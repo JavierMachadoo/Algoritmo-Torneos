@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados - Torneo de Pádel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendario-celda {
+        min-height: 120px;
+        border: 2px solid #dee2e6;
+        padding: 0.5rem;
+    }
+    .partido-bloque {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+        border-left: 4px solid;
+        font-size: 0.85rem;
+    }
+    .partido-cuarta {
+        background-color: #d4edda;
+        border-left-color: #28a745;
+    }
+    .partido-quinta {
+        background-color: #fff3cd;
+        border-left-color: #ffc107;
+    }
+    .partido-sexta {
+        background-color: #d1ecf1;
+        border-left-color: #17a2b8;
+    }
+    .partido-septima {
+        background-color: #e7e3ff;
+        border-left-color: #9b7fed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-trophy-fill"></i> Resultados del Torneo
+            </h1>
+        </div>
+    </div>
+
+    <!-- Botones de Navegación -->
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{{ url_for('datos') }}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-arrow-left"></i> Volver a Datos
+            </a>
+            <button class="btn btn-outline-secondary" onclick="if(confirm('¿Ejecutar algoritmo nuevamente?')) window.location.href='{{ url_for('datos') }}'">
+                <i class="bi bi-arrow-clockwise"></i> Ejecutar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold text-success">
+                        {{ resultado.estadisticas.parejas_asignadas }}/{{ resultado.estadisticas.total_parejas }}
+                    </h3>
+                    <p class="text-muted mb-0">Parejas Asignadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold text-primary">
+                        {{ "%.0f"|format(resultado.estadisticas.porcentaje_asignacion) }}%
+                    </h3>
+                    <p class="text-muted mb-0">Tasa de Asignación</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold text-info">
+                        {{ resultado.estadisticas.total_grupos }}
+                    </h3>
+                    <p class="text-muted mb-0">Grupos Formados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold text-warning">
+                        {{ "%.2f"|format(resultado.estadisticas.score_compatibilidad_promedio) }}/3.0
+                    </h3>
+                    <p class="text-muted mb-0">Calidad Promedio</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs de Resultados -->
+    <ul class="nav nav-tabs nav-fill mb-3" id="resultadosTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="cuarta-tab" data-bs-toggle="tab" data-bs-target="#cuarta" type="button">
+                🟢 Cuarta
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="quinta-tab" data-bs-toggle="tab" data-bs-target="#quinta" type="button">
+                🟡 Quinta
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="sexta-tab" data-bs-toggle="tab" data-bs-target="#sexta" type="button">
+                🔵 Sexta
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="septima-tab" data-bs-toggle="tab" data-bs-target="#septima" type="button">
+                🟣 Séptima
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario" type="button">
+                📅 Calendario General
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido de Tabs -->
+    <div class="tab-content" id="resultadosTabsContent">
+        <!-- Cuarta -->
+        <div class="tab-pane fade show active" id="cuarta" role="tabpanel">
+            {{ mostrar_grupos_categoria('Cuarta', resultado.grupos_por_categoria.Cuarta, '#90EE90', '#f0fff0') }}
+        </div>
+
+        <!-- Quinta -->
+        <div class="tab-pane fade" id="quinta" role="tabpanel">
+            {{ mostrar_grupos_categoria('Quinta', resultado.grupos_por_categoria.Quinta, '#FFD700', '#fffef0') }}
+        </div>
+
+        <!-- Sexta -->
+        <div class="tab-pane fade" id="sexta" role="tabpanel">
+            {{ mostrar_grupos_categoria('Sexta', resultado.grupos_por_categoria.Sexta, '#87CEEB', '#f0f8ff') }}
+        </div>
+
+        <!-- Séptima -->
+        <div class="tab-pane fade" id="septima" role="tabpanel">
+            {{ mostrar_grupos_categoria('Séptima', resultado.grupos_por_categoria['Séptima'], '#DDA0DD', '#fff0ff') }}
+        </div>
+
+        <!-- Calendario General -->
+        <div class="tab-pane fade" id="calendario" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-week"></i> Calendario de Partidos
+                    </h4>
+                    <small>Programación semanal por canchas</small>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <!-- DEBUG: Mostrar estructura del calendario -->
+                    {% if not resultado.calendario.Jueves and not resultado.calendario.Viernes and not resultado.calendario['Sábado'] %}
+                    <div class="alert alert-warning">
+                        <h5>Debug: No hay datos en el calendario</h5>
+                        <p>Estructura recibida:</p>
+                        <pre>{{ resultado.calendario|tojson(indent=2) }}</pre>
+                    </div>
+                    {% endif %}>
+                    
+                    <!-- JUEVES -->
+                    <div class="mb-5">
+                        <h3 class="fw-bold text-primary mb-3">📆 JUEVES</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover calendario-table">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="10%" class="text-center">HORA</th>
+                                        <th width="45%">🏟️ CANCHA 1</th>
+                                        <th width="45%">🏟️ CANCHA 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for franja in ['18:00', '19:00', '20:00', '21:00', '22:00'] %}
+                                    <tr>
+                                        <td class="fw-bold text-center align-middle bg-light">
+                                            {{ franja }}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario.Jueves[franja][0] %}
+                                                {{ mostrar_partido_simple(resultado.calendario.Jueves[franja][0]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario.Jueves[franja][1] %}
+                                                {{ mostrar_partido_simple(resultado.calendario.Jueves[franja][1]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- VIERNES -->
+                    <div class="mb-5">
+                        <h3 class="fw-bold text-primary mb-3">📆 VIERNES</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover calendario-table">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="10%" class="text-center">HORA</th>
+                                        <th width="45%">🏟️ CANCHA 1</th>
+                                        <th width="45%">🏟️ CANCHA 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for franja in ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'] %}
+                                    <tr>
+                                        <td class="fw-bold text-center align-middle bg-light">
+                                            {{ franja }}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario.Viernes[franja][0] %}
+                                                {{ mostrar_partido_simple(resultado.calendario.Viernes[franja][0]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario.Viernes[franja][1] %}
+                                                {{ mostrar_partido_simple(resultado.calendario.Viernes[franja][1]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SÁBADO -->
+                    <div class="mb-3">
+                        <h3 class="fw-bold text-primary mb-3">📆 SÁBADO</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover calendario-table">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="10%" class="text-center">HORA</th>
+                                        <th width="45%">🏟️ CANCHA 1</th>
+                                        <th width="45%">🏟️ CANCHA 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for franja in ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'] %}
+                                    <tr>
+                                        <td class="fw-bold text-center align-middle bg-light">
+                                            {{ franja }}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario['Sábado'][franja][0] %}
+                                                {{ mostrar_partido_simple(resultado.calendario['Sábado'][franja][0]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="calendario-celda-simple">
+                                            {% if resultado.calendario['Sábado'][franja][1] %}
+                                                {{ mostrar_partido_simple(resultado.calendario['Sábado'][franja][1]) }}
+                                            {% else %}
+                                                <span class="text-muted">Libre</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- Macro para mostrar grupos de una categoría -->
+{% macro mostrar_grupos_categoria(categoria, grupos, border_color, bg_color) %}
+    {% if grupos %}
+        <h4 class="mb-4">Grupos de {{ categoria }}</h4>
+        
+        <!-- Grid de 4 columnas para Grupos A, B, C, D -->
+        <div class="row g-3">
+            {% for grupo in grupos %}
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm grupo-card" style="border-top: 4px solid {{ border_color }};">
+                    <div class="card-header text-white text-center" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                        <h5 class="mb-0 fw-bold">
+                            {% if loop.index == 1 %}GRUPO A
+                            {% elif loop.index == 2 %}GRUPO B
+                            {% elif loop.index == 3 %}GRUPO C
+                            {% elif loop.index == 4 %}GRUPO D
+                            {% else %}GRUPO {{ loop.index }}
+                            {% endif %}
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body" style="background-color: {{ bg_color }};">
+                        <!-- Info de Franja y Cancha -->
+                        {% if grupo.franja_horaria %}
+                        <div class="alert alert-light border mb-3 py-2">
+                            <small class="d-block">
+                                <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria }}</strong>
+                            </small>
+                            <small class="d-block">
+                                <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Parejas del Grupo -->
+                        <h6 class="fw-bold mb-2">👥 Parejas:</h6>
+                        {% for pareja in grupo.parejas %}
+                        <div class="pareja-item mb-2 p-2 bg-white rounded border">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-truncate" title="{{ pareja.nombre }}">
+                                        {{ loop.index }}. {{ pareja.nombre }}
+                                    </div>
+                                </div>
+                                <div class="ms-2 text-end">
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-telephone"></i> {{ pareja.telefono }}
+                                    </small>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-clock"></i> {{ pareja.franjas|join(', ') if pareja.franjas else 'Sin horarios' }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="card-footer text-center" style="background-color: {{ bg_color }};">
+                        {% if grupo.score >= 3.0 %}
+                            <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                        {% elif grupo.score >= 2.0 %}
+                            <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                        {% else %}
+                            <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Listado de Partidos debajo de las cards -->
+        <div class="mt-4">
+            <h5 class="fw-bold mb-3">🏆 Partidos de la Categoría {{ categoria }}</h5>
+            <div class="row">
+                {% for grupo in grupos %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-start" style="border-left: 4px solid {{ border_color }} !important;">
+                        <div class="card-body py-2">
+                            <h6 class="fw-bold mb-2">
+                                {% if loop.index == 1 %}Grupo A
+                                {% elif loop.index == 2 %}Grupo B
+                                {% elif loop.index == 3 %}Grupo C
+                                {% elif loop.index == 4 %}Grupo D
+                                {% else %}Grupo {{ loop.index }}
+                                {% endif %}
+                            </h6>
+                            <ul class="list-unstyled mb-0 small">
+                                {% for partido in grupo.partidos %}
+                                <li class="mb-1">• <strong>{{ partido.pareja1 }}</strong> vs <strong>{{ partido.pareja2 }}</strong></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay grupos formados en la categoría {{ categoria }}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+<!-- Macro para mostrar un partido en el calendario -->
+{% macro mostrar_partido_simple(partido) %}
+    {% set clase_categoria = {
+        'Cuarta': 'partido-cuarta',
+        'Quinta': 'partido-quinta',
+        'Sexta': 'partido-sexta',
+        'Séptima': 'partido-septima'
+    } %}
+    
+    {% set emoji_categoria = {
+        'Cuarta': '🟢',
+        'Quinta': '🟡',
+        'Sexta': '🔵',
+        'Séptima': '🟣'
+    } %}
+    
+    <div class="partido-bloque-simple {{ clase_categoria[partido.categoria] }}">
+        <div class="mb-2 text-center">
+            <span class="badge-categoria">{{ emoji_categoria[partido.categoria] }} {{ partido.categoria }}</span>
+            <span class="badge-grupo">Grupo {{ partido.grupo_id }}</span>
+        </div>
+        
+        <div class="row align-items-center g-0">
+            <div class="col-5 text-end pe-2">
+                <div class="fw-bold">{{ partido.pareja1 }}</div>
+            </div>
+            <div class="col-2 text-center">
+                <strong class="text-muted">VS</strong>
+            </div>
+            <div class="col-5 text-start ps-2">
+                <div class="fw-bold">{{ partido.pareja2 }}</div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
