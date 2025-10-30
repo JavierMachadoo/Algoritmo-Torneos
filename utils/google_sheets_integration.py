@@ -93,24 +93,24 @@ class GoogleSheetsIntegration:
         return spreadsheet.url
     
     def _escribir_grupos_en_hoja(self, worksheet, resultado_algoritmo):
-        fila_actual = 1
+        # Preparar todos los datos en una sola estructura
+        datos = []
         
-        worksheet.update_cell(fila_actual, 1, "🎾 TORNEO DE PÁDEL - GRUPOS Y CALENDARIO")
-        worksheet.update_cell(fila_actual + 1, 1, f"Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-        fila_actual += 3
+        # Título y fecha
+        datos.append(["🎾 TORNEO DE PÁDEL - GRUPOS Y CALENDARIO"])
+        datos.append([f"Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}"])
+        datos.append([])
         
+        # Estadísticas
         stats = resultado_algoritmo.estadisticas
-        worksheet.update_cell(fila_actual, 1, "📊 ESTADÍSTICAS")
-        fila_actual += 1
-        worksheet.update_cell(fila_actual, 1, f"Total parejas: {stats['total_parejas']}")
-        fila_actual += 1
-        worksheet.update_cell(fila_actual, 1, f"Parejas asignadas: {stats['parejas_asignadas']} ({stats['porcentaje_asignacion']:.1f}%)")
-        fila_actual += 1
-        worksheet.update_cell(fila_actual, 1, f"Parejas sin asignar: {stats['parejas_sin_asignar']}")
-        fila_actual += 1
-        worksheet.update_cell(fila_actual, 1, f"Total grupos: {stats['total_grupos']}")
-        fila_actual += 3
+        datos.append(["📊 ESTADÍSTICAS"])
+        datos.append([f"Total parejas: {stats['total_parejas']}"])
+        datos.append([f"Parejas asignadas: {stats['parejas_asignadas']} ({stats['porcentaje_asignacion']:.1f}%)"])
+        datos.append([f"Parejas sin asignar: {stats['parejas_sin_asignar']}"])
+        datos.append([f"Total grupos: {stats['total_grupos']}"])
+        datos.append([])
         
+        # Grupos por categoría
         for categoria in ["Cuarta", "Quinta", "Sexta", "Séptima"]:
             if categoria not in resultado_algoritmo.grupos_por_categoria:
                 continue
@@ -120,13 +120,8 @@ class GoogleSheetsIntegration:
                 continue
             
             emoji = EMOJI_CATEGORIA.get(categoria, "⚪")
-            worksheet.update_cell(fila_actual, 1, f"{emoji} CATEGORÍA {categoria.upper()}")
-            fila_actual += 1
-            
-            headers = ["Grupo", "Pareja 1", "Pareja 2", "Pareja 3", "Franja Horaria", "Cancha"]
-            for col, header in enumerate(headers, start=1):
-                worksheet.update_cell(fila_actual, col, header)
-            fila_actual += 1
+            datos.append([f"{emoji} CATEGORÍA {categoria.upper()}"])
+            datos.append(["Grupo", "Pareja 1", "Pareja 2", "Pareja 3", "Franja Horaria", "Cancha"])
             
             for grupo in grupos:
                 parejas_nombres = [p.nombre for p in grupo.parejas]
@@ -143,37 +138,44 @@ class GoogleSheetsIntegration:
                     grupo.franja_horaria or "Por coordinar",
                     f"Cancha {cancha}" if cancha else "Por asignar"
                 ]
-                
-                for col, data in enumerate(row_data, start=1):
-                    worksheet.update_cell(fila_actual, col, data)
-                fila_actual += 1
+                datos.append(row_data)
             
-            fila_actual += 2
+            datos.append([])
         
+        # Parejas sin asignar
         if resultado_algoritmo.parejas_sin_asignar:
-            worksheet.update_cell(fila_actual, 1, "⚠️ PAREJAS SIN GRUPO ASIGNADO")
-            fila_actual += 1
-            worksheet.update_cell(fila_actual, 1, "Por favor coordinar manualmente")
-            fila_actual += 1
-            
-            headers = ["Pareja", "Categoría", "Teléfono", "Franjas Disponibles"]
-            for col, header in enumerate(headers, start=1):
-                worksheet.update_cell(fila_actual, col, header)
-            fila_actual += 1
+            datos.append(["⚠️ PAREJAS SIN GRUPO ASIGNADO"])
+            datos.append(["Por favor coordinar manualmente"])
+            datos.append(["Pareja", "Categoría", "Teléfono", "Franjas Disponibles"])
             
             for pareja in resultado_algoritmo.parejas_sin_asignar:
                 franjas_str = ", ".join(pareja.franjas_disponibles) if pareja.franjas_disponibles else "Ninguna"
-                row_data = [pareja.nombre, pareja.categoria, pareja.telefono, franjas_str]
-                
-                for col, data in enumerate(row_data, start=1):
-                    worksheet.update_cell(fila_actual, col, data)
-                fila_actual += 1
+                datos.append([pareja.nombre, pareja.categoria, pareja.telefono, franjas_str])
+        
+        # Escribir todos los datos de una sola vez
+        worksheet.update('A1', datos)
     
     def _buscar_cancha_grupo(self, grupo, calendario) -> Optional[int]:
-        for franja, partidos in calendario.items():
-            for partido in partidos:
-                if partido['grupo_id'] == grupo.id:
-                    return partido['cancha']
+        if not calendario or not isinstance(calendario, dict):
+            return None
+        
+        for dia, franjas in calendario.items():
+            if not isinstance(franjas, dict):
+                continue
+            for franja, canchas in franjas.items():
+                if not isinstance(canchas, (list, dict)):
+                    continue
+                if isinstance(canchas, list):
+                    for idx, partido in enumerate(canchas):
+                        if isinstance(partido, dict) and partido.get('grupo_id') == grupo.id:
+                            return idx + 1
+                elif isinstance(canchas, dict):
+                    for cancha_idx, partido in canchas.items():
+                        if isinstance(partido, dict) and partido.get('grupo_id') == grupo.id:
+                            try:
+                                return int(cancha_idx)
+                            except:
+                                return None
         return None
     
     def crear_spreadsheet(self, nombre: str) -> str:

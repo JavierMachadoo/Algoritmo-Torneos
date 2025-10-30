@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify, session
 import pandas as pd
+import os
 
-from core import Pareja, AlgoritmoGrupos
+from core import Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo
 from utils import CSVProcessor, CalendarioBuilder
+from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
 from config import CATEGORIAS, FRANJAS_HORARIAS
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -93,6 +95,61 @@ def limpiar_datos():
     })
 
 
+@api_bp.route('/intercambiar-pareja', methods=['POST'])
+def intercambiar_pareja():
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    grupo_origen = data.get('grupo_origen')
+    grupo_destino = data.get('grupo_destino')
+    
+    resultado = session.get('resultado_algoritmo')
+    if not resultado:
+        return jsonify({'error': 'No hay resultados cargados'}), 400
+    
+    try:
+        pareja_movida = None
+        pareja_reemplazo = None
+        categoria_actual = None
+        
+        for categoria, grupos in resultado['grupos_por_categoria'].items():
+            for grupo in grupos:
+                if grupo['id'] == grupo_origen:
+                    categoria_actual = categoria
+                    for pareja in grupo['parejas']:
+                        if pareja['id'] == pareja_id:
+                            pareja_movida = pareja
+                            grupo['parejas'].remove(pareja)
+                            break
+                
+                if grupo['id'] == grupo_destino and categoria_actual:
+                    if len(grupo['parejas']) > 0:
+                        pareja_reemplazo = grupo['parejas'][0]
+                        grupo['parejas'].remove(pareja_reemplazo)
+                    if pareja_movida:
+                        grupo['parejas'].append(pareja_movida)
+        
+        if pareja_movida and pareja_reemplazo:
+            for categoria, grupos in resultado['grupos_por_categoria'].items():
+                for grupo in grupos:
+                    if grupo['id'] == grupo_origen:
+                        grupo['parejas'].append(pareja_reemplazo)
+                        break
+        
+        session['resultado_algoritmo'] = resultado
+        session.modified = True
+        
+        mensaje = f"Pareja intercambiada correctamente"
+        if pareja_reemplazo:
+            mensaje = f"Intercambio exitoso: {pareja_movida['nombre']} ↔ {pareja_reemplazo['nombre']}"
+        
+        return jsonify({
+            'success': True,
+            'mensaje': mensaje
+        })
+    except Exception as e:
+        return jsonify({'error': f'Error al intercambiar: {str(e)}'}), 500
+
+
 @api_bp.route('/ejecutar-algoritmo', methods=['POST'])
 def ejecutar_algoritmo():
     parejas_data = session.get('parejas', [])
@@ -101,7 +158,7 @@ def ejecutar_algoritmo():
         return jsonify({'error': 'No hay parejas cargadas'}), 400
     
     try:
-        num_canchas = request.json.get('num_canchas', 2)
+        num_canchas = 2
         
         parejas_obj = [Pareja.from_dict(p) for p in parejas_data]
         
@@ -165,3 +222,91 @@ def convertir_resultado_a_dict(resultado, num_canchas):
         'parejas_sin_asignar': [p.to_dict() for p in resultado.parejas_sin_asignar],
         'calendario': calendario
     }
+
+
+@api_bp.route('/exportar-google-sheets', methods=['POST'])
+def exportar_google_sheets():
+    data = request.json
+    spreadsheet_id = data.get('spreadsheet_id', '')
+    
+    if not spreadsheet_id:
+        return jsonify({'error': 'Falta el ID del Google Sheet'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo para exportar'}), 400
+    
+    credentials_path = os.path.join(os.path.dirname(__file__), '..', '..', 'credentials.json')
+    if not os.path.exists(credentials_path):
+        return jsonify({'error': 'No se encontraron las credenciales de Google Sheets'}), 500
+    
+    try:
+        resultado = reconstruir_resultado_algoritmo(resultado_data)
+        
+        google_sheets = GoogleSheetsExportCalendario(credentials_path)
+        url = google_sheets.exportar_calendario(spreadsheet_id, resultado)
+        
+        return jsonify({
+            'success': True,
+            'mensaje': '✅ Calendario exportado exitosamente a Google Sheets',
+            'url': url
+        })
+    except KeyError as e:
+        import traceback
+        return jsonify({
+            'error': f'Error en la estructura de datos: clave faltante {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al exportar: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+def reconstruir_resultado_algoritmo(resultado_data):
+    grupos_por_categoria = {}
+    
+    for categoria, grupos_list in resultado_data['grupos_por_categoria'].items():
+        grupos_por_categoria[categoria] = []
+        for grupo_dict in grupos_list:
+            grupo = Grupo(
+                id=grupo_dict['id'],
+                categoria=categoria
+            )
+            grupo.franja_horaria = grupo_dict.get('franja_horaria')
+            grupo.score_compatibilidad = grupo_dict.get('score', 0.0)
+            
+            for pareja_dict in grupo_dict['parejas']:
+                pareja = Pareja(
+                    id=pareja_dict['id'],
+                    nombre=pareja_dict['nombre'],
+                    telefono=pareja_dict.get('telefono', 'Sin teléfono'),
+                    categoria=pareja_dict['categoria'],
+                    franjas_disponibles=pareja_dict.get('franjas_disponibles', [])
+                )
+                grupo.parejas.append(pareja)
+            
+            grupo.generar_partidos()
+            grupos_por_categoria[categoria].append(grupo)
+    
+    parejas_sin_asignar = []
+    for p in resultado_data.get('parejas_sin_asignar', []):
+        pareja = Pareja(
+            id=p['id'],
+            nombre=p['nombre'],
+            telefono=p.get('telefono', 'Sin teléfono'),
+            categoria=p['categoria'],
+            franjas_disponibles=p.get('franjas_disponibles', [])
+        )
+        parejas_sin_asignar.append(pareja)
+    
+    resultado = ResultadoAlgoritmo(
+        grupos_por_categoria=grupos_por_categoria,
+        parejas_sin_asignar=parejas_sin_asignar,
+        calendario=resultado_data.get('calendario', {}),
+        estadisticas=resultado_data.get('estadisticas', {})
+    )
+    
+    return resultado

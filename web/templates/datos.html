@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Cargar Datos - Torneo de Pádel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-database"></i> Cargar Datos de Parejas
+            </h1>
+        </div>
+    </div>
+
+    <!-- Tabs de Carga -->
+    <div class="row mb-4">
+        <div class="col">
+            <ul class="nav nav-pills nav-fill shadow-sm" id="cargaTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="csv-tab" data-bs-toggle="pill" data-bs-target="#csv" type="button">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Cargar CSV
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="manual-tab" data-bs-toggle="pill" data-bs-target="#manual" type="button">
+                        <i class="bi bi-pencil-square"></i> Entrada Manual
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contenido de Tabs -->
+    <div class="tab-content" id="cargaTabsContent">
+        <!-- Tab CSV -->
+        <div class="tab-pane fade show active" id="csv" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Instrucciones:</strong> Carga un archivo CSV con las respuestas del formulario
+                    </div>
+                    
+                    <form id="formCargarCSV" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="archivoCSV" class="form-label fw-bold">
+                                Seleccionar archivo CSV
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="archivoCSV" name="archivo" accept=".csv" required>
+                            <div class="form-text">El archivo debe tener columnas: Nombre, Teléfono, Categoría y franjas horarias</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Cargar Datos
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Manual -->
+        <div class="tab-pane fade" id="manual" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Instrucciones:</strong> Ingresa los datos de cada pareja individualmente
+                    </div>
+                    
+                    <form id="formAgregarPareja">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label fw-bold">Nombre de la pareja *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       placeholder="Ej: Juan Pérez / María López" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telefono" class="form-label fw-bold">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono" 
+                                       placeholder="Ej: 099123456">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="categoria" class="form-label fw-bold">Categoría *</label>
+                                <select class="form-select" id="categoria" name="categoria" required>
+                                    {% for cat in categorias %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Franjas horarias disponibles *</label>
+                            <div class="form-text mb-2">Selecciona todas las franjas en las que pueden jugar</div>
+                            <div class="row g-2">
+                                {% for franja in franjas %}
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="franjas" 
+                                               value="{{ franja }}" id="franja{{ loop.index }}">
+                                        <label class="form-check-label" for="franja{{ loop.index }}">
+                                            {{ franja }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-plus-circle"></i> Agregar Pareja
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Datos Cargados -->
+    {% if parejas %}
+    <div class="row mt-5">
+        <div class="col">
+            <h2 class="h3 fw-bold mb-4">
+                <i class="bi bi-bar-chart"></i> Resumen de Datos
+            </h2>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm stat-card">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold text-primary">{{ stats.total }}</h3>
+                    <p class="text-muted mb-0">Total Parejas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm stat-card stat-cuarta">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold">{{ stats.por_categoria.Cuarta }}</h3>
+                    <p class="mb-0">🟢 Cuarta</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm stat-card stat-quinta">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold">{{ stats.por_categoria.Quinta }}</h3>
+                    <p class="mb-0">🟡 Quinta</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm stat-card stat-sexta">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold">{{ stats.por_categoria.Sexta }}</h3>
+                    <p class="mb-0">🔵 Sexta</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm stat-card stat-septima">
+                <div class="card-body">
+                    <h3 class="display-6 fw-bold">{{ stats.por_categoria['Séptima'] }}</h3>
+                    <p class="mb-0">🟣 Séptima</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 d-flex align-items-stretch">
+            <button class="btn btn-outline-danger w-100" onclick="limpiarDatos()">
+                <i class="bi bi-trash"></i> Limpiar
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de Parejas -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul"></i> Listado de Parejas ({{ parejas|length }})
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 400px;">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="30%">Nombre</th>
+                            <th width="15%">Teléfono</th>
+                            <th width="15%">Categoría</th>
+                            <th width="30%">Horarios Disponibles</th>
+                            <th width="5%">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaParejas">
+                        {% for pareja in parejas %}
+                        <tr data-id="{{ pareja.id }}">
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">{{ pareja.nombre }}</td>
+                            <td><i class="bi bi-telephone"></i> {{ pareja.telefono }}</td>
+                            <td><span class="badge bg-secondary">{{ pareja.categoria }}</span></td>
+                            <td><small>{{ ', '.join(pareja.franjas_disponibles) or 'Sin especificar' }}</small></td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="eliminarPareja({{ pareja.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Ejecutar Algoritmo -->
+    <div class="row">
+        <div class="col text-center">
+            <button id="btnEjecutarAlgoritmo" class="btn btn-success btn-lg px-5 py-3 shadow-lg" onclick="ejecutarAlgoritmo()">
+                <i class="bi bi-cpu"></i> EJECUTAR ALGORITMO
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <h5>Generando grupos óptimos...</h5>
+                <p class="text-muted">Por favor espera un momento</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cargar CSV
+$('#formCargarCSV').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    $.ajax({
+        url: '/api/cargar-csv',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            Toast.error('Error: ' + error);
+        }
+    });
+});
+
+// Agregar pareja manual
+$('#formAgregarPareja').on('submit', function(e) {
+    e.preventDefault();
+    
+    const franjas = [];
+    $('input[name="franjas"]:checked').each(function() {
+        franjas.push($(this).val());
+    });
+    
+    const data = {
+        nombre: $('#nombre').val(),
+        telefono: $('#telefono').val(),
+        categoria: $('#categoria').val(),
+        franjas: franjas
+    };
+    
+    $.ajax({
+        url: '/api/agregar-pareja',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            Toast.success(response.mensaje);
+            $('#formAgregarPareja')[0].reset();
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            Toast.error('Error: ' + error);
+        }
+    });
+});
+
+// Eliminar pareja
+function eliminarPareja(id) {
+    $.ajax({
+        url: '/api/eliminar-pareja/' + id,
+        type: 'DELETE',
+        success: function(response) {
+            Toast.success('Pareja eliminada correctamente');
+            setTimeout(() => location.reload(), 800);
+        },
+        error: function() {
+            Toast.error('Error al eliminar');
+        }
+    });
+}
+
+// Limpiar datos
+function limpiarDatos() {
+    $.ajax({
+        url: '/api/limpiar-datos',
+        type: 'POST',
+        success: function(response) {
+            Toast.success('Datos limpiados correctamente');
+            setTimeout(() => location.reload(), 800);
+        }
+    });
+}
+
+// Ejecutar algoritmo
+function ejecutarAlgoritmo() {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    $.ajax({
+        url: '/api/ejecutar-algoritmo',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        success: function(response) {
+            modal.hide();
+            Toast.success(response.mensaje);
+            setTimeout(() => window.location.href = '/resultados', 1000);
+        },
+        error: function(xhr) {
+            modal.hide();
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            Toast.error('Error: ' + error);
+            console.error(xhr.responseJSON);
+        }
+    });
+}
+</script>
+{% endblock %}
