@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 4. Ejecuta la aplicación:
 ```bash
-streamlit run app.py
+python main.py
 ```
 
 ## 📖 Uso
