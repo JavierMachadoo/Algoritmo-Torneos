@@ -5,13 +5,14 @@ import os
 from core import Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo
 from utils import CSVProcessor, CalendarioBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
-from config import CATEGORIAS, FRANJAS_HORARIAS
+from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
 @api_bp.route('/cargar-csv', methods=['POST'])
 def cargar_csv():
+    """Carga parejas desde un archivo CSV."""
     if 'archivo' not in request.files:
         return jsonify({'error': 'No se envió ningún archivo'}), 400
     
@@ -38,6 +39,7 @@ def cargar_csv():
 
 @api_bp.route('/agregar-pareja', methods=['POST'])
 def agregar_pareja():
+    """Agrega una pareja manualmente al torneo."""
     data = request.json
     
     nombre = data.get('nombre', '').strip()
@@ -74,6 +76,7 @@ def agregar_pareja():
 
 @api_bp.route('/eliminar-pareja/<int:pareja_id>', methods=['DELETE'])
 def eliminar_pareja(pareja_id):
+    """Elimina una pareja del torneo."""
     parejas = session.get('parejas', [])
     parejas = [p for p in parejas if p['id'] != pareja_id]
     
@@ -88,6 +91,7 @@ def eliminar_pareja(pareja_id):
 
 @api_bp.route('/limpiar-datos', methods=['POST'])
 def limpiar_datos():
+    """Limpia todos los datos de la sesión."""
     session.clear()
     return jsonify({
         'success': True,
@@ -97,6 +101,7 @@ def limpiar_datos():
 
 @api_bp.route('/intercambiar-pareja', methods=['POST'])
 def intercambiar_pareja():
+    """Intercambia una pareja entre dos grupos."""
     data = request.json
     pareja_id = data.get('pareja_id')
     grupo_origen = data.get('grupo_origen')
@@ -152,23 +157,22 @@ def intercambiar_pareja():
 
 @api_bp.route('/ejecutar-algoritmo', methods=['POST'])
 def ejecutar_algoritmo():
+    """Ejecuta el algoritmo de generación de grupos para el torneo."""
     parejas_data = session.get('parejas', [])
     
     if not parejas_data:
         return jsonify({'error': 'No hay parejas cargadas'}), 400
     
     try:
-        num_canchas = 2
-        
         parejas_obj = [Pareja.from_dict(p) for p in parejas_data]
         
-        algoritmo = AlgoritmoGrupos(parejas=parejas_obj, num_canchas=num_canchas)
+        algoritmo = AlgoritmoGrupos(parejas=parejas_obj, num_canchas=NUM_CANCHAS_DEFAULT)
         resultado_obj = algoritmo.ejecutar()
         
-        resultado = convertir_resultado_a_dict(resultado_obj, num_canchas)
+        resultado = serializar_resultado(resultado_obj, NUM_CANCHAS_DEFAULT)
         
         session['resultado_algoritmo'] = resultado
-        session['num_canchas'] = num_canchas
+        session['num_canchas'] = NUM_CANCHAS_DEFAULT
         session.modified = True
         
         return jsonify({
@@ -184,7 +188,8 @@ def ejecutar_algoritmo():
         }), 500
 
 
-def convertir_resultado_a_dict(resultado, num_canchas):
+def serializar_resultado(resultado, num_canchas):
+    """Convierte el resultado del algoritmo a formato JSON serializable."""
     grupos_dict = {}
     canchas_asignadas = {}
     
@@ -226,8 +231,9 @@ def convertir_resultado_a_dict(resultado, num_canchas):
 
 @api_bp.route('/exportar-google-sheets', methods=['POST'])
 def exportar_google_sheets():
+    """Exporta el calendario de partidos a Google Sheets."""
     data = request.json
-    spreadsheet_id = data.get('spreadsheet_id', '')
+    spreadsheet_id = data.get('spreadsheet_id', '').strip()
     
     if not spreadsheet_id:
         return jsonify({'error': 'Falta el ID del Google Sheet'}), 400
@@ -241,7 +247,7 @@ def exportar_google_sheets():
         return jsonify({'error': 'No se encontraron las credenciales de Google Sheets'}), 500
     
     try:
-        resultado = reconstruir_resultado_algoritmo(resultado_data)
+        resultado = deserializar_resultado(resultado_data)
         
         google_sheets = GoogleSheetsExportCalendario(credentials_path)
         url = google_sheets.exportar_calendario(spreadsheet_id, resultado)
@@ -265,7 +271,8 @@ def exportar_google_sheets():
         }), 500
 
 
-def reconstruir_resultado_algoritmo(resultado_data):
+def deserializar_resultado(resultado_data):
+    """Reconstruye el objeto ResultadoAlgoritmo desde datos de sesión."""
     grupos_por_categoria = {}
     
     for categoria, grupos_list in resultado_data['grupos_por_categoria'].items():

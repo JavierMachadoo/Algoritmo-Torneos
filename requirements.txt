@@ -1,19 +1,15 @@
-# Core dependencies
-streamlit>=1.28.0
-pandas>=2.2.0
-numpy>=1.26.0
+# Web Framework
+Flask==3.1.2
+Flask-Session==0.8.0
 
-# Google Sheets integration
+# Data Processing
+pandas>=2.2.0
+
+# Google Sheets Integration
 gspread>=6.0.0
 google-auth>=2.23.0
 google-auth-oauthlib>=1.1.0
-google-auth-httplib2>=0.1.1
-
-# Data visualization
-plotly>=5.17.0
-openpyxl>=3.1.0
 
 # Utils
 python-dotenv>=1.0.0
-
-reflex==0.8.17
+openpyxl>=3.1.0

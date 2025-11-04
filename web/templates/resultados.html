@@ -79,9 +79,57 @@
             <a href="{{ url_for('datos') }}" class="btn btn-outline-primary me-2">
                 <i class="bi bi-arrow-left"></i> Volver a Datos
             </a>
-            <button class="btn btn-outline-secondary" onclick="if(confirm('¿Ejecutar algoritmo nuevamente?')) window.location.href='{{ url_for('datos') }}'">
+            <button class="btn btn-outline-secondary me-2" onclick="if(confirm('¿Ejecutar algoritmo nuevamente?')) window.location.href='{{ url_for('datos') }}'">
                 <i class="bi bi-arrow-clockwise"></i> Ejecutar de Nuevo
             </button>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarPareja">
+                <i class="bi bi-plus-circle"></i> Agregar Pareja
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Pareja -->
+    <div class="modal fade" id="modalAgregarPareja" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Agregar Nueva Pareja
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarParejaModal">
+                        <div class="mb-3">
+                            <label for="nombreModal" class="form-label">Nombre de la Pareja *</label>
+                            <input type="text" class="form-control" id="nombreModal" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telefonoModal" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefonoModal" name="telefono">
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoriaModal" class="form-label">Categoría *</label>
+                            <select class="form-select" id="categoriaModal" name="categoria" required>
+                                <option value="Cuarta">4ta</option>
+                                <option value="Quinta">5ta</option>
+                                <option value="Sexta">6ta</option>
+                                <option value="Séptima">7ma</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Franjas Horarias Disponibles *</label>
+                            <div id="franjasModalContainer"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="agregarParejaDesdeModal()">
+                        <i class="bi bi-check-circle"></i> Agregar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -358,30 +406,31 @@
                     
                     <div class="card-body" style="background-color: {{ bg_color }};">
                         <!-- Info de Franja y Cancha -->
-                        {% if grupo.franja_horaria %}
                         <div class="alert alert-light border mb-3 py-2">
                             <small class="d-block">
-                                <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria }}</strong>
+                                <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
                             </small>
                             <small class="d-block">
                                 <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
                             </small>
                         </div>
-                        {% endif %}
 
                         <!-- Parejas del Grupo -->
                         <h6 class="fw-bold mb-2">👥 Parejas:</h6>
                         {% for pareja in grupo.parejas %}
-                        <div class="pareja-item mb-2 p-2 bg-white rounded border" 
+                        {% set franja_compatible = grupo.franja_horaria in pareja.franjas_disponibles if grupo.franja_horaria and pareja.franjas_disponibles else true %}
+                        <div class="pareja-item mb-2 p-2 bg-white rounded border {{ 'border-danger border-2' if not franja_compatible else '' }}" 
                              draggable="true"
                              data-pareja-id="{{ pareja.id }}"
                              data-pareja-nombre="{{ pareja.nombre }}"
                              data-grupo-origen="{{ grupo.id }}"
-                             ondragstart="dragStart(event)">
+                             ondragstart="dragStart(event)"
+                             {% if not franja_compatible %}title="⚠️ Esta pareja no eligió esta franja horaria"{% endif %}>
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="flex-grow-1">
-                                    <div class="fw-bold text-truncate" title="{{ pareja.nombre }}">
+                                    <div class="fw-bold text-truncate {{ 'text-danger' if not franja_compatible else '' }}" title="{{ pareja.nombre }}">
                                         {{ loop.index }}. {{ pareja.nombre }}
+                                        {% if not franja_compatible %}<i class="bi bi-exclamation-triangle-fill text-danger ms-1"></i>{% endif %}
                                     </div>
                                     <small class="text-muted d-block mt-1">
                                         <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
@@ -609,6 +658,86 @@ function exportarGoogleSheets() {
     .catch(error => {
         console.error('Error:', error);
         Toast.error('Error al exportar a Google Sheets');
+    });
+}
+
+// Función para cargar franjas horarias en el modal
+document.addEventListener('DOMContentLoaded', function() {
+    const franjasContainer = document.getElementById('franjasModalContainer');
+    const franjas = [
+        "Jueves 18:00", "Jueves 20:00",
+        "Viernes 18:00", "Viernes 21:00",
+        "Sábado 09:00", "Sábado 12:00", "Sábado 16:00", "Sábado 19:00"
+    ];
+    
+    franjas.forEach((franja, idx) => {
+        const div = document.createElement('div');
+        div.className = 'form-check';
+        div.innerHTML = `
+            <input class="form-check-input" type="checkbox" value="${franja}" id="franjaModal${idx}" name="franjas">
+            <label class="form-check-label" for="franjaModal${idx}">${franja}</label>
+        `;
+        franjasContainer.appendChild(div);
+    });
+});
+
+function agregarParejaDesdeModal() {
+    const form = document.getElementById('formAgregarParejaModal');
+    const nombre = document.getElementById('nombreModal').value.trim();
+    const telefono = document.getElementById('telefonoModal').value.trim();
+    const categoria = document.getElementById('categoriaModal').value;
+    
+    const franjasChecked = Array.from(document.querySelectorAll('#franjasModalContainer input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    
+    if (!nombre) {
+        Toast.error('El nombre es obligatorio');
+        return;
+    }
+    
+    if (franjasChecked.length === 0) {
+        Toast.error('Selecciona al menos una franja horaria');
+        return;
+    }
+    
+    Toast.info('Agregando pareja...');
+    
+    fetch('/api/agregar-pareja', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nombre: nombre,
+            telefono: telefono || 'Sin teléfono',
+            categoria: categoria,
+            franjas: franjasChecked
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarPareja'));
+            modal.hide();
+            
+            // Limpiar formulario
+            form.reset();
+            
+            // Volver a datos para re-ejecutar algoritmo
+            setTimeout(() => {
+                Toast.info('Redirigiendo a datos para actualizar grupos...');
+                setTimeout(() => window.location.href = '/datos', 800);
+            }, 1000);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al agregar pareja');
     });
 }
 </script>
