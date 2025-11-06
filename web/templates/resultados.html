@@ -198,6 +198,35 @@
         </div>
     </div>
 
+    <!-- Modal Confirmar Ganador -->
+    <div class="modal fade" id="modalConfirmarGanador" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-trophy-fill"></i> Confirmar Ganador
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-trophy-fill text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 id="mensajeConfirmacion">¿Confirmar ganador?</h5>
+                    <p class="text-muted" id="detalleConfirmacion"></p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnConfirmarGanador">
+                        <i class="bi bi-check-circle-fill"></i> Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Estadísticas Generales -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
@@ -510,13 +539,14 @@
                                      data-pareja-id="{{ pareja.id }}"
                                      data-pareja-nombre="{{ pareja.nombre }}"
                                      data-grupo-origen="{{ grupo.id }}"
+                                     data-grupo-id="{{ grupo.id }}"
+                                     data-posicion="{{ pareja.posicion_grupo or '' }}"
                                      ondragstart="dragStart(event)"
-                                     {% if not franja_compatible %}title="⚠️ Esta pareja no eligió esta franja horaria"{% endif %}>
+                                     {% if not franja_compatible %}title="Esta pareja no eligió esta franja horaria"{% endif %}>
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-truncate {{ 'text-danger' if not franja_compatible else '' }}" title="{{ pareja.nombre }}">
                                                 {{ loop.index }}. {{ pareja.nombre }}
-                                                {% if not franja_compatible %}<i class="bi bi-exclamation-triangle-fill text-danger ms-1"></i>{% endif %}
                                             </div>
                                             <small class="text-muted d-block mt-1">
                                                 <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
@@ -528,17 +558,17 @@
                                         <div class="ms-2 d-flex gap-1">
                                             <!-- Botones para asignar posición -->
                                             <span class="posicion-badge {{ 'posicion-primero' if pareja.posicion_grupo == 1 else '' }}" 
-                                                  onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}')"
+                                                  onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}', {{ grupo.id }})"
                                                   title="1° Puesto">
                                                 🥇
                                             </span>
                                             <span class="posicion-badge {{ 'posicion-segundo' if pareja.posicion_grupo == 2 else '' }}"
-                                                  onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}')"
+                                                  onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}', {{ grupo.id }})"
                                                   title="2° Puesto">
                                                 🥈
                                             </span>
                                             <span class="posicion-badge {{ 'posicion-tercero' if pareja.posicion_grupo == 3 else '' }}"
-                                                  onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}')"
+                                                  onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}', {{ grupo.id }})"
                                                   title="3° Puesto">
                                                 🥉
                                             </span>
@@ -562,14 +592,6 @@
                     {% endfor %}
                 </div>
                 
-                <!-- Botón para generar finales -->
-                <div class="mt-4 text-center">
-                    <button class="btn btn-primary btn-lg" onclick="generarFinales('{{ categoria }}')">
-                        <i class="bi bi-trophy"></i> Generar Finales
-                    </button>
-                    <p class="text-muted mt-2">Asigna las posiciones de todas las parejas antes de generar las finales</p>
-                </div>
-                
                 <!-- Listado de Partidos debajo de las cards -->
                 <div class="mt-4">
                     <h5 class="fw-bold mb-3">🏆 Partidos de la Fase de Grupos</h5>
@@ -586,6 +608,10 @@
                                         {% else %}Grupo {{ loop.index }}
                                         {% endif %}
                                     </h6>
+                                    <small class="text-muted d-block mb-2">
+                                        <i class="bi bi-clock-fill"></i> {{ grupo.franja_horaria or 'Por coordinar' }} | 
+                                        <i class="bi bi-geo-alt-fill"></i> Cancha {{ grupo.cancha or 'Por asignar' }}
+                                    </small>
                                     <ul class="list-unstyled mb-0 small">
                                         {% for partido in grupo.partidos %}
                                         <li class="mb-1">• <strong>{{ partido.pareja1 }}</strong> vs <strong>{{ partido.pareja2 }}</strong></li>
@@ -601,6 +627,14 @@
 
             <!-- TAB FINALES: Fixture de finales -->
             <div class="tab-pane fade" id="finales-{{ categoria }}" role="tabpanel">
+                <!-- Botón para generar finales -->
+                <div class="mb-4 text-center">
+                    <button class="btn btn-primary btn-lg" onclick="generarFinales('{{ categoria }}')">
+                        <i class="bi bi-trophy"></i> Generar Finales
+                    </button>
+                    <p class="text-muted mt-2">Asigna las posiciones de todas las parejas en el tab SERIE antes de generar las finales</p>
+                </div>
+                
                 <div id="fixture-container-{{ categoria }}">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status">
@@ -726,7 +760,11 @@ function intercambiarPareja(parejaId, grupoOrigen, grupoDestino) {
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            setTimeout(() => location.reload(), 1000);
+            // Para intercambios de parejas, necesitamos recargar porque afecta los partidos
+            // Pero hacemos una recarga suave
+            setTimeout(() => {
+                window.location.reload();
+            }, 800);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -867,8 +905,20 @@ function agregarParejaDesdeModal() {
 
 // ==================== FUNCIONES PARA FINALES ====================
 
-function asignarPosicion(parejaId, posicion, categoria) {
-    Toast.info(`Asignando posición ${posicion}°...`);
+function asignarPosicion(parejaId, posicion, categoria, grupoId) {
+    // Validar que no exista otra pareja con la misma posición en el mismo grupo
+    const parejasDelGrupo = document.querySelectorAll(`[data-grupo-id="${grupoId}"]`);
+    
+    for (let pareja of parejasDelGrupo) {
+        const parejaIdActual = parseInt(pareja.dataset.parejaId);
+        const posicionActual = parseInt(pareja.dataset.posicion);
+        
+        // Si es otra pareja (no la misma) y tiene la misma posición
+        if (parejaIdActual !== parejaId && posicionActual === posicion) {
+            Toast.error(`Ya existe una pareja con la posición ${posicion}° en este grupo. Debes asignar posiciones diferentes (1°, 2° y 3°).`);
+            return;
+        }
+    }
     
     fetch('/api/asignar-posicion', {
         method: 'POST',
@@ -885,7 +935,8 @@ function asignarPosicion(parejaId, posicion, categoria) {
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            setTimeout(() => location.reload(), 800);
+            // Actualizar solo los badges de posición sin recargar la página
+            actualizarBadgesPosicion(parejaId, posicion, grupoId);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -894,6 +945,34 @@ function asignarPosicion(parejaId, posicion, categoria) {
         console.error('Error:', error);
         Toast.error('Error al asignar posición');
     });
+}
+
+function actualizarBadgesPosicion(parejaId, posicion, grupoId) {
+    // Encontrar el elemento de la pareja
+    const parejaElement = document.querySelector(`[data-pareja-id="${parejaId}"][data-grupo-id="${grupoId}"]`);
+    
+    if (!parejaElement) return;
+    
+    // Actualizar el data-posicion
+    parejaElement.dataset.posicion = posicion;
+    
+    // Remover clases de posición de todos los badges de esta pareja
+    const badges = parejaElement.querySelectorAll('.posicion-badge');
+    badges.forEach(badge => {
+        badge.classList.remove('posicion-primero', 'posicion-segundo', 'posicion-tercero');
+    });
+    
+    // Agregar clase solo al badge correspondiente
+    const badgeIndex = posicion - 1; // 0, 1, 2
+    if (badges[badgeIndex]) {
+        if (posicion === 1) {
+            badges[badgeIndex].classList.add('posicion-primero');
+        } else if (posicion === 2) {
+            badges[badgeIndex].classList.add('posicion-segundo');
+        } else if (posicion === 3) {
+            badges[badgeIndex].classList.add('posicion-tercero');
+        }
+    }
 }
 
 function generarFinales(categoria) {
@@ -1018,7 +1097,7 @@ function renderizarPartido(partido, categoria) {
     const tieneGanador = partido.tiene_ganador;
     
     return `
-        <div class="partido-final ${tieneGanador ? 'tiene-ganador' : ''}">
+        <div class="partido-final ${tieneGanador ? 'tiene-ganador' : ''}" data-partido-id="${partido.id}">
             <div class="mb-3 text-center">
                 <span class="badge bg-secondary">${partido.fase}</span>
             </div>
@@ -1028,9 +1107,9 @@ function renderizarPartido(partido, categoria) {
                 <div class="flex-grow-1">
                     <strong>${p1 ? p1.nombre : 'Por definir'}</strong>
                 </div>
-                ${p1 && p2 && !tieneGanador ? `
+                ${p1 && p2 ? `
                     <button class="btn btn-sm btn-success btn-ganador ${ganadorId === p1.id ? 'activo' : ''}" 
-                            onclick="marcarGanador('${categoria}', '${partido.id}', ${p1.id})"
+                            onclick="confirmarGanador('${categoria}', '${partido.id}', ${p1.id}, '${p1.nombre}')"
                             title="Marcar como ganador">
                         <i class="bi bi-check-circle-fill"></i>
                     </button>
@@ -1047,9 +1126,9 @@ function renderizarPartido(partido, categoria) {
                 <div class="flex-grow-1">
                     <strong>${p2 ? p2.nombre : 'Por definir'}</strong>
                 </div>
-                ${p1 && p2 && !tieneGanador ? `
+                ${p1 && p2 ? `
                     <button class="btn btn-sm btn-success btn-ganador ${ganadorId === p2.id ? 'activo' : ''}" 
-                            onclick="marcarGanador('${categoria}', '${partido.id}', ${p2.id})"
+                            onclick="confirmarGanador('${categoria}', '${partido.id}', ${p2.id}, '${p2.nombre}')"
                             title="Marcar como ganador">
                         <i class="bi bi-check-circle-fill"></i>
                     </button>
@@ -1060,13 +1139,28 @@ function renderizarPartido(partido, categoria) {
     `;
 }
 
+function confirmarGanador(categoria, partidoId, ganadorId, nombreGanador) {
+    // Configurar el modal de confirmación
+    document.getElementById('mensajeConfirmacion').innerHTML = `<strong>"${nombreGanador}"</strong> ganó este partido`;
+    document.getElementById('detalleConfirmacion').textContent = 'Esta acción actualizará el fixture y avanzará al ganador a la siguiente ronda.';
+    
+    // Configurar el botón de confirmar
+    const btnConfirmar = document.getElementById('btnConfirmarGanador');
+    btnConfirmar.onclick = function() {
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarGanador'));
+        modal.hide();
+        
+        // Marcar ganador
+        marcarGanador(categoria, partidoId, ganadorId);
+    };
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarGanador'));
+    modal.show();
+}
+
 function marcarGanador(categoria, partidoId, ganadorId) {
-    if (!confirm('¿Confirmar este resultado?')) {
-        return;
-    }
-    
-    Toast.info('Registrando ganador...');
-    
     fetch('/api/marcar-ganador', {
         method: 'POST',
         headers: {
@@ -1082,8 +1176,8 @@ function marcarGanador(categoria, partidoId, ganadorId) {
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            // Recargar fixture
-            setTimeout(() => cargarFixture(categoria), 800);
+            // Recargar solo el fixture sin refrescar toda la página
+            cargarFixture(categoria);
         } else {
             Toast.error('Error: ' + data.error);
         }

@@ -129,6 +129,30 @@ class PartidoFinal:
             'esta_completo': self.pareja1 is not None and self.pareja2 is not None,
             'tiene_ganador': self.ganador is not None
         }
+    
+    @staticmethod
+    def from_dict(data: dict, grupos: List['Grupo']) -> 'PartidoFinal':
+        """Reconstruye un PartidoFinal desde un diccionario"""
+        # Crear un mapa de parejas por ID para búsqueda rápida
+        parejas_map = {}
+        for grupo in grupos:
+            for pareja in grupo.parejas:
+                parejas_map[pareja.id] = pareja
+        
+        def encontrar_pareja(pareja_dict):
+            if not pareja_dict:
+                return None
+            pareja_id = pareja_dict.get('id')
+            return parejas_map.get(pareja_id)
+        
+        return PartidoFinal(
+            id=data['id'],
+            fase=FaseFinal(data['fase']),
+            pareja1=encontrar_pareja(data.get('pareja1')),
+            pareja2=encontrar_pareja(data.get('pareja2')),
+            ganador=encontrar_pareja(data.get('ganador')),
+            numero_partido=data.get('numero_partido', 1)
+        )
 
 
 @dataclass
@@ -148,4 +172,25 @@ class FixtureFinales:
             'semifinales': [p.to_dict() for p in self.semifinales],
             'final': self.final.to_dict() if self.final else None
         }
+    
+    @staticmethod
+    def from_dict(data: dict, grupos: List['Grupo']) -> 'FixtureFinales':
+        """Reconstruye un FixtureFinales desde un diccionario"""
+        fixture = FixtureFinales(categoria=data['categoria'])
+        
+        # Reconstruir cada lista de partidos
+        fixture.octavos = [
+            PartidoFinal.from_dict(p, grupos) for p in data.get('octavos', [])
+        ]
+        fixture.cuartos = [
+            PartidoFinal.from_dict(p, grupos) for p in data.get('cuartos', [])
+        ]
+        fixture.semifinales = [
+            PartidoFinal.from_dict(p, grupos) for p in data.get('semifinales', [])
+        ]
+        
+        if data.get('final'):
+            fixture.final = PartidoFinal.from_dict(data['final'], grupos)
+        
+        return fixture
 

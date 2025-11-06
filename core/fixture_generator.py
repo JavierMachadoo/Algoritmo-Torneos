@@ -292,19 +292,38 @@ class FixtureGenerator:
     @staticmethod
     def _propagar_a_semifinal(fixture: FixtureFinales, cuarto_id: str, ganador: Pareja):
         """Propaga el ganador de cuartos a la semifinal correspondiente"""
-        # Mapeo de cuartos a semifinales
-        if cuarto_id == "cuartos_1":
-            if len(fixture.semifinales) > 0 and fixture.semifinales[0].pareja2 is None:
-                fixture.semifinales[0].pareja2 = ganador
-        elif cuarto_id == "cuartos_2":
-            if len(fixture.semifinales) > 1 and fixture.semifinales[1].pareja2 is None:
-                fixture.semifinales[1].pareja2 = ganador
-        elif cuarto_id == "cuartos_3":
-            if len(fixture.semifinales) > 1 and fixture.semifinales[1].pareja1 is None:
-                fixture.semifinales[1].pareja1 = ganador
-        elif cuarto_id == "cuartos_4":
-            if len(fixture.semifinales) > 1 and fixture.semifinales[1].pareja2 is None:
-                fixture.semifinales[1].pareja2 = ganador
+        # La lógica depende de cuántos cuartos hay (2 para 3 grupos, 4 para 4 grupos)
+        num_cuartos = len(fixture.cuartos)
+        
+        if num_cuartos == 2:
+            # Caso de 3 grupos: primeros van directo a semi en pareja1, ganadores de cuartos en pareja2
+            if cuarto_id == "cuartos_1":
+                # Ganador va a semi_1 pareja2
+                if len(fixture.semifinales) > 0:
+                    fixture.semifinales[0].pareja2 = ganador
+            elif cuarto_id == "cuartos_2":
+                # Ganador va a semi_2 pareja2
+                if len(fixture.semifinales) > 1:
+                    fixture.semifinales[1].pareja2 = ganador
+        
+        elif num_cuartos == 4:
+            # Caso de 4 grupos: todos vienen de cuartos
+            if cuarto_id == "cuartos_1":
+                # Ganador va a semi_1 pareja1
+                if len(fixture.semifinales) > 0:
+                    fixture.semifinales[0].pareja1 = ganador
+            elif cuarto_id == "cuartos_2":
+                # Ganador va a semi_1 pareja2
+                if len(fixture.semifinales) > 0:
+                    fixture.semifinales[0].pareja2 = ganador
+            elif cuarto_id == "cuartos_3":
+                # Ganador va a semi_2 pareja1
+                if len(fixture.semifinales) > 1:
+                    fixture.semifinales[1].pareja1 = ganador
+            elif cuarto_id == "cuartos_4":
+                # Ganador va a semi_2 pareja2
+                if len(fixture.semifinales) > 1:
+                    fixture.semifinales[1].pareja2 = ganador
     
     @staticmethod
     def _propagar_a_final(fixture: FixtureFinales, semi_id: str, ganador: Pareja):

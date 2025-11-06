@@ -365,7 +365,7 @@ def asignar_posicion():
         
         return jsonify({
             'success': True,
-            'mensaje': f'Posición {posicion}° asignada correctamente',
+            'mensaje': f'✓ Posición {posicion}°',
             'puede_generar_finales': puede_generar
         })
     
@@ -506,11 +506,11 @@ def marcar_ganador():
             
             grupos_obj.append(grupo)
         
-        # Generar fixture con los datos actuales
-        generator = FixtureGenerator(grupos_obj)
-        fixture = generator.generar_fixture()
+        # CRUCIAL: Reconstruir el fixture DESDE LOS DATOS GUARDADOS, no generar uno nuevo
+        # Esto preserva todos los ganadores anteriores
+        fixture = FixtureFinales.from_dict(fixture_data, grupos_obj)
         
-        # Actualizar con el ganador
+        # Actualizar con el ganador NUEVO
         fixture = FixtureGenerator.actualizar_fixture_con_ganador(
             fixture,
             partido_id,
@@ -524,7 +524,7 @@ def marcar_ganador():
         
         return jsonify({
             'success': True,
-            'mensaje': 'Ganador registrado exitosamente',
+            'mensaje': '✓ Ganador confirmado',
             'fixture': fixture.to_dict()
         })
     
