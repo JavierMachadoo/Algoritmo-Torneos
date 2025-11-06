@@ -298,6 +298,11 @@
                 📅 Calendario General
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="finales-tab" data-bs-toggle="tab" data-bs-target="#finales-domingo" type="button" onclick="cargarCalendarioFinales()">
+                🏆 Finales (Domingo)
+            </button>
+        </li>
     </ul>
 
     <!-- Contenido de Tabs -->
@@ -464,6 +469,30 @@
                         </div>
                     </div>
                     
+                </div>
+            </div>
+        </div>
+
+        <!-- Finales Domingo -->
+        <div class="tab-pane fade" id="finales-domingo" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">
+                            <i class="bi bi-trophy-fill"></i> Calendario de Finales - Domingo
+                        </h4>
+                        <small>Horarios fijos predefinidos para todas las fases finales</small>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div id="calendario-finales-container">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando calendario de finales...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1178,6 +1207,10 @@ function marcarGanador(categoria, partidoId, ganadorId) {
             Toast.success(data.mensaje);
             // Recargar solo el fixture sin refrescar toda la página
             cargarFixture(categoria);
+            // Si estamos en el tab de finales, recargar el calendario también
+            if (document.getElementById('finales-tab').classList.contains('active')) {
+                cargarCalendarioFinales();
+            }
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1186,6 +1219,191 @@ function marcarGanador(categoria, partidoId, ganadorId) {
         console.error('Error:', error);
         Toast.error('Error al marcar ganador');
     });
+}
+
+// ==================== CALENDARIO DE FINALES ====================
+
+function cargarCalendarioFinales() {
+    const container = document.getElementById('calendario-finales-container');
+    
+    // Mostrar loading
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando calendario de finales...</p>
+        </div>
+    `;
+    
+    fetch('/api/calendario-finales')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderizarCalendarioFinales(data.calendario, data.tiene_datos);
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle"></i> Error al cargar calendario de finales
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> Error al cargar calendario de finales
+                </div>
+            `;
+        });
+}
+
+function renderizarCalendarioFinales(calendario, tieneDatos) {
+    const container = document.getElementById('calendario-finales-container');
+    
+    if (!tieneDatos) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> Calendario de finales no disponible</h5>
+                <p>Debes generar los fixtures de finales primero en cada categoría.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Colores por categoría
+    const coloresFondo = {
+        'Cuarta': '#d4edda',
+        'Quinta': '#fff3cd',
+        'Sexta': '#d1ecf1',
+        'Séptima': '#e7e3ff'
+    };
+    
+    const coloresBorde = {
+        'Cuarta': '#28a745',
+        'Quinta': '#ffc107',
+        'Sexta': '#17a2b8',
+        'Séptima': '#9b7fed'
+    };
+    
+    const emojis = {
+        'Cuarta': '🟢',
+        'Quinta': '🟡',
+        'Sexta': '🔵',
+        'Séptima': '🟣'
+    };
+    
+    let html = `
+        <h3 class="fw-bold text-warning mb-3">📆 DOMINGO</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th width="10%" class="text-center">HORA</th>
+                        <th width="45%">🏟️ CANCHA 1</th>
+                        <th width="45%">🏟️ CANCHA 2</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    const horarios = Object.keys(calendario).sort();
+    
+    for (const hora of horarios) {
+        const canchas = calendario[hora];
+        
+        html += `<tr>`;
+        html += `<td class="fw-bold text-center align-middle bg-light">${hora}</td>`;
+        
+        // Cancha 1
+        html += `<td class="p-2">`;
+        if (canchas[1]) {
+            const partido = canchas[1];
+            const colorFondo = coloresFondo[partido.categoria] || '#f8f9fa';
+            const colorBorde = coloresBorde[partido.categoria] || '#dee2e6';
+            const emoji = emojis[partido.categoria] || '⚪';
+            
+            html += `
+                <div class="p-2 rounded" style="background-color: ${colorFondo}; border-left: 4px solid ${colorBorde};">
+                    <div class="mb-2">
+                        <span class="badge" style="background-color: ${colorBorde};">
+                            ${emoji} ${partido.categoria} - ${partido.fase} ${partido.numero_partido}
+                        </span>
+                    </div>
+                    <div class="row align-items-center g-0">
+                        <div class="col-5 text-end pe-2">
+                            <strong>${partido.pareja1}</strong>
+                        </div>
+                        <div class="col-2 text-center">
+                            <strong class="text-muted">VS</strong>
+                        </div>
+                        <div class="col-5 text-start ps-2">
+                            <strong>${partido.pareja2}</strong>
+                        </div>
+                    </div>
+                    ${partido.tiene_ganador ? `
+                        <div class="mt-2 text-center">
+                            <i class="bi bi-trophy-fill text-warning"></i>
+                            <small class="text-success fw-bold">Ganador: ${partido.ganador}</small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            html += `<span class="text-muted">Libre</span>`;
+        }
+        html += `</td>`;
+        
+        // Cancha 2
+        html += `<td class="p-2">`;
+        if (canchas[2]) {
+            const partido = canchas[2];
+            const colorFondo = coloresFondo[partido.categoria] || '#f8f9fa';
+            const colorBorde = coloresBorde[partido.categoria] || '#dee2e6';
+            const emoji = emojis[partido.categoria] || '⚪';
+            
+            html += `
+                <div class="p-2 rounded" style="background-color: ${colorFondo}; border-left: 4px solid ${colorBorde};">
+                    <div class="mb-2">
+                        <span class="badge" style="background-color: ${colorBorde};">
+                            ${emoji} ${partido.categoria} - ${partido.fase} ${partido.numero_partido}
+                        </span>
+                    </div>
+                    <div class="row align-items-center g-0">
+                        <div class="col-5 text-end pe-2">
+                            <strong>${partido.pareja1}</strong>
+                        </div>
+                        <div class="col-2 text-center">
+                            <strong class="text-muted">VS</strong>
+                        </div>
+                        <div class="col-5 text-start ps-2">
+                            <strong>${partido.pareja2}</strong>
+                        </div>
+                    </div>
+                    ${partido.tiene_ganador ? `
+                        <div class="mt-2 text-center">
+                            <i class="bi bi-trophy-fill text-warning"></i>
+                            <small class="text-success fw-bold">Ganador: ${partido.ganador}</small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            html += `<span class="text-muted">Libre</span>`;
+        }
+        html += `</td>`;
+        
+        html += `</tr>`;
+    }
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
 }
 
 </script>

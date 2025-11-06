@@ -7,6 +7,7 @@ from core import (
     PosicionGrupo, FixtureGenerator, FixtureFinales
 )
 from utils import CSVProcessor, CalendarioBuilder
+from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
@@ -532,6 +533,38 @@ def marcar_ganador():
         import traceback
         return jsonify({
             'error': f'Error al marcar ganador: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+@api_bp.route('/calendario-finales', methods=['GET'])
+def obtener_calendario_finales():
+    """Obtiene el calendario de finales del domingo con los partidos asignados."""
+    try:
+        fixtures = session.get('fixtures', {})
+        
+        if not fixtures:
+            # Si no hay fixtures, devolver calendario vacío con estructura
+            calendario_base = CalendarioFinalesBuilder.generar_calendario_base()
+            return jsonify({
+                'success': True,
+                'calendario': calendario_base,
+                'tiene_datos': False
+            })
+        
+        # Poblar calendario con los fixtures actuales
+        calendario = CalendarioFinalesBuilder.poblar_calendario_con_fixtures(fixtures)
+        
+        return jsonify({
+            'success': True,
+            'calendario': calendario,
+            'tiene_datos': True
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al generar calendario de finales: {str(e)}',
             'traceback': traceback.format_exc()
         }), 500
 
