@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify, session
 import pandas as pd
 import os
 
-from core import Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo
+from core import (
+    Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
+    PosicionGrupo, FixtureGenerator, FixtureFinales
+)
 from utils import CSVProcessor, CalendarioBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
@@ -317,3 +320,226 @@ def deserializar_resultado(resultado_data):
     )
     
     return resultado
+
+
+@api_bp.route('/asignar-posicion', methods=['POST'])
+def asignar_posicion():
+    """Asigna la posición final de una pareja en su grupo."""
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    posicion = data.get('posicion')  # 1, 2, o 3
+    categoria = data.get('categoria')
+    
+    if not all([pareja_id, posicion, categoria]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    try:
+        resultado_data = session.get('resultado_algoritmo')
+        if not resultado_data:
+            return jsonify({'error': 'No hay resultados cargados'}), 400
+        
+        # Buscar la pareja en los grupos de la categoría
+        grupos_categoria = resultado_data['grupos_por_categoria'].get(categoria, [])
+        pareja_encontrada = False
+        grupo_id = None
+        
+        for grupo in grupos_categoria:
+            for pareja in grupo['parejas']:
+                if pareja['id'] == pareja_id:
+                    pareja['posicion_grupo'] = posicion
+                    pareja_encontrada = True
+                    grupo_id = grupo['id']
+                    break
+            if pareja_encontrada:
+                break
+        
+        if not pareja_encontrada:
+            return jsonify({'error': 'Pareja no encontrada'}), 404
+        
+        # Guardar cambios en sesión
+        session['resultado_algoritmo'] = resultado_data
+        session.modified = True
+        
+        # Verificar si ya se pueden generar las finales
+        puede_generar = verificar_posiciones_completas(grupos_categoria)
+        
+        return jsonify({
+            'success': True,
+            'mensaje': f'Posición {posicion}° asignada correctamente',
+            'puede_generar_finales': puede_generar
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al asignar posición: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+@api_bp.route('/generar-fixture/<categoria>', methods=['POST'])
+def generar_fixture(categoria):
+    """Genera el fixture de finales para una categoría."""
+    try:
+        resultado_data = session.get('resultado_algoritmo')
+        if not resultado_data:
+            return jsonify({'error': 'No hay resultados cargados'}), 400
+        
+        # Reconstruir grupos con posiciones
+        grupos_data = resultado_data['grupos_por_categoria'].get(categoria, [])
+        if not grupos_data:
+            return jsonify({'error': f'No hay grupos en categoría {categoria}'}), 404
+        
+        # Reconstruir objetos Grupo
+        grupos_obj = []
+        for grupo_dict in grupos_data:
+            grupo = Grupo(
+                id=grupo_dict['id'],
+                categoria=categoria,
+                franja_horaria=grupo_dict.get('franja_horaria'),
+                score_compatibilidad=grupo_dict.get('score', 0.0)
+            )
+            
+            # Reconstruir parejas con posiciones
+            for pareja_dict in grupo_dict['parejas']:
+                pareja = Pareja(
+                    id=pareja_dict['id'],
+                    nombre=pareja_dict['nombre'],
+                    telefono=pareja_dict.get('telefono', 'Sin teléfono'),
+                    categoria=pareja_dict['categoria'],
+                    franjas_disponibles=pareja_dict.get('franjas_disponibles', []),
+                    grupo_asignado=grupo_dict['id'],
+                    posicion_grupo=PosicionGrupo(pareja_dict['posicion_grupo']) if pareja_dict.get('posicion_grupo') else None
+                )
+                grupo.parejas.append(pareja)
+            
+            grupos_obj.append(grupo)
+        
+        # Generar fixture
+        generator = FixtureGenerator(grupos_obj)
+        fixture = generator.generar_fixture()
+        
+        # Guardar fixture en sesión
+        if 'fixtures' not in session:
+            session['fixtures'] = {}
+        session['fixtures'][categoria] = fixture.to_dict()
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'mensaje': 'Fixture generado exitosamente',
+            'fixture': fixture.to_dict()
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al generar fixture: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+@api_bp.route('/obtener-fixture/<categoria>', methods=['GET'])
+def obtener_fixture(categoria):
+    """Obtiene el fixture de finales para una categoría."""
+    try:
+        fixtures = session.get('fixtures', {})
+        fixture = fixtures.get(categoria)
+        
+        if not fixture:
+            return jsonify({'fixture': None})
+        
+        return jsonify({
+            'success': True,
+            'fixture': fixture
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'error': f'Error al obtener fixture: {str(e)}'
+        }), 500
+
+
+@api_bp.route('/marcar-ganador', methods=['POST'])
+def marcar_ganador():
+    """Marca el ganador de un partido de finales."""
+    data = request.json
+    categoria = data.get('categoria')
+    partido_id = data.get('partido_id')
+    ganador_id = data.get('ganador_id')
+    
+    if not all([categoria, partido_id, ganador_id]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    try:
+        fixtures = session.get('fixtures', {})
+        if categoria not in fixtures:
+            return jsonify({'error': 'Fixture no encontrado'}), 404
+        
+        fixture_data = fixtures[categoria]
+        
+        # Reconstruir objetos para usar el método de actualización
+        resultado_data = session.get('resultado_algoritmo')
+        grupos_data = resultado_data['grupos_por_categoria'].get(categoria, [])
+        
+        # Reconstruir grupos
+        grupos_obj = []
+        for grupo_dict in grupos_data:
+            grupo = Grupo(
+                id=grupo_dict['id'],
+                categoria=categoria,
+                franja_horaria=grupo_dict.get('franja_horaria'),
+                score_compatibilidad=grupo_dict.get('score', 0.0)
+            )
+            
+            for pareja_dict in grupo_dict['parejas']:
+                pareja = Pareja(
+                    id=pareja_dict['id'],
+                    nombre=pareja_dict['nombre'],
+                    telefono=pareja_dict.get('telefono', 'Sin teléfono'),
+                    categoria=pareja_dict['categoria'],
+                    franjas_disponibles=pareja_dict.get('franjas_disponibles', []),
+                    grupo_asignado=grupo_dict['id'],
+                    posicion_grupo=PosicionGrupo(pareja_dict['posicion_grupo']) if pareja_dict.get('posicion_grupo') else None
+                )
+                grupo.parejas.append(pareja)
+            
+            grupos_obj.append(grupo)
+        
+        # Generar fixture con los datos actuales
+        generator = FixtureGenerator(grupos_obj)
+        fixture = generator.generar_fixture()
+        
+        # Actualizar con el ganador
+        fixture = FixtureGenerator.actualizar_fixture_con_ganador(
+            fixture,
+            partido_id,
+            ganador_id
+        )
+        
+        # Guardar en sesión
+        fixtures[categoria] = fixture.to_dict()
+        session['fixtures'] = fixtures
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'mensaje': 'Ganador registrado exitosamente',
+            'fixture': fixture.to_dict()
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al marcar ganador: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+def verificar_posiciones_completas(grupos: list) -> bool:
+    """Verifica si todas las parejas tienen posiciones asignadas."""
+    for grupo in grupos:
+        for pareja in grupo['parejas']:
+            if not pareja.get('posicion_grupo'):
+                return False
+    return True

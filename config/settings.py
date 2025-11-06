@@ -14,15 +14,16 @@ UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'csv', 'xlsx'}
 
+# Franjas horarias exactas del formulario de Google Forms
 FRANJAS_HORARIAS = [
-    "Jueves 18:00",
-    "Jueves 20:00",
-    "Viernes 18:00",
-    "Viernes 21:00",
-    "Sábado 09:00",
-    "Sábado 12:00",
-    "Sábado 16:00",
-    "Sábado 19:00"
+    "Jueves 18:00",      # Jueves 18:00 a 21:00
+    "Jueves 20:00",      # Jueves 20:00 a 23:00
+    "Viernes 18:00",     # Viernes 18:00 a 21:00
+    "Viernes 21:00",     # Viernes 21:00 a 00:00
+    "Sábado 09:00",      # Sábado 9:00 a 12:00
+    "Sábado 12:00",      # Sábado 12:00 a 15:00
+    "Sábado 16:00",      # Sábado 16:00 a 19:00
+    "Sábado 19:00"       # Sábado 19:00 a 22:00
 ]
 
 CATEGORIAS = ["Cuarta", "Quinta", "Sexta", "Séptima"]
@@ -44,6 +45,7 @@ EMOJI_CATEGORIA = {
 NUM_CANCHAS_DEFAULT = 2
 DURACION_PARTIDO_DEFAULT = 1
 
+# Horarios por día según las franjas del formulario
 HORARIOS_POR_DIA = {
     'Jueves': ['18:00', '19:00', '20:00', '21:00', '22:00'],
     'Viernes': ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],

@@ -1,5 +1,21 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
+from enum import Enum
+
+
+class PosicionGrupo(Enum):
+    """Posiciones finales en el grupo"""
+    PRIMERO = 1
+    SEGUNDO = 2
+    TERCERO = 3
+
+
+class FaseFinal(Enum):
+    """Fases de las finales"""
+    OCTAVOS = "Octavos de Final"
+    CUARTOS = "Cuartos de Final"
+    SEMIFINAL = "Semifinal"
+    FINAL = "Final"
 
 
 @dataclass
@@ -10,6 +26,7 @@ class Pareja:
     categoria: str
     franjas_disponibles: List[str]
     grupo_asignado: Optional[int] = None
+    posicion_grupo: Optional[PosicionGrupo] = None  # Nueva: posición final en el grupo
     
     def __hash__(self):
         return hash(self.id)
@@ -26,17 +43,21 @@ class Pareja:
             'telefono': self.telefono,
             'categoria': self.categoria,
             'franjas_disponibles': self.franjas_disponibles,
-            'grupo_asignado': self.grupo_asignado
+            'grupo_asignado': self.grupo_asignado,
+            'posicion_grupo': self.posicion_grupo.value if self.posicion_grupo else None
         }
     
     @classmethod
     def from_dict(cls, data: dict):
+        posicion = data.get('posicion_grupo')
         return cls(
             id=data['id'],
             nombre=data['nombre'],
             telefono=data.get('telefono', 'Sin teléfono'),
             categoria=data['categoria'],
-            franjas_disponibles=data.get('franjas_disponibles', [])
+            franjas_disponibles=data.get('franjas_disponibles', []),
+            grupo_asignado=data.get('grupo_asignado'),
+            posicion_grupo=PosicionGrupo(posicion) if posicion else None
         )
 
 
@@ -85,3 +106,46 @@ class ResultadoAlgoritmo:
     parejas_sin_asignar: List[Pareja]
     calendario: dict
     estadisticas: dict
+
+
+@dataclass
+class PartidoFinal:
+    """Representa un partido en la fase final"""
+    id: str  # Ej: "cuartos_1", "semi_1", "final"
+    fase: FaseFinal
+    pareja1: Optional[Pareja] = None
+    pareja2: Optional[Pareja] = None
+    ganador: Optional[Pareja] = None
+    numero_partido: int = 1  # Número del partido dentro de la fase
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'fase': self.fase.value,
+            'pareja1': self.pareja1.to_dict() if self.pareja1 else None,
+            'pareja2': self.pareja2.to_dict() if self.pareja2 else None,
+            'ganador': self.ganador.to_dict() if self.ganador else None,
+            'numero_partido': self.numero_partido,
+            'esta_completo': self.pareja1 is not None and self.pareja2 is not None,
+            'tiene_ganador': self.ganador is not None
+        }
+
+
+@dataclass
+class FixtureFinales:
+    """Fixture completo de finales para una categoría"""
+    categoria: str
+    octavos: List[PartidoFinal] = field(default_factory=list)
+    cuartos: List[PartidoFinal] = field(default_factory=list)
+    semifinales: List[PartidoFinal] = field(default_factory=list)
+    final: Optional[PartidoFinal] = None
+    
+    def to_dict(self):
+        return {
+            'categoria': self.categoria,
+            'octavos': [p.to_dict() for p in self.octavos],
+            'cuartos': [p.to_dict() for p in self.cuartos],
+            'semifinales': [p.to_dict() for p in self.semifinales],
+            'final': self.final.to_dict() if self.final else None
+        }
+

@@ -59,6 +59,71 @@
     .grupo-card {
         transition: all 0.2s;
     }
+    .posicion-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .posicion-badge:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .posicion-primero {
+        background: gold;
+        color: #000;
+    }
+    .posicion-segundo {
+        background: silver;
+        color: #000;
+    }
+    .posicion-tercero {
+        background: #cd7f32;
+        color: #fff;
+    }
+    .partido-final {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    .partido-final:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .partido-final.tiene-ganador {
+        background: #f8f9fa;
+        border-color: #28a745;
+    }
+    .btn-ganador {
+        opacity: 0.3;
+        transition: all 0.2s;
+    }
+    .btn-ganador:hover {
+        opacity: 1;
+    }
+    .btn-ganador.activo {
+        opacity: 1;
+        background: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    .fixture-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: space-around;
+    }
+    .fase-column {
+        flex: 1;
+        min-width: 250px;
+    }
 </style>
 {% endblock %}
 
@@ -380,111 +445,170 @@
 <!-- Macro para mostrar grupos de una categoría -->
 {% macro mostrar_grupos_categoria(categoria, grupos, border_color, bg_color) %}
     {% if grupos %}
-        <h4 class="mb-4">Grupos de {{ categoria }}</h4>
-        
-        <!-- Grid de 4 columnas para Grupos A, B, C, D -->
-        <div class="row g-3">
-            {% for grupo in grupos %}
-            <div class="col-md-3">
-                <div class="card h-100 shadow-sm grupo-card" 
-                     style="border-top: 4px solid {{ border_color }};"
-                     data-grupo-id="{{ grupo.id }}"
-                     data-categoria="{{ categoria }}"
-                     ondrop="dropPareja(event)" 
-                     ondragover="allowDrop(event)"
-                     ondragleave="removeDragOver(event)">
-                    <div class="card-header text-white text-center" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
-                        <h5 class="mb-0 fw-bold">
-                            {% if loop.index == 1 %}GRUPO A
-                            {% elif loop.index == 2 %}GRUPO B
-                            {% elif loop.index == 3 %}GRUPO C
-                            {% elif loop.index == 4 %}GRUPO D
-                            {% else %}GRUPO {{ loop.index }}
-                            {% endif %}
-                        </h5>
-                    </div>
-                    
-                    <div class="card-body" style="background-color: {{ bg_color }};">
-                        <!-- Info de Franja y Cancha -->
-                        <div class="alert alert-light alert-permanent border mb-3 py-2">
-                            <small class="d-block">
-                                <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
-                            </small>
-                            <small class="d-block">
-                                <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
-                            </small>
-                        </div>
+        <!-- Sub-tabs: SERIE y FINALES -->
+        <ul class="nav nav-pills mb-3" id="sub-tabs-{{ categoria }}" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="serie-{{ categoria }}-tab" data-bs-toggle="pill" 
+                        data-bs-target="#serie-{{ categoria }}" type="button" role="tab">
+                    📋 SERIE (Grupos)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="finales-{{ categoria }}-tab" data-bs-toggle="pill" 
+                        data-bs-target="#finales-{{ categoria }}" type="button" role="tab"
+                        onclick="cargarFixture('{{ categoria }}')">
+                    🏆 FINALES
+                </button>
+            </li>
+        </ul>
 
-                        <!-- Parejas del Grupo -->
-                        <h6 class="fw-bold mb-2">👥 Parejas:</h6>
-                        {% for pareja in grupo.parejas %}
-                        {% set franja_compatible = grupo.franja_horaria in pareja.franjas_disponibles if grupo.franja_horaria and pareja.franjas_disponibles else true %}
-                        <div class="pareja-item mb-2 p-2 bg-white rounded border {{ 'border-danger border-2' if not franja_compatible else '' }}" 
-                             draggable="true"
-                             data-pareja-id="{{ pareja.id }}"
-                             data-pareja-nombre="{{ pareja.nombre }}"
-                             data-grupo-origen="{{ grupo.id }}"
-                             ondragstart="dragStart(event)"
-                             {% if not franja_compatible %}title="⚠️ Esta pareja no eligió esta franja horaria"{% endif %}>
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold text-truncate {{ 'text-danger' if not franja_compatible else '' }}" title="{{ pareja.nombre }}">
-                                        {{ loop.index }}. {{ pareja.nombre }}
-                                        {% if not franja_compatible %}<i class="bi bi-exclamation-triangle-fill text-danger ms-1"></i>{% endif %}
-                                    </div>
-                                    <small class="text-muted d-block mt-1">
-                                        <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
+        <!-- Contenido de sub-tabs -->
+        <div class="tab-content">
+            <!-- TAB SERIE: Grupos actuales -->
+            <div class="tab-pane fade show active" id="serie-{{ categoria }}" role="tabpanel">
+                <h4 class="mb-4">Grupos de {{ categoria }}</h4>
+                
+                <!-- Grid de 4 columnas para Grupos A, B, C, D -->
+                <div class="row g-3">
+                    {% for grupo in grupos %}
+                    <div class="col-md-3">
+                        <div class="card h-100 shadow-sm grupo-card" 
+                             style="border-top: 4px solid {{ border_color }};"
+                             data-grupo-id="{{ grupo.id }}"
+                             data-categoria="{{ categoria }}"
+                             ondrop="dropPareja(event)" 
+                             ondragover="allowDrop(event)"
+                             ondragleave="removeDragOver(event)">
+                            <div class="card-header text-white text-center" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                                <h5 class="mb-0 fw-bold">
+                                    {% if loop.index == 1 %}GRUPO A
+                                    {% elif loop.index == 2 %}GRUPO B
+                                    {% elif loop.index == 3 %}GRUPO C
+                                    {% elif loop.index == 4 %}GRUPO D
+                                    {% else %}GRUPO {{ loop.index }}
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            
+                            <div class="card-body" style="background-color: {{ bg_color }};">
+                                <!-- Info de Franja y Cancha -->
+                                <div class="alert alert-light alert-permanent border mb-3 py-2">
+                                    <small class="d-block">
+                                        <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
+                                    </small>
+                                    <small class="d-block">
+                                        <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
                                     </small>
                                 </div>
-                                <div class="ms-2 text-end">
-                                    <small class="text-muted d-block">
-                                        <i class="bi bi-telephone"></i> {{ pareja.telefono }}
-                                    </small>
+
+                                <!-- Parejas del Grupo con selector de posición -->
+                                <h6 class="fw-bold mb-2">👥 Parejas:</h6>
+                                {% for pareja in grupo.parejas %}
+                                {% set franja_compatible = grupo.franja_horaria in pareja.franjas_disponibles if grupo.franja_horaria and pareja.franjas_disponibles else true %}
+                                <div class="pareja-item mb-2 p-2 bg-white rounded border {{ 'border-danger border-2' if not franja_compatible else '' }}" 
+                                     draggable="true"
+                                     data-pareja-id="{{ pareja.id }}"
+                                     data-pareja-nombre="{{ pareja.nombre }}"
+                                     data-grupo-origen="{{ grupo.id }}"
+                                     ondragstart="dragStart(event)"
+                                     {% if not franja_compatible %}title="⚠️ Esta pareja no eligió esta franja horaria"{% endif %}>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold text-truncate {{ 'text-danger' if not franja_compatible else '' }}" title="{{ pareja.nombre }}">
+                                                {{ loop.index }}. {{ pareja.nombre }}
+                                                {% if not franja_compatible %}<i class="bi bi-exclamation-triangle-fill text-danger ms-1"></i>{% endif %}
+                                            </div>
+                                            <small class="text-muted d-block mt-1">
+                                                <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
+                                            </small>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-telephone"></i> {{ pareja.telefono }}
+                                            </small>
+                                        </div>
+                                        <div class="ms-2 d-flex gap-1">
+                                            <!-- Botones para asignar posición -->
+                                            <span class="posicion-badge {{ 'posicion-primero' if pareja.posicion_grupo == 1 else '' }}" 
+                                                  onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}')"
+                                                  title="1° Puesto">
+                                                🥇
+                                            </span>
+                                            <span class="posicion-badge {{ 'posicion-segundo' if pareja.posicion_grupo == 2 else '' }}"
+                                                  onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}')"
+                                                  title="2° Puesto">
+                                                🥈
+                                            </span>
+                                            <span class="posicion-badge {{ 'posicion-tercero' if pareja.posicion_grupo == 3 else '' }}"
+                                                  onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}')"
+                                                  title="3° Puesto">
+                                                🥉
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="card-footer text-center" style="background-color: {{ bg_color }};">
+                                {% if grupo.score >= 3.0 %}
+                                    <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                                {% elif grupo.score >= 2.0 %}
+                                    <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                                {% else %}
+                                    <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Botón para generar finales -->
+                <div class="mt-4 text-center">
+                    <button class="btn btn-primary btn-lg" onclick="generarFinales('{{ categoria }}')">
+                        <i class="bi bi-trophy"></i> Generar Finales
+                    </button>
+                    <p class="text-muted mt-2">Asigna las posiciones de todas las parejas antes de generar las finales</p>
+                </div>
+                
+                <!-- Listado de Partidos debajo de las cards -->
+                <div class="mt-4">
+                    <h5 class="fw-bold mb-3">🏆 Partidos de la Fase de Grupos</h5>
+                    <div class="row">
+                        {% for grupo in grupos %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-start" style="border-left: 4px solid {{ border_color }} !important;">
+                                <div class="card-body py-2">
+                                    <h6 class="fw-bold mb-2">
+                                        {% if loop.index == 1 %}Grupo A
+                                        {% elif loop.index == 2 %}Grupo B
+                                        {% elif loop.index == 3 %}Grupo C
+                                        {% elif loop.index == 4 %}Grupo D
+                                        {% else %}Grupo {{ loop.index }}
+                                        {% endif %}
+                                    </h6>
+                                    <ul class="list-unstyled mb-0 small">
+                                        {% for partido in grupo.partidos %}
+                                        <li class="mb-1">• <strong>{{ partido.pareja1 }}</strong> vs <strong>{{ partido.pareja2 }}</strong></li>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    
-                    <div class="card-footer text-center" style="background-color: {{ bg_color }};">
-                        {% if grupo.score >= 3.0 %}
-                            <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
-                        {% elif grupo.score >= 2.0 %}
-                            <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
-                        {% else %}
-                            <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Listado de Partidos debajo de las cards -->
-        <div class="mt-4">
-            <h5 class="fw-bold mb-3">🏆 Partidos de la Categoría {{ categoria }}</h5>
-            <div class="row">
-                {% for grupo in grupos %}
-                <div class="col-md-6 mb-3">
-                    <div class="card border-start" style="border-left: 4px solid {{ border_color }} !important;">
-                        <div class="card-body py-2">
-                            <h6 class="fw-bold mb-2">
-                                {% if loop.index == 1 %}Grupo A
-                                {% elif loop.index == 2 %}Grupo B
-                                {% elif loop.index == 3 %}Grupo C
-                                {% elif loop.index == 4 %}Grupo D
-                                {% else %}Grupo {{ loop.index }}
-                                {% endif %}
-                            </h6>
-                            <ul class="list-unstyled mb-0 small">
-                                {% for partido in grupo.partidos %}
-                                <li class="mb-1">• <strong>{{ partido.pareja1 }}</strong> vs <strong>{{ partido.pareja2 }}</strong></li>
-                                {% endfor %}
-                            </ul>
+
+            <!-- TAB FINALES: Fixture de finales -->
+            <div class="tab-pane fade" id="finales-{{ categoria }}" role="tabpanel">
+                <div id="fixture-container-{{ categoria }}">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
                         </div>
+                        <p class="mt-3 text-muted">Cargando fixture de finales...</p>
                     </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
     {% else %}
@@ -740,6 +864,236 @@ function agregarParejaDesdeModal() {
         Toast.error('Error al agregar pareja');
     });
 }
+
+// ==================== FUNCIONES PARA FINALES ====================
+
+function asignarPosicion(parejaId, posicion, categoria) {
+    Toast.info(`Asignando posición ${posicion}°...`);
+    
+    fetch('/api/asignar-posicion', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            pareja_id: parejaId,
+            posicion: posicion,
+            categoria: categoria
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al asignar posición');
+    });
+}
+
+function generarFinales(categoria) {
+    Toast.info('Generando fixture de finales...');
+    
+    fetch(`/api/generar-fixture/${categoria}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            // Cambiar a la tab de finales
+            document.getElementById(`finales-${categoria}-tab`).click();
+            cargarFixture(categoria);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al generar finales');
+    });
+}
+
+function cargarFixture(categoria) {
+    const container = document.getElementById(`fixture-container-${categoria}`);
+    
+    // Mostrar loading
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando fixture de finales...</p>
+        </div>
+    `;
+    
+    fetch(`/api/obtener-fixture/${categoria}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.fixture) {
+                renderizarFixture(categoria, data.fixture);
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Fixture no generado</h5>
+                        <p>Debes asignar las posiciones de todas las parejas y generar las finales primero.</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('serie-${categoria}-tab').click()">
+                            Volver a la Serie
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> Error al cargar fixture
+                </div>
+            `;
+        });
+}
+
+function renderizarFixture(categoria, fixture) {
+    const container = document.getElementById(`fixture-container-${categoria}`);
+    
+    let html = '<div class="fixture-container">';
+    
+    // CUARTOS DE FINAL
+    if (fixture.cuartos && fixture.cuartos.length > 0) {
+        html += `
+            <div class="fase-column">
+                <h4 class="text-center mb-4">⚔️ Cuartos de Final</h4>
+                ${fixture.cuartos.map(partido => renderizarPartido(partido, categoria)).join('')}
+            </div>
+        `;
+    }
+    
+    // SEMIFINALES
+    if (fixture.semifinales && fixture.semifinales.length > 0) {
+        html += `
+            <div class="fase-column">
+                <h4 class="text-center mb-4">🏅 Semifinales</h4>
+                ${fixture.semifinales.map(partido => renderizarPartido(partido, categoria)).join('')}
+            </div>
+        `;
+    }
+    
+    // FINAL
+    if (fixture.final) {
+        html += `
+            <div class="fase-column">
+                <h4 class="text-center mb-4">🏆 FINAL</h4>
+                ${renderizarPartido(fixture.final, categoria)}
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderizarPartido(partido, categoria) {
+    if (!partido.pareja1 && !partido.pareja2) {
+        return `
+            <div class="partido-final">
+                <div class="text-center text-muted">
+                    <i class="bi bi-hourglass-split"></i> Esperando resultados anteriores...
+                </div>
+            </div>
+        `;
+    }
+    
+    const p1 = partido.pareja1;
+    const p2 = partido.pareja2;
+    const ganadorId = partido.ganador ? partido.ganador.id : null;
+    const tieneGanador = partido.tiene_ganador;
+    
+    return `
+        <div class="partido-final ${tieneGanador ? 'tiene-ganador' : ''}">
+            <div class="mb-3 text-center">
+                <span class="badge bg-secondary">${partido.fase}</span>
+            </div>
+            
+            <!-- Pareja 1 -->
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded ${ganadorId === (p1 ? p1.id : null) ? 'bg-success text-white' : 'bg-light'}">
+                <div class="flex-grow-1">
+                    <strong>${p1 ? p1.nombre : 'Por definir'}</strong>
+                </div>
+                ${p1 && p2 && !tieneGanador ? `
+                    <button class="btn btn-sm btn-success btn-ganador ${ganadorId === p1.id ? 'activo' : ''}" 
+                            onclick="marcarGanador('${categoria}', '${partido.id}', ${p1.id})"
+                            title="Marcar como ganador">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                ` : ''}
+                ${ganadorId === (p1 ? p1.id : null) ? '<i class="bi bi-trophy-fill text-warning ms-2"></i>' : ''}
+            </div>
+            
+            <div class="text-center my-2">
+                <strong class="text-muted">VS</strong>
+            </div>
+            
+            <!-- Pareja 2 -->
+            <div class="d-flex justify-content-between align-items-center p-2 rounded ${ganadorId === (p2 ? p2.id : null) ? 'bg-success text-white' : 'bg-light'}">
+                <div class="flex-grow-1">
+                    <strong>${p2 ? p2.nombre : 'Por definir'}</strong>
+                </div>
+                ${p1 && p2 && !tieneGanador ? `
+                    <button class="btn btn-sm btn-success btn-ganador ${ganadorId === p2.id ? 'activo' : ''}" 
+                            onclick="marcarGanador('${categoria}', '${partido.id}', ${p2.id})"
+                            title="Marcar como ganador">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                ` : ''}
+                ${ganadorId === (p2 ? p2.id : null) ? '<i class="bi bi-trophy-fill text-warning ms-2"></i>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+function marcarGanador(categoria, partidoId, ganadorId) {
+    if (!confirm('¿Confirmar este resultado?')) {
+        return;
+    }
+    
+    Toast.info('Registrando ganador...');
+    
+    fetch('/api/marcar-ganador', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            categoria: categoria,
+            partido_id: partidoId,
+            ganador_id: ganadorId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            // Recargar fixture
+            setTimeout(() => cargarFixture(categoria), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al marcar ganador');
+    });
+}
+
 </script>
 {% endblock %}
 
