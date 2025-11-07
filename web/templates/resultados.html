@@ -750,12 +750,13 @@
                                 {% set compatible_exacto = franja_asignada in franjas_pareja if franja_asignada and franjas_pareja else true %}
                                 
                                 {# Verificar compatibilidad parcial (mismo día) #}
-                                {% set compatible_parcial = false %}
-                                {% if franja_asignada and not compatible_exacto %}
+                                {% set compatible_parcial = namespace(value=false) %}
+                                {% if franja_asignada and not compatible_exacto and franjas_pareja %}
                                     {% set dia_asignado = franja_asignada.split(' ')[0] %}
                                     {% for franja in franjas_pareja %}
-                                        {% if franja.startswith(dia_asignado) %}
-                                            {% set compatible_parcial = true %}
+                                        {% set dia_franja = franja.split(' ')[0] %}
+                                        {% if dia_franja == dia_asignado %}
+                                            {% set compatible_parcial.value = true %}
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
@@ -765,7 +766,7 @@
                                     {% set border_class = '' %}
                                     {% set text_class = '' %}
                                     {% set tooltip = '' %}
-                                {% elif compatible_parcial %}
+                                {% elif compatible_parcial.value %}
                                     {% set border_class = 'border-warning border-2' %}
                                     {% set text_class = 'text-warning' %}
                                     {% set tooltip = 'Esta pareja eligió este día pero en otro horario' %}
