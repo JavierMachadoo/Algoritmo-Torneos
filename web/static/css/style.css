@@ -119,22 +119,52 @@
 }
 
 /* Parejas dentro de las cards */
-.pareja-item {
+.pareja-item, .pareja-slot {
     transition: all 0.2s ease;
 }
 
-.pareja-item:hover {
+.pareja-item:hover, .pareja-slot:hover {
     transform: translateX(3px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.pareja-item .fw-bold {
+.pareja-item .fw-bold, .pareja-slot .fw-bold {
     font-size: 0.9rem;
     color: #212529;
 }
 
-.pareja-item small {
+.pareja-item small, .pareja-slot small {
     font-size: 0.75rem;
+}
+
+/* Slots vacíos */
+.pareja-slot-vacio {
+    background-color: #f8f9fa !important;
+    border: 2px dashed #dee2e6 !important;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pareja-slot-vacio:hover {
+    background-color: #e9ecef !important;
+    border-color: #adb5bd !important;
+}
+
+/* Drag and Drop effects */
+.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.drag-over-slot {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    border-color: #007bff !important;
+    border-width: 2px !important;
+    transform: scale(1.02);
+}
+
+.pareja-slot[draggable="true"] {
+    cursor: move;
 }
 
 /* Ajustes para Grid de 4 columnas */

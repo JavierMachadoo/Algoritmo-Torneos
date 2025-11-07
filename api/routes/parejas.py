@@ -105,11 +105,12 @@ def limpiar_datos():
 
 @api_bp.route('/intercambiar-pareja', methods=['POST'])
 def intercambiar_pareja():
-    """Intercambia una pareja entre dos grupos."""
+    """Intercambia parejas entre slots específicos de grupos."""
     data = request.json
     pareja_id = data.get('pareja_id')
-    grupo_origen = data.get('grupo_origen')
-    grupo_destino = data.get('grupo_destino')
+    grupo_origen_id = data.get('grupo_origen')
+    grupo_destino_id = data.get('grupo_destino')
+    slot_destino = data.get('slot_destino')  # 0, 1, o 2
     
     resultado = session.get('resultado_algoritmo')
     if not resultado:
@@ -117,46 +118,57 @@ def intercambiar_pareja():
     
     try:
         pareja_movida = None
-        pareja_reemplazo = None
+        grupo_origen_obj = None
+        grupo_destino_obj = None
         categoria_actual = None
         
+        # Buscar la pareja que se está moviendo y los grupos
         for categoria, grupos in resultado['grupos_por_categoria'].items():
             for grupo in grupos:
-                if grupo['id'] == grupo_origen:
+                if grupo['id'] == grupo_origen_id:
                     categoria_actual = categoria
-                    for pareja in grupo['parejas']:
+                    grupo_origen_obj = grupo
+                    for i, pareja in enumerate(grupo['parejas']):
                         if pareja['id'] == pareja_id:
-                            pareja_movida = pareja
-                            grupo['parejas'].remove(pareja)
+                            pareja_movida = grupo['parejas'].pop(i)
                             break
                 
-                if grupo['id'] == grupo_destino and categoria_actual:
-                    if len(grupo['parejas']) > 0:
-                        pareja_reemplazo = grupo['parejas'][0]
-                        grupo['parejas'].remove(pareja_reemplazo)
-                    if pareja_movida:
-                        grupo['parejas'].append(pareja_movida)
+                if grupo['id'] == grupo_destino_id:
+                    grupo_destino_obj = grupo
         
-        if pareja_movida and pareja_reemplazo:
-            for categoria, grupos in resultado['grupos_por_categoria'].items():
-                for grupo in grupos:
-                    if grupo['id'] == grupo_origen:
-                        grupo['parejas'].append(pareja_reemplazo)
-                        break
+        if not pareja_movida or not grupo_destino_obj:
+            return jsonify({'error': 'No se encontró la pareja o el grupo'}), 400
+        
+        # Verificar si hay una pareja en el slot destino
+        pareja_en_slot = None
+        if slot_destino < len(grupo_destino_obj['parejas']):
+            pareja_en_slot = grupo_destino_obj['parejas'][slot_destino]
+        
+        # Intercambio
+        if pareja_en_slot:
+            # Hay una pareja en el slot destino, intercambiarlas
+            grupo_destino_obj['parejas'][slot_destino] = pareja_movida
+            grupo_origen_obj['parejas'].append(pareja_en_slot)
+            mensaje = f"Intercambio exitoso: {pareja_movida['nombre']} ↔ {pareja_en_slot['nombre']}"
+        else:
+            # El slot está vacío, solo mover la pareja
+            # Insertar en el slot específico o al final si el grupo no tiene suficientes parejas
+            if slot_destino <= len(grupo_destino_obj['parejas']):
+                grupo_destino_obj['parejas'].insert(slot_destino, pareja_movida)
+            else:
+                grupo_destino_obj['parejas'].append(pareja_movida)
+            mensaje = f"Pareja {pareja_movida['nombre']} movida al slot {slot_destino + 1}"
         
         session['resultado_algoritmo'] = resultado
         session.modified = True
-        
-        mensaje = f"Pareja intercambiada correctamente"
-        if pareja_reemplazo:
-            mensaje = f"Intercambio exitoso: {pareja_movida['nombre']} ↔ {pareja_reemplazo['nombre']}"
         
         return jsonify({
             'success': True,
             'mensaje': mensaje
         })
     except Exception as e:
-        return jsonify({'error': f'Error al intercambiar: {str(e)}'}), 500
+        import traceback
+        return jsonify({'error': f'Error al intercambiar: {str(e)}', 'traceback': traceback.format_exc()}), 500
 
 
 @api_bp.route('/ejecutar-algoritmo', methods=['POST'])
@@ -257,12 +269,13 @@ def obtener_parejas_no_asignadas(categoria):
 
 @api_bp.route('/asignar-pareja-a-grupo', methods=['POST'])
 def asignar_pareja_a_grupo():
-    """Asigna una pareja no asignada a un grupo, opcionalmente reemplazando otra."""
+    """Asigna una pareja no asignada a un grupo, opcionalmente en un slot específico."""
     data = request.json
     pareja_id = data.get('pareja_id')
     grupo_id = data.get('grupo_id')
     pareja_a_remover_id = data.get('pareja_a_remover_id')  # Opcional
     categoria = data.get('categoria')
+    slot_destino = data.get('slot_destino')  # Opcional: 0, 1, o 2
     
     if not all([pareja_id, grupo_id, categoria]):
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
@@ -317,8 +330,11 @@ def asignar_pareja_a_grupo():
             'parejas_grupo': grupo_encontrado['parejas']
         }), 400
     
-    # Agregar la pareja al grupo
-    grupo_encontrado['parejas'].append(pareja_a_asignar)
+    # Agregar la pareja al grupo en el slot específico si se provee
+    if slot_destino is not None and slot_destino < len(grupo_encontrado['parejas']):
+        grupo_encontrado['parejas'].insert(slot_destino, pareja_a_asignar)
+    else:
+        grupo_encontrado['parejas'].append(pareja_a_asignar)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
@@ -410,6 +426,20 @@ def editar_grupo():
     
     if not grupo_encontrado:
         return jsonify({'error': 'Grupo no encontrado'}), 404
+    
+    # Validar que la combinación franja + cancha esté disponible
+    # (no debe estar ocupada por otro grupo)
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            # Saltar el grupo que estamos editando
+            if grupo['id'] == grupo_id:
+                continue
+            
+            # Verificar si ya existe un grupo con la misma franja y cancha
+            if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
+                return jsonify({
+                    'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por otro grupo ({cat})'
+                }), 400
     
     # Actualizar datos del grupo
     grupo_encontrado['franja_horaria'] = franja_horaria

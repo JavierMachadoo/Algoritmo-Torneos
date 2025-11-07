@@ -761,10 +761,7 @@
                         <div class="card h-100 shadow-sm grupo-card" 
                              style="border-top: 4px solid {{ border_color }};"
                              data-grupo-id="{{ grupo.id }}"
-                             data-categoria="{{ categoria }}"
-                             ondrop="dropPareja(event)" 
-                             ondragover="allowDrop(event)"
-                             ondragleave="removeDragOver(event)">
+                             data-categoria="{{ categoria }}">
                             <div class="card-header text-white text-center position-relative" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
                                 <h5 class="mb-0 fw-bold">
                                     {% if loop.index == 1 %}GRUPO A
@@ -792,91 +789,118 @@
                                     </small>
                                 </div>
 
-                                <!-- Parejas del Grupo con selector de posición -->
+                                <!-- Parejas del Grupo con 3 slots fijos -->
                                 <h6 class="fw-bold mb-2">👥 Parejas:</h6>
-                                {% for pareja in grupo.parejas %}
-                                {% set franja_asignada = grupo.franja_horaria %}
-                                {% set franjas_pareja = pareja.franjas_disponibles if pareja.franjas_disponibles else [] %}
                                 
-                                {# Verificar compatibilidad exacta #}
-                                {% set compatible_exacto = franja_asignada in franjas_pareja if franja_asignada and franjas_pareja else true %}
+                                {% for slot_num in range(3) %}
+                                {% set pareja = grupo.parejas[slot_num] if slot_num < grupo.parejas|length else none %}
                                 
-                                {# Verificar compatibilidad parcial (mismo día) #}
-                                {% set compatible_parcial = namespace(value=false) %}
-                                {% if franja_asignada and not compatible_exacto and franjas_pareja %}
-                                    {% set dia_asignado = franja_asignada.split(' ')[0] %}
-                                    {% for franja in franjas_pareja %}
-                                        {% set dia_franja = franja.split(' ')[0] %}
-                                        {% if dia_franja == dia_asignado %}
-                                            {% set compatible_parcial.value = true %}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                                
-                                {# Determinar clase CSS y tooltip #}
-                                {% if compatible_exacto %}
-                                    {% set border_class = '' %}
-                                    {% set text_class = '' %}
-                                    {% set tooltip = '' %}
-                                {% elif compatible_parcial.value %}
-                                    {% set border_class = 'border-warning border-2' %}
-                                    {% set text_class = 'text-warning' %}
-                                    {% set tooltip = 'Esta pareja eligió este día pero en otro horario' %}
-                                {% else %}
-                                    {% set border_class = 'border-danger border-2' %}
-                                    {% set text_class = 'text-danger' %}
-                                    {% set tooltip = 'Esta pareja no eligió este día' %}
-                                {% endif %}
-                                
-                                <div class="pareja-item mb-2 p-2 bg-white rounded border {{ border_class }}" 
-                                     draggable="true"
-                                     data-pareja-id="{{ pareja.id }}"
-                                     data-pareja-nombre="{{ pareja.nombre }}"
-                                     data-grupo-origen="{{ grupo.id }}"
-                                     data-grupo-id="{{ grupo.id }}"
-                                     data-posicion="{{ pareja.posicion_grupo or '' }}"
-                                     ondragstart="dragStart(event)"
-                                     {% if tooltip %}title="{{ tooltip }}"{% endif %}>
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
-                                                    {{ loop.index }}. {{ pareja.nombre }}
+                                {% if pareja %}
+                                    {# Hay pareja en este slot #}
+                                    {% set franja_asignada = grupo.franja_horaria %}
+                                    {% set franjas_pareja = pareja.franjas_disponibles if pareja.franjas_disponibles else [] %}
+                                    
+                                    {# Verificar compatibilidad exacta #}
+                                    {% set compatible_exacto = franja_asignada in franjas_pareja if franja_asignada and franjas_pareja else true %}
+                                    
+                                    {# Verificar compatibilidad parcial (mismo día) #}
+                                    {% set compatible_parcial = namespace(value=false) %}
+                                    {% if franja_asignada and not compatible_exacto and franjas_pareja %}
+                                        {% set dia_asignado = franja_asignada.split(' ')[0] %}
+                                        {% for franja in franjas_pareja %}
+                                            {% set dia_franja = franja.split(' ')[0] %}
+                                            {% if dia_franja == dia_asignado %}
+                                                {% set compatible_parcial.value = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    
+                                    {# Determinar clase CSS y tooltip #}
+                                    {% if compatible_exacto %}
+                                        {% set border_class = '' %}
+                                        {% set text_class = '' %}
+                                        {% set tooltip = '' %}
+                                    {% elif compatible_parcial.value %}
+                                        {% set border_class = 'border-warning border-2' %}
+                                        {% set text_class = 'text-warning' %}
+                                        {% set tooltip = 'Esta pareja eligió este día pero en otro horario' %}
+                                    {% else %}
+                                        {% set border_class = 'border-danger border-2' %}
+                                        {% set text_class = 'text-danger' %}
+                                        {% set tooltip = 'Esta pareja no eligió este día' %}
+                                    {% endif %}
+                                    
+                                    <div class="pareja-slot mb-2 p-2 bg-white rounded border {{ border_class }}" 
+                                         draggable="true"
+                                         data-pareja-id="{{ pareja.id }}"
+                                         data-pareja-nombre="{{ pareja.nombre }}"
+                                         data-grupo-origen="{{ grupo.id }}"
+                                         data-grupo-id="{{ grupo.id }}"
+                                         data-slot="{{ slot_num }}"
+                                         data-posicion="{{ pareja.posicion_grupo or '' }}"
+                                         ondragstart="dragStart(event)"
+                                         ondrop="dropEnSlot(event)"
+                                         ondragover="allowDropSlot(event)"
+                                         ondragleave="removeDragOverSlot(event)"
+                                         {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
+                                                        {{ slot_num + 1 }}. {{ pareja.nombre }}
+                                                    </div>
+                                                    <button class="btn btn-sm btn-outline-secondary p-0 px-1" 
+                                                            draggable="false"
+                                                            onmousedown="event.stopPropagation();"
+                                                            onclick="event.stopPropagation(); event.preventDefault(); abrirModalEditarPareja({{ pareja.id }}, '{{ pareja.nombre|replace("'", "\\'") }}', '{{ pareja.telefono|replace("'", "\\'") }}', '{{ categoria }}', {{ pareja.franjas_disponibles|tojson }})"
+                                                            title="Editar pareja"
+                                                            style="font-size: 0.7rem;">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
                                                 </div>
-                                                <button class="btn btn-sm btn-outline-secondary p-0 px-1" 
-                                                        onclick="event.stopPropagation(); abrirModalEditarPareja({{ pareja.id }}, '{{ pareja.nombre }}', '{{ pareja.telefono }}', '{{ categoria }}', {{ pareja.franjas_disponibles|tojson }})"
-                                                        title="Editar pareja"
-                                                        style="font-size: 0.7rem;">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-telephone"></i> {{ pareja.telefono }}
+                                                </small>
                                             </div>
-                                            <small class="text-muted d-block mt-1">
-                                                <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
-                                            </small>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-telephone"></i> {{ pareja.telefono }}
-                                            </small>
-                                        </div>
-                                        <div class="ms-2 d-flex gap-1">
-                                            <!-- Botones para asignar posición -->
-                                            <span class="posicion-badge {{ 'posicion-primero' if pareja.posicion_grupo == 1 else '' }}" 
-                                                  onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}', {{ grupo.id }})"
-                                                  title="1° Puesto">
-                                                🥇
-                                            </span>
-                                            <span class="posicion-badge {{ 'posicion-segundo' if pareja.posicion_grupo == 2 else '' }}"
-                                                  onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}', {{ grupo.id }})"
-                                                  title="2° Puesto">
-                                                🥈
-                                            </span>
-                                            <span class="posicion-badge {{ 'posicion-tercero' if pareja.posicion_grupo == 3 else '' }}"
-                                                  onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}', {{ grupo.id }})"
-                                                  title="3° Puesto">
-                                                🥉
-                                            </span>
+                                            <div class="ms-2 d-flex gap-1">
+                                                <!-- Botones para asignar posición -->
+                                                <span class="posicion-badge {{ 'posicion-primero' if pareja.posicion_grupo == 1 else '' }}" 
+                                                      onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}', {{ grupo.id }})"
+                                                      title="1° Puesto">
+                                                    🥇
+                                                </span>
+                                                <span class="posicion-badge {{ 'posicion-segundo' if pareja.posicion_grupo == 2 else '' }}"
+                                                      onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}', {{ grupo.id }})"
+                                                      title="2° Puesto">
+                                                    🥈
+                                                </span>
+                                                <span class="posicion-badge {{ 'posicion-tercero' if pareja.posicion_grupo == 3 else '' }}"
+                                                      onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}', {{ grupo.id }})"
+                                                      title="3° Puesto">
+                                                    🥉
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% else %}
+                                    {# Slot vacío #}
+                                    <div class="pareja-slot pareja-slot-vacio mb-2 p-2 bg-light rounded border border-dashed" 
+                                         data-grupo-id="{{ grupo.id }}"
+                                         data-slot="{{ slot_num }}"
+                                         ondrop="dropEnSlot(event)"
+                                         ondragover="allowDropSlot(event)"
+                                         ondragleave="removeDragOverSlot(event)"
+                                         style="min-height: 80px; display: flex; align-items: center; justify-content: center; border-style: dashed !important;">
+                                        <div class="text-muted text-center">
+                                            <i class="bi bi-plus-circle"></i>
+                                            <small class="d-block">Slot {{ slot_num + 1 }} vacío</small>
+                                            <small class="d-block" style="font-size: 0.7rem;">Arrastra una pareja aquí</small>
+                                        </div>
+                                    </div>
+                                {% endif %}
                                 {% endfor %}
                             </div>
                             
@@ -998,11 +1022,13 @@ let dragTimeout = null;
 function dragStart(event) {
     const esNoAsignada = event.target.dataset.esNoAsignada === 'true';
     const categoria = event.target.dataset.categoria;
+    const slot = event.target.dataset.slot;
     
     draggedPareja = {
         parejaId: event.target.dataset.parejaId,
         parejaNombre: event.target.dataset.parejaNombre,
         grupoOrigen: event.target.dataset.grupoOrigen || null,
+        slotOrigen: slot ? parseInt(slot) : null,
         esNoAsignada: esNoAsignada,
         categoria: categoria
     };
@@ -1011,65 +1037,51 @@ function dragStart(event) {
     event.dataTransfer.setData('text/plain', '');
 }
 
-function allowDrop(event) {
+function allowDropSlot(event) {
     event.preventDefault();
+    event.stopPropagation();
     event.dataTransfer.dropEffect = 'move';
     
-    clearTimeout(dragTimeout);
-    dragTimeout = setTimeout(() => {
-        const grupoCard = event.currentTarget;
-        if (!grupoCard.classList.contains('drag-over')) {
-            grupoCard.classList.add('drag-over');
-        }
-    }, 50);
+    // Resaltar el slot específico
+    const slot = event.currentTarget;
+    if (!slot.classList.contains('drag-over-slot')) {
+        slot.classList.add('drag-over-slot');
+    }
 }
 
-function removeDragOver(event) {
-    clearTimeout(dragTimeout);
-    event.currentTarget.classList.remove('drag-over');
+function removeDragOverSlot(event) {
+    event.currentTarget.classList.remove('drag-over-slot');
 }
 
-function dropPareja(event) {
+function dropEnSlot(event) {
     event.preventDefault();
-    event.currentTarget.classList.remove('drag-over');
+    event.stopPropagation();
+    event.currentTarget.classList.remove('drag-over-slot');
     
     if (!draggedPareja) return;
     
-    const grupoDestino = event.currentTarget.dataset.grupoId;
-    const categoria = event.currentTarget.dataset.categoria;
+    const slotDestino = parseInt(event.currentTarget.dataset.slot);
+    const grupoDestino = parseInt(event.currentTarget.dataset.grupoId);
     
     // Limpiar estado visual
     document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
     
     // Si es una pareja no asignada
     if (draggedPareja.esNoAsignada) {
-        asignarParejaNoAsignadaAGrupo(draggedPareja.parejaId, grupoDestino, categoria);
+        asignarParejaNoAsignadaASlot(draggedPareja.parejaId, grupoDestino, slotDestino, draggedPareja.categoria);
         draggedPareja = null;
         return;
     }
     
-    // Si es intercambio normal entre grupos
+    // Si es intercambio entre slots
     const grupoOrigen = draggedPareja.grupoOrigen;
     
-    if (grupoOrigen === grupoDestino) {
-        draggedPareja = null;
-        return;
-    }
-    
-    intercambiarPareja(draggedPareja.parejaId, grupoOrigen, grupoDestino);
+    // Permitir reordenar dentro del mismo grupo
+    intercambiarParejaEnSlot(draggedPareja.parejaId, grupoOrigen, grupoDestino, slotDestino);
     draggedPareja = null;
 }
 
-function asignarParejaNoAsignadaAGrupo(parejaId, grupoId, categoria) {
-    // Verificar si el grupo está lleno
-    const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"]`);
-    const parejas = grupoCard.querySelectorAll('.pareja-item');
-    
-    if (parejas.length >= 3) {
-        Toast.warning('El grupo está lleno (3/3). Usa el botón "Asignar" para reemplazar una pareja.');
-        return;
-    }
-    
+function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
     Toast.info('Asignando pareja al grupo...');
     
     fetch('/api/asignar-pareja-a-grupo', {
@@ -1081,7 +1093,8 @@ function asignarParejaNoAsignadaAGrupo(parejaId, grupoId, categoria) {
             pareja_id: parseInt(parejaId),
             grupo_id: parseInt(grupoId),
             pareja_a_remover_id: null,
-            categoria: categoria
+            categoria: categoria,
+            slot_destino: slot
         })
     })
     .then(response => response.json())
@@ -1089,10 +1102,8 @@ function asignarParejaNoAsignadaAGrupo(parejaId, grupoId, categoria) {
         if (data.success) {
             Toast.success(data.mensaje);
             setTimeout(() => window.location.reload(), 800);
-        } else if (data.grupo_lleno) {
-            Toast.warning('El grupo está lleno. Usa el botón "Asignar" para elegir qué pareja reemplazar.');
         } else {
-            Toast.error('Error: ' + data.error);
+            Toast.error('Error: ' + (data.error || 'Error desconocido'));
         }
     })
     .catch(error => {
@@ -1101,7 +1112,7 @@ function asignarParejaNoAsignadaAGrupo(parejaId, grupoId, categoria) {
     });
 }
 
-function intercambiarPareja(parejaId, grupoOrigen, grupoDestino) {
+function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDestino) {
     Toast.info('Intercambiando parejas...');
     
     fetch('/api/intercambiar-pareja', {
@@ -1112,15 +1123,14 @@ function intercambiarPareja(parejaId, grupoOrigen, grupoDestino) {
         body: JSON.stringify({
             pareja_id: parseInt(parejaId),
             grupo_origen: parseInt(grupoOrigen),
-            grupo_destino: parseInt(grupoDestino)
+            grupo_destino: parseInt(grupoDestino),
+            slot_destino: slotDestino
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            // Para intercambios de parejas, necesitamos recargar porque afecta los partidos
-            // Pero hacemos una recarga suave
             setTimeout(() => {
                 window.location.reload();
             }, 800);
@@ -1269,11 +1279,15 @@ function renderizarParejasNoAsignadas(categoria, parejas) {
                         </div>
                         <div class="d-flex gap-1">
                             <button class="btn btn-sm btn-outline-secondary btn-asignar-manual" 
-                                    onclick="event.stopPropagation(); abrirModalEditarPareja(${pareja.id}, '${pareja.nombre}', '${pareja.telefono || ''}', '${categoria}', ${JSON.stringify(pareja.franjas_disponibles || [])})"
+                                    draggable="false"
+                                    onmousedown="event.stopPropagation();"
+                                    onclick="event.stopPropagation(); event.preventDefault(); abrirModalEditarPareja(${pareja.id}, '${pareja.nombre.replace(/'/g, "\\'")}', '${(pareja.telefono || '').replace(/'/g, "\\'")}', '${categoria}', ${JSON.stringify(pareja.franjas_disponibles || [])})"
                                     title="Editar pareja">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-primary btn-asignar-manual" 
+                                    draggable="false"
+                                    onmousedown="event.stopPropagation();"
                                     onclick="abrirModalAsignarManual(${pareja.id}, '${pareja.nombre}', '${categoria}')"
                                     title="Asignar manualmente">
                                 <i class="bi bi-plus-circle"></i>
