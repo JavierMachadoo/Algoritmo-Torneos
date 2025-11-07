@@ -157,6 +157,17 @@
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
     }
+    /* Estilos para la tabla de parejas en el modal de editar grupo */
+    #parejasDelGrupo table {
+        border: 1px solid #dee2e6;
+    }
+    #parejasDelGrupo .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    #parejasDelGrupo .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 </style>
 {% endblock %}
 
@@ -346,6 +357,14 @@
                             </select>
                         </div>
                     </form>
+                    
+                    <!-- Listado de Parejas del Grupo -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="mb-3"><i class="bi bi-people-fill"></i> Parejas en este grupo:</h6>
+                        <div id="parejasDelGrupo">
+                            <!-- Se llenará dinámicamente con JavaScript -->
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -772,7 +791,12 @@
                                     {% endif %}
                                 </h5>
                                 <button class="btn btn-sm btn-light position-absolute top-50 end-0 translate-middle-y me-2" 
-                                        onclick="abrirModalEditarGrupo({{ grupo.id }}, '{{ categoria }}', '{{ grupo.franja_horaria }}', {{ grupo.cancha }})"
+                                        data-grupo-id="{{ grupo.id }}"
+                                        data-categoria="{{ categoria }}"
+                                        data-franja="{{ grupo.franja_horaria }}"
+                                        data-cancha="{{ grupo.cancha }}"
+                                        data-parejas='{{ grupo.parejas|tojson }}'
+                                        onclick="abrirModalEditarGrupo(this)"
                                         title="Editar horario y cancha">
                                     <i class="bi bi-pencil-fill"></i>
                                 </button>
@@ -1141,7 +1165,8 @@ function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            setTimeout(() => window.location.reload(), 800);
+            // Actualizar manteniendo el tab activo
+            actualizarCategoria(categoria);
         } else {
             Toast.error('Error: ' + (data.error || 'Error desconocido'));
         }
@@ -1169,9 +1194,9 @@ function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDesti
     .then(data => {
         if (data.success) {
             Toast.success(data.mensaje);
-            setTimeout(() => {
-                window.location.reload();
-            }, 800);
+            // Actualizar manteniendo el tab activo
+            const categoriaActual = obtenerCategoriaActual();
+            actualizarCategoria(categoriaActual);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1488,12 +1513,11 @@ function confirmarAsignacionManual(parejaId, categoria) {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal
+            // Cerrar modal y actualizar solo la categoría
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarManual'));
             modal.hide();
             
-            // Recargar página para reflejar cambios
-            setTimeout(() => window.location.reload(), 800);
+            actualizarCategoria(categoria);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1567,7 +1591,8 @@ function agregarParejaDesdeModal() {
             // Limpiar formulario
             form.reset();
             
-            // Volver a datos para re-ejecutar algoritmo
+            // Volver a datos para re-ejecutar algoritmo (esto sí necesita redirect)
+            Toast.info('Redirigiendo para re-ejecutar el algoritmo...');
             setTimeout(() => {
                 window.location.href = '/datos';
             }, 1000);
@@ -1618,12 +1643,11 @@ function confirmarCrearGrupo() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal
+            // Cerrar modal y actualizar
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalCrearGrupo'));
             modal.hide();
             
-            // Recargar para mostrar el nuevo grupo
-            setTimeout(() => window.location.reload(), 800);
+            actualizarCategoria(categoria);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1634,14 +1658,124 @@ function confirmarCrearGrupo() {
     });
 }
 
-function abrirModalEditarGrupo(grupoId, categoria, franjaActual, canchaActual) {
+function abrirModalEditarGrupo(button) {
+    const grupoId = button.getAttribute('data-grupo-id');
+    const categoria = button.getAttribute('data-categoria');
+    const franjaActual = button.getAttribute('data-franja');
+    const canchaActual = button.getAttribute('data-cancha');
+    const parejas = JSON.parse(button.getAttribute('data-parejas'));
+    
     document.getElementById('editarGrupoId').value = grupoId;
     document.getElementById('editarGrupoCategoria').value = categoria;
     document.getElementById('editarGrupoFranja').value = franjaActual;
     document.getElementById('editarGrupoCancha').value = canchaActual;
     
+    // Mostrar las parejas del grupo
+    const contenedorParejas = document.getElementById('parejasDelGrupo');
+    if (parejas && parejas.length > 0) {
+        let html = '<div class="table-responsive"><table class="table table-sm table-hover mb-0">';
+        html += '<thead class="table-light"><tr>';
+        html += '<th width="5%">#</th>';
+        html += '<th width="55%">Nombre</th>';
+        html += '<th width="30%">Teléfono</th>';
+        html += '<th width="10%">Acción</th>';
+        html += '</tr></thead><tbody>';
+        
+        parejas.forEach((pareja, index) => {
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td class="fw-bold">${pareja.nombre}</td>
+                <td><small><i class="bi bi-telephone"></i> ${pareja.telefono || 'N/A'}</small></td>
+                <td>
+                    <button class="btn btn-sm btn-primary me-1" 
+                            data-pareja-id="${pareja.id}"
+                            data-pareja-nombre="${pareja.nombre}"
+                            data-pareja-telefono="${pareja.telefono || ''}"
+                            data-pareja-categoria="${pareja.categoria}"
+                            data-pareja-franjas='${JSON.stringify(pareja.franjas_disponibles)}'
+                            onclick="editarParejaDesdeGrupo(this)"
+                            title="Editar">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="eliminarParejaGrupo(${pareja.id})"
+                            title="Eliminar">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            </tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+        contenedorParejas.innerHTML = html;
+    } else {
+        contenedorParejas.innerHTML = '<div class="alert alert-warning mb-0"><i class="bi bi-exclamation-triangle"></i> No hay parejas en este grupo</div>';
+    }
+    
     const modal = new bootstrap.Modal(document.getElementById('modalEditarGrupo'));
     modal.show();
+}
+
+// Nueva función para editar pareja desde el modal de grupo
+function editarParejaDesdeGrupo(button) {
+    const id = button.getAttribute('data-pareja-id');
+    const nombre = button.getAttribute('data-pareja-nombre');
+    const telefono = button.getAttribute('data-pareja-telefono');
+    const categoria = button.getAttribute('data-pareja-categoria');
+    const franjas = JSON.parse(button.getAttribute('data-pareja-franjas'));
+    
+    document.getElementById('editarParejaId').value = id;
+    document.getElementById('editarParejaNombre').value = nombre;
+    document.getElementById('editarParejaTelefono').value = telefono;
+    document.getElementById('editarParejaCategoria').value = categoria;
+    
+    // Limpiar checkboxes
+    document.querySelectorAll('#modalEditarPareja input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    // Marcar franjas actuales
+    franjas.forEach(franja => {
+        const checkbox = Array.from(document.querySelectorAll('#modalEditarPareja input[type="checkbox"]'))
+            .find(cb => cb.value === franja);
+        if (checkbox) checkbox.checked = true;
+    });
+    
+    // Cerrar modal de editar grupo y abrir modal de editar pareja
+    const modalGrupo = bootstrap.Modal.getInstance(document.getElementById('modalEditarGrupo'));
+    if (modalGrupo) modalGrupo.hide();
+    
+    const modalPareja = new bootstrap.Modal(document.getElementById('modalEditarPareja'));
+    modalPareja.show();
+}
+
+// Nueva función para eliminar pareja desde el modal de grupo
+function eliminarParejaGrupo(parejaId) {
+    if (!confirm('¿Estás seguro de eliminar esta pareja? Se quitará del grupo y volverá a la lista de no asignadas.')) {
+        return;
+    }
+    
+    fetch('/api/eliminar-pareja', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pareja_id: parejaId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            Toast.error(data.error);
+        } else {
+            Toast.success(data.mensaje);
+            const modalGrupo = bootstrap.Modal.getInstance(document.getElementById('modalEditarGrupo'));
+            if (modalGrupo) modalGrupo.hide();
+            
+            // Actualizar solo la categoría del grupo
+            const categoriaActual = obtenerCategoriaActual();
+            actualizarCategoria(categoriaActual);
+        }
+    })
+    .catch(error => {
+        Toast.error('Error al eliminar la pareja');
+        console.error(error);
+    });
 }
 
 function confirmarEditarGrupo() {
@@ -1672,12 +1806,11 @@ function confirmarEditarGrupo() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal
+            // Cerrar modal y actualizar categoría
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarGrupo'));
             modal.hide();
             
-            // Recargar para mostrar los cambios
-            setTimeout(() => window.location.reload(), 800);
+            actualizarCategoria(categoria);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1752,12 +1885,12 @@ function confirmarEditarPareja() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal
+            // Cerrar modal y actualizar
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPareja'));
             modal.hide();
             
-            // Recargar para mostrar los cambios
-            setTimeout(() => window.location.reload(), 800);
+            const categoriaActual = obtenerCategoriaActual();
+            actualizarCategoria(categoriaActual);
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -2238,6 +2371,126 @@ function renderizarCalendarioFinales(calendario, tieneDatos) {
     `;
     
     container.innerHTML = html;
+}
+
+// ==========================================
+// SISTEMA DE ACTUALIZACIÓN SELECTIVA SIN RECARGAR
+// ==========================================
+
+// Variable global para mantener el tab activo
+let tabActivo = 'cuarta';
+
+// Función para obtener la categoría del tab actual
+function obtenerCategoriaActual() {
+    // Capitalizar primera letra
+    return tabActivo.charAt(0).toUpperCase() + tabActivo.slice(1);
+}
+
+// Detectar cambios de tab
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            // Extraer el ID del tab desde data-bs-target
+            const target = e.target.getAttribute('data-bs-target');
+            if (target) {
+                tabActivo = target.replace('#', '');
+                sessionStorage.setItem('tabActivo', tabActivo);
+            }
+        });
+    });
+    
+    // Restaurar tab activo si existe
+    const tabGuardado = sessionStorage.getItem('tabActivo');
+    if (tabGuardado && tabGuardado !== 'cuarta') {
+        const tabButton = document.querySelector(`[data-bs-target="#${tabGuardado}"]`);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+            tabActivo = tabGuardado;
+        }
+    }
+});
+
+// Función para actualizar solo el contenido de una categoría específica
+function actualizarCategoria(categoria) {
+    // Por ahora, la forma más sencilla es recargar toda la página
+    // pero manteniendo el tab activo
+    sessionStorage.setItem('tabActivo', categoria.toLowerCase());
+    window.location.reload();
+    
+    // TODO: En futuro se puede mejorar para actualizar solo el HTML de la categoría
+    // sin recargar, pero requiere más endpoints en el backend
+}
+
+// Función para actualizar todas las categorías (más rápido que reload completo)
+function actualizarTodasCategorias() {
+    const categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
+    return Promise.all(categorias.map(cat => actualizarCategoria(cat)));
+}
+
+// Función para actualizar solo un grupo específico
+function actualizarGrupo(categoria, grupoId) {
+    return fetch(`/api/obtener-grupo/${categoria}/${grupoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Actualizar el grupo específico en el DOM
+            const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"][data-categoria="${categoria}"]`);
+            if (grupoCard && data.html) {
+                grupoCard.outerHTML = data.html;
+                inicializarDragAndDrop();
+            }
+            
+            return data;
+        });
+}
+
+// Función para actualizar la lista de parejas no asignadas de una categoría
+function actualizarParejaNoAsignadas(categoria) {
+    return fetch(`/api/obtener-no-asignadas/${categoria}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            const contenedor = document.querySelector(`#${categoria.toLowerCase()} .parejas-no-asignadas-container`);
+            if (contenedor && data.html) {
+                contenedor.outerHTML = data.html;
+                inicializarDragAndDrop();
+            }
+            
+            return data;
+        });
+}
+
+// Función placeholder para re-inicializar drag & drop (si es necesario)
+function inicializarDragAndDrop() {
+    // Los event listeners de drag & drop ya están en los elementos
+    // Esta función es por si en el futuro necesitamos re-adjuntarlos
+}
+
+// Función auxiliar para cerrar modal y actualizar
+function cerrarModalYActualizar(modalId, callback) {
+    const modalElement = document.getElementById(modalId);
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Esperar a que el modal se cierre antes de actualizar
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function handler() {
+            modalElement.removeEventListener('hidden.bs.modal', handler);
+            if (callback) callback();
+        }, { once: true });
+    } else if (callback) {
+        callback();
+    }
 }
 
 </script>

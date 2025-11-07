@@ -131,7 +131,7 @@
     <!-- Estadísticas -->
     <div class="row g-3 mb-4">
         <div class="col-md-2">
-            <div class="card text-center shadow-sm stat-card">
+            <div class="card text-center shadow-sm stat-card cursor-pointer" onclick="filtrarPorCategoria(null)" style="cursor: pointer;">
                 <div class="card-body">
                     <h3 class="display-6 fw-bold text-primary">{{ stats.total }}</h3>
                     <p class="text-muted mb-0">Total Parejas</p>
@@ -139,7 +139,8 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card text-center shadow-sm stat-card stat-cuarta">
+            <div class="card text-center shadow-sm stat-card stat-cuarta" onclick="filtrarPorCategoria('Cuarta')" style="cursor: pointer; transition: all 0.2s;" 
+                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <div class="card-body">
                     <h3 class="display-6 fw-bold">{{ stats.por_categoria.Cuarta }}</h3>
                     <p class="mb-0">🟢 Cuarta</p>
@@ -147,7 +148,8 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card text-center shadow-sm stat-card stat-quinta">
+            <div class="card text-center shadow-sm stat-card stat-quinta" onclick="filtrarPorCategoria('Quinta')" style="cursor: pointer; transition: all 0.2s;"
+                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <div class="card-body">
                     <h3 class="display-6 fw-bold">{{ stats.por_categoria.Quinta }}</h3>
                     <p class="mb-0">🟡 Quinta</p>
@@ -155,7 +157,8 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card text-center shadow-sm stat-card stat-sexta">
+            <div class="card text-center shadow-sm stat-card stat-sexta" onclick="filtrarPorCategoria('Sexta')" style="cursor: pointer; transition: all 0.2s;"
+                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <div class="card-body">
                     <h3 class="display-6 fw-bold">{{ stats.por_categoria.Sexta }}</h3>
                     <p class="mb-0">🔵 Sexta</p>
@@ -163,7 +166,8 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card text-center shadow-sm stat-card stat-septima">
+            <div class="card text-center shadow-sm stat-card stat-septima" onclick="filtrarPorCategoria('Séptima')" style="cursor: pointer; transition: all 0.2s;"
+                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <div class="card-body">
                     <h3 class="display-6 fw-bold">{{ stats.por_categoria['Séptima'] }}</h3>
                     <p class="mb-0">🟣 Séptima</p>
@@ -199,14 +203,21 @@
                     </thead>
                     <tbody id="tablaParejas">
                         {% for pareja in parejas %}
-                        <tr data-id="{{ pareja.id }}">
+                        <tr data-id="{{ pareja.id }}" data-categoria="{{ pareja.categoria }}">
                             <td>{{ loop.index }}</td>
                             <td class="fw-bold">{{ pareja.nombre }}</td>
                             <td><i class="bi bi-telephone"></i> {{ pareja.telefono }}</td>
                             <td><span class="badge bg-secondary">{{ pareja.categoria }}</span></td>
                             <td><small>{{ ', '.join(pareja.franjas_disponibles) or 'Sin especificar' }}</small></td>
                             <td>
-                                <button class="btn btn-sm btn-primary me-1" onclick="editarParejaTabla({{ pareja.id }}, '{{ pareja.nombre|replace("'", "\\'") }}', '{{ pareja.telefono|replace("'", "\\'") }}', '{{ pareja.categoria }}', {{ pareja.franjas_disponibles|tojson }})" title="Editar">
+                                <button class="btn btn-sm btn-primary me-1" 
+                                        data-pareja-id="{{ pareja.id }}"
+                                        data-pareja-nombre="{{ pareja.nombre }}"
+                                        data-pareja-telefono="{{ pareja.telefono }}"
+                                        data-pareja-categoria="{{ pareja.categoria }}"
+                                        data-pareja-franjas='{{ pareja.franjas_disponibles|tojson }}'
+                                        onclick="editarParejaTabla(this)"
+                                        title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-danger" onclick="eliminarPareja({{ pareja.id }})">
@@ -349,7 +360,7 @@ $('#formCargarCSV').on('submit', function(e) {
         contentType: false,
         success: function(response) {
             Toast.success(response.mensaje);
-            setTimeout(() => location.reload(), 1000);
+            setTimeout(() => actualizarListaParejas(), 800);
         },
         error: function(xhr) {
             const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
@@ -382,7 +393,7 @@ $('#formAgregarPareja').on('submit', function(e) {
         success: function(response) {
             Toast.success(response.mensaje);
             $('#formAgregarPareja')[0].reset();
-            setTimeout(() => location.reload(), 1000);
+            setTimeout(() => actualizarListaParejas(), 800);
         },
         error: function(xhr) {
             const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
@@ -398,7 +409,7 @@ function eliminarPareja(id) {
         type: 'DELETE',
         success: function(response) {
             Toast.success('Pareja eliminada correctamente');
-            setTimeout(() => location.reload(), 800);
+            setTimeout(() => actualizarListaParejas(), 500);
         },
         error: function() {
             Toast.error('Error al eliminar');
@@ -407,7 +418,13 @@ function eliminarPareja(id) {
 }
 
 // Editar pareja desde tabla
-function editarParejaTabla(id, nombre, telefono, categoria, franjas) {
+function editarParejaTabla(button) {
+    const id = button.getAttribute('data-pareja-id');
+    const nombre = button.getAttribute('data-pareja-nombre');
+    const telefono = button.getAttribute('data-pareja-telefono');
+    const categoria = button.getAttribute('data-pareja-categoria');
+    const franjas = JSON.parse(button.getAttribute('data-pareja-franjas'));
+    
     document.getElementById('editParejaId').value = id;
     document.getElementById('editPanejaNombre').value = nombre;
     document.getElementById('editParejaTelefono').value = telefono;
@@ -463,7 +480,7 @@ function confirmarEditarParejaTabla() {
             Toast.success(response.mensaje);
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarParejaTabla'));
             modal.hide();
-            setTimeout(() => location.reload(), 800);
+            setTimeout(() => actualizarListaParejas(), 500);
         },
         error: function(xhr) {
             const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
@@ -479,7 +496,7 @@ function limpiarDatos() {
         type: 'POST',
         success: function(response) {
             Toast.success('Datos limpiados correctamente');
-            setTimeout(() => location.reload(), 800);
+            setTimeout(() => actualizarListaParejas(), 500);
         }
     });
 }
@@ -507,5 +524,79 @@ function ejecutarAlgoritmo() {
         }
     });
 }
+
+// Variable para mantener el estado del filtro actual
+let categoriaFiltroActual = null;
+
+// Filtrar tabla por categoría
+function filtrarPorCategoria(categoria) {
+    const filas = document.querySelectorAll('#tablaParejas tr[data-categoria]');
+    const cards = document.querySelectorAll('.stat-card');
+    
+    // Si se hace clic en la misma categoría, quitar filtro
+    if (categoriaFiltroActual === categoria) {
+        categoria = null;
+    }
+    
+    categoriaFiltroActual = categoria;
+    
+    // Remover efecto activo de todas las tarjetas
+    cards.forEach(card => {
+        card.style.boxShadow = '';
+        card.style.border = '';
+    });
+    
+    // Filtrar filas
+    let filasMostradas = 0;
+    filas.forEach(fila => {
+        if (!categoria || fila.getAttribute('data-categoria') === categoria) {
+            fila.style.display = '';
+            filasMostradas++;
+            // Actualizar número de fila
+            fila.querySelector('td:first-child').textContent = filasMostradas;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+    
+    // Resaltar tarjeta activa
+    if (categoria) {
+        const categoriaLower = categoria.toLowerCase();
+        let cardActiva = null;
+        
+        if (categoriaLower === 'cuarta') {
+            cardActiva = document.querySelector('.stat-cuarta');
+        } else if (categoriaLower === 'quinta') {
+            cardActiva = document.querySelector('.stat-quinta');
+        } else if (categoriaLower === 'sexta') {
+            cardActiva = document.querySelector('.stat-sexta');
+        } else if (categoriaLower === 'séptima') {
+            cardActiva = document.querySelector('.stat-septima');
+        }
+        
+        if (cardActiva) {
+            cardActiva.style.boxShadow = '0 0 15px rgba(13, 110, 253, 0.6)';
+            cardActiva.style.border = '2px solid #0d6efd';
+        }
+    }
+    
+    // Actualizar contador en header de la tabla
+    const header = document.querySelector('.card-header h5');
+    if (categoria) {
+        header.innerHTML = `<i class="bi bi-list-ul"></i> Listado de Parejas - ${categoria} (${filasMostradas})`;
+    } else {
+        header.innerHTML = `<i class="bi bi-list-ul"></i> Listado de Parejas ({{ parejas|length }})`;
+    }
+}
+
+// ==========================================
+// ACTUALIZACIÓN SIN RECARGAR PÁGINA
+// ==========================================
+
+function actualizarListaParejas() {
+    // Recargar la página pero más rápido y suave
+    location.reload();
+}
+
 </script>
 {% endblock %}

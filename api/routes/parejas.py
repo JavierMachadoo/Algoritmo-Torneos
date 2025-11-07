@@ -893,3 +893,68 @@ def verificar_posiciones_completas(grupos: list) -> bool:
             if not pareja.get('posicion_grupo'):
                 return False
     return True
+
+
+# ==========================================
+# ENDPOINTS PARA ACTUALIZACIÓN SELECTIVA
+# ==========================================
+
+@api_bp.route('/obtener-categoria/<categoria>', methods=['GET'])
+def obtener_categoria(categoria):
+    """Devuelve solo el HTML de una categoría específica para actualización parcial."""
+    from flask import render_template_string
+    
+    if 'resultado' not in session:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    resultado_dict = session['resultado']
+    
+    # Verificar que la categoría existe
+    if categoria not in resultado_dict.get('grupos_por_categoria', {}):
+        return jsonify({'error': f'Categoría {categoria} no encontrada'}), 404
+    
+    # Aquí deberías renderizar solo la sección de la categoría
+    # Por ahora devolvemos un JSON simple, luego lo mejoramos
+    return jsonify({
+        'success': True,
+        'categoria': categoria,
+        'grupos': resultado_dict['grupos_por_categoria'][categoria],
+        'no_asignadas': resultado_dict['parejas_no_asignadas'].get(categoria, [])
+    })
+
+
+@api_bp.route('/obtener-grupo/<categoria>/<int:grupo_id>', methods=['GET'])
+def obtener_grupo(categoria, grupo_id):
+    """Devuelve el HTML de un grupo específico."""
+    if 'resultado' not in session:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    resultado_dict = session['resultado']
+    grupos = resultado_dict.get('grupos_por_categoria', {}).get(categoria, [])
+    
+    # Buscar el grupo
+    grupo = next((g for g in grupos if g['id'] == grupo_id), None)
+    
+    if not grupo:
+        return jsonify({'error': 'Grupo no encontrado'}), 404
+    
+    return jsonify({
+        'success': True,
+        'grupo': grupo
+    })
+
+
+@api_bp.route('/obtener-no-asignadas/<categoria>', methods=['GET'])
+def obtener_no_asignadas(categoria):
+    """Devuelve las parejas no asignadas de una categoría."""
+    if 'resultado' not in session:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    resultado_dict = session['resultado']
+    no_asignadas = resultado_dict.get('parejas_no_asignadas', {}).get(categoria, [])
+    
+    return jsonify({
+        'success': True,
+        'categoria': categoria,
+        'parejas': no_asignadas
+    })
