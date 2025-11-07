@@ -526,6 +526,14 @@
             <div class="tab-pane fade show active" id="serie-{{ categoria }}" role="tabpanel">
                 <h4 class="mb-4">Grupos de {{ categoria }}</h4>
                 
+                <!-- Leyenda de compatibilidad horaria -->
+                <div class="alert alert-info mb-3">
+                    <strong>📌 Compatibilidad Horaria:</strong>
+                    <span class="ms-2">⚪ Normal = Horario exacto elegido</span>
+                    <span class="ms-2">🟡 Amarillo = Mismo día, horario diferente</span>
+                    <span class="ms-2">🔴 Rojo = Día no elegido</span>
+                </div>
+                
                 <!-- Grid de 4 columnas para Grupos A, B, C, D -->
                 <div class="row g-3">
                     {% for grupo in grupos %}
@@ -562,8 +570,39 @@
                                 <!-- Parejas del Grupo con selector de posición -->
                                 <h6 class="fw-bold mb-2">👥 Parejas:</h6>
                                 {% for pareja in grupo.parejas %}
-                                {% set franja_compatible = grupo.franja_horaria in pareja.franjas_disponibles if grupo.franja_horaria and pareja.franjas_disponibles else true %}
-                                <div class="pareja-item mb-2 p-2 bg-white rounded border {{ 'border-danger border-2' if not franja_compatible else '' }}" 
+                                {% set franja_asignada = grupo.franja_horaria %}
+                                {% set franjas_pareja = pareja.franjas_disponibles if pareja.franjas_disponibles else [] %}
+                                
+                                {# Verificar compatibilidad exacta #}
+                                {% set compatible_exacto = franja_asignada in franjas_pareja if franja_asignada and franjas_pareja else true %}
+                                
+                                {# Verificar compatibilidad parcial (mismo día) #}
+                                {% set compatible_parcial = false %}
+                                {% if franja_asignada and not compatible_exacto %}
+                                    {% set dia_asignado = franja_asignada.split(' ')[0] %}
+                                    {% for franja in franjas_pareja %}
+                                        {% if franja.startswith(dia_asignado) %}
+                                            {% set compatible_parcial = true %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {# Determinar clase CSS y tooltip #}
+                                {% if compatible_exacto %}
+                                    {% set border_class = '' %}
+                                    {% set text_class = '' %}
+                                    {% set tooltip = '' %}
+                                {% elif compatible_parcial %}
+                                    {% set border_class = 'border-warning border-2' %}
+                                    {% set text_class = 'text-warning' %}
+                                    {% set tooltip = 'Esta pareja eligió este día pero en otro horario' %}
+                                {% else %}
+                                    {% set border_class = 'border-danger border-2' %}
+                                    {% set text_class = 'text-danger' %}
+                                    {% set tooltip = 'Esta pareja no eligió este día' %}
+                                {% endif %}
+                                
+                                <div class="pareja-item mb-2 p-2 bg-white rounded border {{ border_class }}" 
                                      draggable="true"
                                      data-pareja-id="{{ pareja.id }}"
                                      data-pareja-nombre="{{ pareja.nombre }}"
@@ -571,10 +610,10 @@
                                      data-grupo-id="{{ grupo.id }}"
                                      data-posicion="{{ pareja.posicion_grupo or '' }}"
                                      ondragstart="dragStart(event)"
-                                     {% if not franja_compatible %}title="Esta pareja no eligió esta franja horaria"{% endif %}>
+                                     {% if tooltip %}title="{{ tooltip }}"{% endif %}>
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
-                                            <div class="fw-bold text-truncate {{ 'text-danger' if not franja_compatible else '' }}" title="{{ pareja.nombre }}">
+                                            <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
                                                 {{ loop.index }}. {{ pareja.nombre }}
                                             </div>
                                             <small class="text-muted d-block mt-1">
