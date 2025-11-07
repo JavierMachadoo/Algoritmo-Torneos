@@ -124,6 +124,39 @@
         flex: 1;
         min-width: 250px;
     }
+    .parejas-no-asignadas-container {
+        border: 3px dashed #ffc107;
+        border-radius: 10px;
+        padding: 1rem;
+        background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+        margin-bottom: 1.5rem;
+    }
+    .pareja-no-asignada {
+        background: white;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        cursor: grab;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .pareja-no-asignada:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        border-color: #ff9800;
+    }
+    .pareja-no-asignada:active {
+        cursor: grabbing;
+    }
+    .pareja-no-asignada.dragging {
+        opacity: 0.4;
+        cursor: grabbing;
+    }
+    .btn-asignar-manual {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -221,6 +254,131 @@
                     </button>
                     <button type="button" class="btn btn-success" id="btnConfirmarGanador">
                         <i class="bi bi-check-circle-fill"></i> Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Grupo Manual -->
+    <div class="modal fade" id="modalCrearGrupo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle-fill"></i> Crear Nuevo Grupo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCrearGrupo">
+                        <input type="hidden" id="crearGrupoCategoria">
+                        <div class="mb-3">
+                            <label for="crearGrupoFranja" class="form-label">Franja Horaria *</label>
+                            <select class="form-select" id="crearGrupoFranja" required>
+                                <option value="">-- Selecciona --</option>
+                                <option value="Jueves 18:00">Jueves 18:00</option>
+                                <option value="Jueves 19:00">Jueves 19:00</option>
+                                <option value="Jueves 20:00">Jueves 20:00</option>
+                                <option value="Jueves 21:00">Jueves 21:00</option>
+                                <option value="Jueves 22:00">Jueves 22:00</option>
+                                <option value="Viernes 18:00">Viernes 18:00</option>
+                                <option value="Viernes 19:00">Viernes 19:00</option>
+                                <option value="Viernes 20:00">Viernes 20:00</option>
+                                <option value="Viernes 21:00">Viernes 21:00</option>
+                                <option value="Viernes 22:00">Viernes 22:00</option>
+                                <option value="Viernes 23:00">Viernes 23:00</option>
+                                <option value="Sábado 09:00">Sábado 09:00</option>
+                                <option value="Sábado 10:00">Sábado 10:00</option>
+                                <option value="Sábado 11:00">Sábado 11:00</option>
+                                <option value="Sábado 12:00">Sábado 12:00</option>
+                                <option value="Sábado 13:00">Sábado 13:00</option>
+                                <option value="Sábado 14:00">Sábado 14:00</option>
+                                <option value="Sábado 16:00">Sábado 16:00</option>
+                                <option value="Sábado 17:00">Sábado 17:00</option>
+                                <option value="Sábado 18:00">Sábado 18:00</option>
+                                <option value="Sábado 19:00">Sábado 19:00</option>
+                                <option value="Sábado 20:00">Sábado 20:00</option>
+                                <option value="Sábado 21:00">Sábado 21:00</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="crearGrupoCancha" class="form-label">Cancha *</label>
+                            <select class="form-select" id="crearGrupoCancha" required>
+                                <option value="">-- Selecciona --</option>
+                                <option value="1">Cancha 1</option>
+                                <option value="2">Cancha 2</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarCrearGrupo()">
+                        <i class="bi bi-check-circle"></i> Crear Grupo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Grupo -->
+    <div class="modal fade" id="modalEditarGrupo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-fill"></i> Editar Grupo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarGrupo">
+                        <input type="hidden" id="editarGrupoId">
+                        <input type="hidden" id="editarGrupoCategoria">
+                        <div class="mb-3">
+                            <label for="editarGrupoFranja" class="form-label">Franja Horaria *</label>
+                            <select class="form-select" id="editarGrupoFranja" required>
+                                <option value="">-- Selecciona --</option>
+                                <option value="Jueves 18:00">Jueves 18:00</option>
+                                <option value="Jueves 19:00">Jueves 19:00</option>
+                                <option value="Jueves 20:00">Jueves 20:00</option>
+                                <option value="Jueves 21:00">Jueves 21:00</option>
+                                <option value="Jueves 22:00">Jueves 22:00</option>
+                                <option value="Viernes 18:00">Viernes 18:00</option>
+                                <option value="Viernes 19:00">Viernes 19:00</option>
+                                <option value="Viernes 20:00">Viernes 20:00</option>
+                                <option value="Viernes 21:00">Viernes 21:00</option>
+                                <option value="Viernes 22:00">Viernes 22:00</option>
+                                <option value="Viernes 23:00">Viernes 23:00</option>
+                                <option value="Sábado 09:00">Sábado 09:00</option>
+                                <option value="Sábado 10:00">Sábado 10:00</option>
+                                <option value="Sábado 11:00">Sábado 11:00</option>
+                                <option value="Sábado 12:00">Sábado 12:00</option>
+                                <option value="Sábado 13:00">Sábado 13:00</option>
+                                <option value="Sábado 14:00">Sábado 14:00</option>
+                                <option value="Sábado 16:00">Sábado 16:00</option>
+                                <option value="Sábado 17:00">Sábado 17:00</option>
+                                <option value="Sábado 18:00">Sábado 18:00</option>
+                                <option value="Sábado 19:00">Sábado 19:00</option>
+                                <option value="Sábado 20:00">Sábado 20:00</option>
+                                <option value="Sábado 21:00">Sábado 21:00</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editarGrupoCancha" class="form-label">Cancha *</label>
+                            <select class="form-select" id="editarGrupoCancha" required>
+                                <option value="">-- Selecciona --</option>
+                                <option value="1">Cancha 1</option>
+                                <option value="2">Cancha 2</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmarEditarGrupo()">
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
                     </button>
                 </div>
             </div>
@@ -524,7 +682,12 @@
         <div class="tab-content">
             <!-- TAB SERIE: Grupos actuales -->
             <div class="tab-pane fade show active" id="serie-{{ categoria }}" role="tabpanel">
-                <h4 class="mb-4">Grupos de {{ categoria }}</h4>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Grupos de {{ categoria }}</h4>
+                    <button class="btn btn-success" onclick="abrirModalCrearGrupo('{{ categoria }}')">
+                        <i class="bi bi-plus-circle-fill"></i> Nuevo Grupo
+                    </button>
+                </div>
                 
                 <!-- Leyenda de compatibilidad horaria -->
                 <div class="alert alert-info mb-3">
@@ -532,6 +695,11 @@
                     <span class="ms-2">⚪ Normal = Horario exacto elegido</span>
                     <span class="ms-2">🟡 Amarillo = Mismo día, horario diferente</span>
                     <span class="ms-2">🔴 Rojo = Día no elegido</span>
+                </div>
+
+                <!-- Parejas No Asignadas -->
+                <div id="parejas-no-asignadas-{{ categoria }}" class="mb-4">
+                    <!-- Se carga dinámicamente -->
                 </div>
                 
                 <!-- Grid de 4 columnas para Grupos A, B, C, D -->
@@ -545,7 +713,7 @@
                              ondrop="dropPareja(event)" 
                              ondragover="allowDrop(event)"
                              ondragleave="removeDragOver(event)">
-                            <div class="card-header text-white text-center" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                            <div class="card-header text-white text-center position-relative" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
                                 <h5 class="mb-0 fw-bold">
                                     {% if loop.index == 1 %}GRUPO A
                                     {% elif loop.index == 2 %}GRUPO B
@@ -554,6 +722,11 @@
                                     {% else %}GRUPO {{ loop.index }}
                                     {% endif %}
                                 </h5>
+                                <button class="btn btn-sm btn-light position-absolute top-50 end-0 translate-middle-y me-2" 
+                                        onclick="abrirModalEditarGrupo({{ grupo.id }}, '{{ categoria }}', '{{ grupo.franja_horaria }}', {{ grupo.cancha }})"
+                                        title="Editar horario y cancha">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
                             </div>
                             
                             <div class="card-body" style="background-color: {{ bg_color }};">
@@ -762,10 +935,15 @@ let draggedPareja = null;
 let dragTimeout = null;
 
 function dragStart(event) {
+    const esNoAsignada = event.target.dataset.esNoAsignada === 'true';
+    const categoria = event.target.dataset.categoria;
+    
     draggedPareja = {
         parejaId: event.target.dataset.parejaId,
         parejaNombre: event.target.dataset.parejaNombre,
-        grupoOrigen: event.target.dataset.grupoOrigen
+        grupoOrigen: event.target.dataset.grupoOrigen || null,
+        esNoAsignada: esNoAsignada,
+        categoria: categoria
     };
     event.target.classList.add('dragging');
     event.dataTransfer.effectAllowed = 'move';
@@ -797,17 +975,69 @@ function dropPareja(event) {
     if (!draggedPareja) return;
     
     const grupoDestino = event.currentTarget.dataset.grupoId;
+    const categoria = event.currentTarget.dataset.categoria;
+    
+    // Limpiar estado visual
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    
+    // Si es una pareja no asignada
+    if (draggedPareja.esNoAsignada) {
+        asignarParejaNoAsignadaAGrupo(draggedPareja.parejaId, grupoDestino, categoria);
+        draggedPareja = null;
+        return;
+    }
+    
+    // Si es intercambio normal entre grupos
     const grupoOrigen = draggedPareja.grupoOrigen;
     
     if (grupoOrigen === grupoDestino) {
-        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        draggedPareja = null;
         return;
     }
     
     intercambiarPareja(draggedPareja.parejaId, grupoOrigen, grupoDestino);
-    
-    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
     draggedPareja = null;
+}
+
+function asignarParejaNoAsignadaAGrupo(parejaId, grupoId, categoria) {
+    // Verificar si el grupo está lleno
+    const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"]`);
+    const parejas = grupoCard.querySelectorAll('.pareja-item');
+    
+    if (parejas.length >= 3) {
+        Toast.warning('El grupo está lleno (3/3). Usa el botón "Asignar" para reemplazar una pareja.');
+        return;
+    }
+    
+    Toast.info('Asignando pareja al grupo...');
+    
+    fetch('/api/asignar-pareja-a-grupo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            pareja_id: parseInt(parejaId),
+            grupo_id: parseInt(grupoId),
+            pareja_a_remover_id: null,
+            categoria: categoria
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            setTimeout(() => window.location.reload(), 800);
+        } else if (data.grupo_lleno) {
+            Toast.warning('El grupo está lleno. Usa el botón "Asignar" para elegir qué pareja reemplazar.');
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al asignar pareja');
+    });
 }
 
 function intercambiarPareja(parejaId, grupoOrigen, grupoDestino) {
@@ -909,6 +1139,278 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         franjasContainer.appendChild(div);
     });
+    
+    // Cargar parejas no asignadas para cada categoría visible
+    const categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
+    categorias.forEach(cat => cargarParejasNoAsignadas(cat));
+});
+
+// ==================== PAREJAS NO ASIGNADAS ====================
+
+function cargarParejasNoAsignadas(categoria) {
+    fetch(`/api/parejas-no-asignadas/${categoria}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderizarParejasNoAsignadas(categoria, data.parejas);
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar parejas no asignadas:', error);
+        });
+}
+
+function renderizarParejasNoAsignadas(categoria, parejas) {
+    const container = document.getElementById(`parejas-no-asignadas-${categoria}`);
+    
+    if (!parejas || parejas.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    const coloresCategoria = {
+        'Cuarta': { border: '#28a745', bg: '#d4edda', emoji: '🟢' },
+        'Quinta': { border: '#ffc107', bg: '#fff3cd', emoji: '🟡' },
+        'Sexta': { border: '#17a2b8', bg: '#d1ecf1', emoji: '🔵' },
+        'Séptima': { border: '#9b7fed', bg: '#e7e3ff', emoji: '🟣' }
+    };
+    
+    const color = coloresCategoria[categoria] || { border: '#6c757d', bg: '#f8f9fa', emoji: '⚪' };
+    
+    let html = `
+        <div class="parejas-no-asignadas-container">
+            <h5 class="mb-3">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                Parejas No Asignadas (${parejas.length})
+            </h5>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i> 
+                Arrastra estas parejas a los grupos o usa el botón "Asignar" para elegir manualmente
+            </p>
+            <div class="row g-2">
+    `;
+    
+    parejas.forEach(pareja => {
+        html += `
+            <div class="col-md-4">
+                <div class="pareja-no-asignada" 
+                     draggable="true"
+                     data-pareja-id="${pareja.id}"
+                     data-pareja-nombre="${pareja.nombre}"
+                     data-categoria="${categoria}"
+                     data-es-no-asignada="true"
+                     ondragstart="dragStart(event)">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-truncate" title="${pareja.nombre}">
+                                ${color.emoji} ${pareja.nombre}
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary btn-asignar-manual" 
+                                onclick="abrirModalAsignarManual(${pareja.id}, '${pareja.nombre}', '${categoria}')"
+                                title="Asignar manualmente">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-clock"></i> ${pareja.franjas_disponibles ? pareja.franjas_disponibles.join(', ') : 'Sin horarios'}
+                    </small>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-telephone"></i> ${pareja.telefono || 'Sin teléfono'}
+                    </small>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function abrirModalAsignarManual(parejaId, parejaNombre, categoria) {
+    // Crear modal dinámico
+    const modalHtml = `
+        <div class="modal fade" id="modalAsignarManual" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-arrow-right-circle"></i> Asignar Pareja a Grupo
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Pareja:</strong> ${parejaNombre}</p>
+                        <div class="mb-3">
+                            <label for="selectGrupo" class="form-label">Grupo de destino *</label>
+                            <select class="form-select" id="selectGrupo" required>
+                                <option value="">-- Selecciona un grupo --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="selectParejaRemoverContainer" style="display: none;">
+                            <label for="selectParejaRemover" class="form-label">Reemplazar pareja (opcional)</label>
+                            <select class="form-select" id="selectParejaRemover">
+                                <option value="">-- No reemplazar, solo agregar --</option>
+                            </select>
+                            <small class="text-muted">
+                                Si el grupo ya tiene 3 parejas, debes seleccionar una para reemplazar
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmarAsignacionManual(${parejaId}, '${categoria}')">
+                            <i class="bi bi-check-circle"></i> Asignar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior si existe
+    const modalAnterior = document.getElementById('modalAsignarManual');
+    if (modalAnterior) {
+        modalAnterior.remove();
+    }
+    
+    // Agregar nuevo modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Cargar grupos disponibles
+    cargarGruposDisponibles(categoria);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalAsignarManual'));
+    modal.show();
+}
+
+function cargarGruposDisponibles(categoria) {
+    // Obtener todos los grupos de la categoría del DOM
+    const gruposCards = document.querySelectorAll(`[data-categoria="${categoria}"].grupo-card`);
+    const selectGrupo = document.getElementById('selectGrupo');
+    
+    gruposCards.forEach((card, index) => {
+        const grupoId = card.dataset.grupoId;
+        const letra = ['A', 'B', 'C', 'D'][index] || index + 1;
+        const parejas = card.querySelectorAll('.pareja-item');
+        const numParejas = parejas.length;
+        
+        const option = document.createElement('option');
+        option.value = grupoId;
+        option.textContent = `Grupo ${letra} (${numParejas}/3 parejas)`;
+        option.dataset.numParejas = numParejas;
+        selectGrupo.appendChild(option);
+    });
+    
+    // Evento para mostrar selector de pareja a remover si el grupo está lleno
+    selectGrupo.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const numParejas = parseInt(selectedOption.dataset.numParejas || 0);
+        const grupoId = this.value;
+        
+        const container = document.getElementById('selectParejaRemoverContainer');
+        const selectPareja = document.getElementById('selectParejaRemover');
+        
+        if (numParejas >= 3 && grupoId) {
+            // Mostrar selector y cargar parejas del grupo
+            container.style.display = 'block';
+            selectPareja.innerHTML = '<option value="">-- Selecciona pareja a reemplazar --</option>';
+            
+            // Buscar parejas del grupo
+            const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"]`);
+            const parejas = grupoCard.querySelectorAll('.pareja-item');
+            
+            parejas.forEach(pareja => {
+                const option = document.createElement('option');
+                option.value = pareja.dataset.parejaId;
+                option.textContent = pareja.dataset.parejaNombre;
+                selectPareja.appendChild(option);
+            });
+            
+            selectPareja.required = true;
+        } else {
+            container.style.display = 'none';
+            selectPareja.required = false;
+        }
+    });
+}
+
+function confirmarAsignacionManual(parejaId, categoria) {
+    const grupoId = document.getElementById('selectGrupo').value;
+    const parejaRemoverId = document.getElementById('selectParejaRemover').value;
+    
+    if (!grupoId) {
+        Toast.error('Debes seleccionar un grupo');
+        return;
+    }
+    
+    // Verificar si el grupo está lleno y no se seleccionó pareja a remover
+    const selectedOption = document.getElementById('selectGrupo').options[document.getElementById('selectGrupo').selectedIndex];
+    const numParejas = parseInt(selectedOption.dataset.numParejas || 0);
+    
+    if (numParejas >= 3 && !parejaRemoverId) {
+        Toast.error('El grupo está lleno. Debes seleccionar una pareja para reemplazar');
+        return;
+    }
+    
+    Toast.info('Asignando pareja al grupo...');
+    
+    fetch('/api/asignar-pareja-a-grupo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            pareja_id: parseInt(parejaId),
+            grupo_id: parseInt(grupoId),
+            pareja_a_remover_id: parejaRemoverId ? parseInt(parejaRemoverId) : null,
+            categoria: categoria
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarManual'));
+            modal.hide();
+            
+            // Recargar página para reflejar cambios
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al asignar pareja');
+    });
+}
+
+// Función para cargar franjas horarias en el modal
+document.addEventListener('DOMContentLoaded', function() {
+    const franjasContainer = document.getElementById('franjasModalContainer');
+    const franjas = [
+        "Jueves 18:00", "Jueves 20:00",
+        "Viernes 18:00", "Viernes 21:00",
+        "Sábado 09:00", "Sábado 12:00", "Sábado 16:00", "Sábado 19:00"
+    ];
+    
+    franjas.forEach((franja, idx) => {
+        const div = document.createElement('div');
+        div.className = 'form-check';
+        div.innerHTML = `
+            <input class="form-check-input" type="checkbox" value="${franja}" id="franjaModal${idx}" name="franjas">
+            <label class="form-check-label" for="franjaModal${idx}">${franja}</label>
+        `;
+        franjasContainer.appendChild(div);
+    });
 });
 
 function agregarParejaDesdeModal() {
@@ -968,6 +1470,117 @@ function agregarParejaDesdeModal() {
     .catch(error => {
         console.error('Error:', error);
         Toast.error('Error al agregar pareja');
+    });
+}
+
+// ==================== CREAR Y EDITAR GRUPOS ====================
+
+function abrirModalCrearGrupo(categoria) {
+    document.getElementById('crearGrupoCategoria').value = categoria;
+    document.getElementById('crearGrupoFranja').value = '';
+    document.getElementById('crearGrupoCancha').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalCrearGrupo'));
+    modal.show();
+}
+
+function confirmarCrearGrupo() {
+    const categoria = document.getElementById('crearGrupoCategoria').value;
+    const franja = document.getElementById('crearGrupoFranja').value;
+    const cancha = document.getElementById('crearGrupoCancha').value;
+    
+    if (!franja || !cancha) {
+        Toast.error('Debes completar todos los campos');
+        return;
+    }
+    
+    Toast.info('Creando grupo...');
+    
+    fetch('/api/crear-grupo-manual', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            categoria: categoria,
+            franja_horaria: franja,
+            cancha: cancha
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalCrearGrupo'));
+            modal.hide();
+            
+            // Recargar para mostrar el nuevo grupo
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al crear grupo');
+    });
+}
+
+function abrirModalEditarGrupo(grupoId, categoria, franjaActual, canchaActual) {
+    document.getElementById('editarGrupoId').value = grupoId;
+    document.getElementById('editarGrupoCategoria').value = categoria;
+    document.getElementById('editarGrupoFranja').value = franjaActual;
+    document.getElementById('editarGrupoCancha').value = canchaActual;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarGrupo'));
+    modal.show();
+}
+
+function confirmarEditarGrupo() {
+    const grupoId = document.getElementById('editarGrupoId').value;
+    const categoria = document.getElementById('editarGrupoCategoria').value;
+    const franja = document.getElementById('editarGrupoFranja').value;
+    const cancha = document.getElementById('editarGrupoCancha').value;
+    
+    if (!franja || !cancha) {
+        Toast.error('Debes completar todos los campos');
+        return;
+    }
+    
+    Toast.info('Actualizando grupo...');
+    
+    fetch('/api/editar-grupo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            grupo_id: parseInt(grupoId),
+            categoria: categoria,
+            franja_horaria: franja,
+            cancha: cancha
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarGrupo'));
+            modal.hide();
+            
+            // Recargar para mostrar los cambios
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al editar grupo');
     });
 }
 

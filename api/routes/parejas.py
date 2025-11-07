@@ -233,6 +233,198 @@ def serializar_resultado(resultado, num_canchas):
     }
 
 
+@api_bp.route('/parejas-no-asignadas/<categoria>', methods=['GET'])
+def obtener_parejas_no_asignadas(categoria):
+    """Obtiene las parejas no asignadas de una categoría específica."""
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    parejas_no_asignadas = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Filtrar por categoría
+    parejas_categoria = [
+        pareja for pareja in parejas_no_asignadas 
+        if pareja.get('categoria') == categoria
+    ]
+    
+    return jsonify({
+        'success': True,
+        'parejas': parejas_categoria,
+        'total': len(parejas_categoria)
+    })
+
+
+@api_bp.route('/asignar-pareja-a-grupo', methods=['POST'])
+def asignar_pareja_a_grupo():
+    """Asigna una pareja no asignada a un grupo, opcionalmente reemplazando otra."""
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    grupo_id = data.get('grupo_id')
+    pareja_a_remover_id = data.get('pareja_a_remover_id')  # Opcional
+    categoria = data.get('categoria')
+    
+    if not all([pareja_id, grupo_id, categoria]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Buscar la pareja no asignada
+    pareja_a_asignar = None
+    for idx, p in enumerate(parejas_sin_asignar):
+        if p.get('id') == pareja_id:
+            pareja_a_asignar = parejas_sin_asignar.pop(idx)
+            break
+    
+    if not pareja_a_asignar:
+        return jsonify({'error': 'Pareja no encontrada en no asignadas'}), 404
+    
+    # Buscar el grupo
+    grupo_encontrado = None
+    for grupo in grupos_dict.get(categoria, []):
+        if grupo['id'] == grupo_id:
+            grupo_encontrado = grupo
+            break
+    
+    if not grupo_encontrado:
+        return jsonify({'error': 'Grupo no encontrado'}), 404
+    
+    # Si hay pareja a remover, quitarla del grupo y agregarla a no asignadas
+    if pareja_a_remover_id:
+        pareja_removida = None
+        for idx, p in enumerate(grupo_encontrado['parejas']):
+            if p.get('id') == pareja_a_remover_id:
+                pareja_removida = grupo_encontrado['parejas'].pop(idx)
+                break
+        
+        if pareja_removida:
+            # Limpiar la posición de grupo antes de agregar a no asignadas
+            pareja_removida['posicion_grupo'] = None
+            parejas_sin_asignar.append(pareja_removida)
+    
+    # Si el grupo ya tiene 3 parejas y no se especificó a quién remover
+    if len(grupo_encontrado['parejas']) >= 3 and not pareja_a_remover_id:
+        # Devolver la pareja a no asignadas
+        parejas_sin_asignar.append(pareja_a_asignar)
+        return jsonify({
+            'error': 'El grupo ya tiene 3 parejas. Debes especificar cuál reemplazar.',
+            'grupo_lleno': True,
+            'parejas_grupo': grupo_encontrado['parejas']
+        }), 400
+    
+    # Agregar la pareja al grupo
+    grupo_encontrado['parejas'].append(pareja_a_asignar)
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    
+    return jsonify({
+        'success': True,
+        'mensaje': f'✓ Pareja asignada al grupo correctamente'
+    })
+
+
+@api_bp.route('/crear-grupo-manual', methods=['POST'])
+def crear_grupo_manual():
+    """Crea un nuevo grupo manualmente para una categoría."""
+    data = request.json
+    categoria = data.get('categoria')
+    franja_horaria = data.get('franja_horaria')
+    cancha = data.get('cancha')
+    
+    if not all([categoria, franja_horaria, cancha]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    
+    # Asegurar que existe la categoría
+    if categoria not in grupos_dict:
+        grupos_dict[categoria] = []
+    
+    # Generar nuevo ID único para el grupo
+    max_id = 0
+    for cat_grupos in grupos_dict.values():
+        for grupo in cat_grupos:
+            if grupo.get('id', 0) > max_id:
+                max_id = grupo['id']
+    
+    nuevo_id = max_id + 1
+    
+    # Crear el nuevo grupo
+    nuevo_grupo = {
+        'id': nuevo_id,
+        'franja_horaria': franja_horaria,
+        'cancha': cancha,
+        'score_compatibilidad': 0.0,
+        'parejas': [],
+        'partidos': []
+    }
+    
+    grupos_dict[categoria].append(nuevo_grupo)
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    
+    return jsonify({
+        'success': True,
+        'mensaje': '✓ Grupo creado correctamente',
+        'grupo': nuevo_grupo
+    })
+
+
+@api_bp.route('/editar-grupo', methods=['POST'])
+def editar_grupo():
+    """Edita la franja horaria y cancha de un grupo."""
+    data = request.json
+    grupo_id = data.get('grupo_id')
+    categoria = data.get('categoria')
+    franja_horaria = data.get('franja_horaria')
+    cancha = data.get('cancha')
+    
+    if not all([grupo_id, categoria, franja_horaria, cancha]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    
+    # Buscar el grupo
+    grupo_encontrado = None
+    for grupo in grupos_dict.get(categoria, []):
+        if grupo['id'] == grupo_id:
+            grupo_encontrado = grupo
+            break
+    
+    if not grupo_encontrado:
+        return jsonify({'error': 'Grupo no encontrado'}), 404
+    
+    # Actualizar datos del grupo
+    grupo_encontrado['franja_horaria'] = franja_horaria
+    grupo_encontrado['cancha'] = cancha
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    
+    return jsonify({
+        'success': True,
+        'mensaje': '✓ Grupo actualizado correctamente'
+    })
+
+
 @api_bp.route('/exportar-google-sheets', methods=['POST'])
 def exportar_google_sheets():
     """Exporta el calendario de partidos a Google Sheets."""
