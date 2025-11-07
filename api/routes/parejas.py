@@ -425,6 +425,92 @@ def editar_grupo():
     })
 
 
+@api_bp.route('/editar-pareja', methods=['POST'])
+def editar_pareja():
+    """Edita los datos de una pareja (nombre, teléfono, categoría, franjas)."""
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    nombre = data.get('nombre')
+    telefono = data.get('telefono')
+    categoria = data.get('categoria')
+    franjas = data.get('franjas', [])
+    
+    if not all([pareja_id, nombre, categoria]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    if not franjas or len(franjas) == 0:
+        return jsonify({'error': 'Debes seleccionar al menos una franja horaria'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Buscar la pareja en grupos o en no asignadas
+    pareja_encontrada = None
+    grupo_contenedor = None
+    categoria_original = None
+    en_no_asignadas = False
+    
+    # Buscar en grupos
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            for pareja in grupo.get('parejas', []):
+                if pareja.get('id') == pareja_id:
+                    pareja_encontrada = pareja
+                    grupo_contenedor = grupo
+                    categoria_original = cat
+                    break
+            if pareja_encontrada:
+                break
+        if pareja_encontrada:
+            break
+    
+    # Si no está en grupos, buscar en no asignadas
+    if not pareja_encontrada:
+        for pareja in parejas_sin_asignar:
+            if pareja.get('id') == pareja_id:
+                pareja_encontrada = pareja
+                categoria_original = pareja.get('categoria')
+                en_no_asignadas = True
+                break
+    
+    if not pareja_encontrada:
+        return jsonify({'error': 'Pareja no encontrada'}), 404
+    
+    # Si cambió de categoría, mover a parejas no asignadas de la nueva categoría
+    cambio_categoria = categoria != categoria_original
+    
+    if cambio_categoria and grupo_contenedor:
+        # Remover del grupo actual
+        grupo_contenedor['parejas'].remove(pareja_encontrada)
+        # Actualizar categoría
+        pareja_encontrada['categoria'] = categoria
+        # Agregar a no asignadas
+        parejas_sin_asignar.append(pareja_encontrada)
+    
+    # Actualizar datos de la pareja
+    pareja_encontrada['nombre'] = nombre
+    pareja_encontrada['telefono'] = telefono
+    pareja_encontrada['categoria'] = categoria
+    pareja_encontrada['franjas_disponibles'] = franjas
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    
+    mensaje = '✓ Pareja actualizada correctamente'
+    if cambio_categoria:
+        mensaje += ' (movida a parejas no asignadas por cambio de categoría)'
+    
+    return jsonify({
+        'success': True,
+        'mensaje': mensaje
+    })
+
+
 @api_bp.route('/exportar-google-sheets', methods=['POST'])
 def exportar_google_sheets():
     """Exporta el calendario de partidos a Google Sheets."""

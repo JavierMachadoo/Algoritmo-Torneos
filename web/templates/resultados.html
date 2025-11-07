@@ -357,6 +357,86 @@
         </div>
     </div>
 
+    <!-- Modal Editar Pareja -->
+    <div class="modal fade" id="modalEditarPareja" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i> Editar Pareja
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarPareja">
+                        <input type="hidden" id="editarParejaId">
+                        <div class="mb-3">
+                            <label for="editarParejaNombre" class="form-label">Nombre de la Pareja *</label>
+                            <input type="text" class="form-control" id="editarParejaNombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editarParejaTelefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="editarParejaTelefono">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editarParejaCategoria" class="form-label">Categoría *</label>
+                            <select class="form-select" id="editarParejaCategoria" required>
+                                <option value="Cuarta">4ta</option>
+                                <option value="Quinta">5ta</option>
+                                <option value="Sexta">6ta</option>
+                                <option value="Séptima">7ma</option>
+                            </select>
+                            <small class="text-muted">Si cambias la categoría, la pareja se moverá a "No Asignadas"</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Franjas Horarias Disponibles *</label>
+                            <div id="editarParejaFranjasContainer">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Jueves 18:00" id="editFranjaJ18">
+                                    <label class="form-check-label" for="editFranjaJ18">Jueves 18:00 a 21:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Jueves 20:00" id="editFranjaJ20">
+                                    <label class="form-check-label" for="editFranjaJ20">Jueves 20:00 a 23:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Viernes 18:00" id="editFranjaV18">
+                                    <label class="form-check-label" for="editFranjaV18">Viernes 18:00 a 21:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Viernes 21:00" id="editFranjaV21">
+                                    <label class="form-check-label" for="editFranjaV21">Viernes 21:00 a 00:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Sábado 09:00" id="editFranjaS09">
+                                    <label class="form-check-label" for="editFranjaS09">Sábado 09:00 a 12:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Sábado 12:00" id="editFranjaS12">
+                                    <label class="form-check-label" for="editFranjaS12">Sábado 12:00 a 15:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Sábado 16:00" id="editFranjaS16">
+                                    <label class="form-check-label" for="editFranjaS16">Sábado 16:00 a 19:00</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Sábado 19:00" id="editFranjaS19">
+                                    <label class="form-check-label" for="editFranjaS19">Sábado 19:00 a 22:00</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info text-white" onclick="confirmarEditarPareja()">
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Estadísticas Generales -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
@@ -759,8 +839,16 @@
                                      {% if tooltip %}title="{{ tooltip }}"{% endif %}>
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
-                                            <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
-                                                {{ loop.index }}. {{ pareja.nombre }}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
+                                                    {{ loop.index }}. {{ pareja.nombre }}
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-secondary p-0 px-1" 
+                                                        onclick="event.stopPropagation(); abrirModalEditarPareja({{ pareja.id }}, '{{ pareja.nombre }}', '{{ pareja.telefono }}', '{{ categoria }}', {{ pareja.franjas_disponibles|tojson }})"
+                                                        title="Editar pareja"
+                                                        style="font-size: 0.7rem;">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
                                             </div>
                                             <small class="text-muted d-block mt-1">
                                                 <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
@@ -1179,11 +1267,18 @@ function renderizarParejasNoAsignadas(categoria, parejas) {
                                 ${color.emoji} ${pareja.nombre}
                             </div>
                         </div>
-                        <button class="btn btn-sm btn-outline-primary btn-asignar-manual" 
-                                onclick="abrirModalAsignarManual(${pareja.id}, '${pareja.nombre}', '${categoria}')"
-                                title="Asignar manualmente">
-                            <i class="bi bi-plus-circle"></i>
-                        </button>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-secondary btn-asignar-manual" 
+                                    onclick="event.stopPropagation(); abrirModalEditarPareja(${pareja.id}, '${pareja.nombre}', '${pareja.telefono || ''}', '${categoria}', ${JSON.stringify(pareja.franjas_disponibles || [])})"
+                                    title="Editar pareja">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-asignar-manual" 
+                                    onclick="abrirModalAsignarManual(${pareja.id}, '${pareja.nombre}', '${categoria}')"
+                                    title="Asignar manualmente">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
                     </div>
                     <small class="text-muted d-block">
                         <i class="bi bi-clock"></i> ${pareja.franjas_disponibles ? pareja.franjas_disponibles.join(', ') : 'Sin horarios'}
@@ -1554,6 +1649,88 @@ function confirmarEditarGrupo() {
     .catch(error => {
         console.error('Error:', error);
         Toast.error('Error al editar grupo');
+    });
+}
+
+// ==================== EDITAR PAREJA ====================
+
+function abrirModalEditarPareja(parejaId, nombre, telefono, categoria, franjas) {
+    document.getElementById('editarParejaId').value = parejaId;
+    document.getElementById('editarParejaNombre').value = nombre;
+    document.getElementById('editarParejaTelefono').value = telefono || '';
+    document.getElementById('editarParejaCategoria').value = categoria;
+    
+    // Limpiar checkboxes
+    document.querySelectorAll('#editarParejaFranjasContainer input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+    
+    // Marcar las franjas actuales
+    if (franjas && Array.isArray(franjas)) {
+        franjas.forEach(franja => {
+            const checkbox = document.querySelector(`#editarParejaFranjasContainer input[value="${franja}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarPareja'));
+    modal.show();
+}
+
+function confirmarEditarPareja() {
+    const parejaId = document.getElementById('editarParejaId').value;
+    const nombre = document.getElementById('editarParejaNombre').value.trim();
+    const telefono = document.getElementById('editarParejaTelefono').value.trim();
+    const categoria = document.getElementById('editarParejaCategoria').value;
+    
+    const franjasChecked = Array.from(document.querySelectorAll('#editarParejaFranjasContainer input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    
+    if (!nombre) {
+        Toast.error('El nombre es obligatorio');
+        return;
+    }
+    
+    if (franjasChecked.length === 0) {
+        Toast.error('Selecciona al menos una franja horaria');
+        return;
+    }
+    
+    Toast.info('Actualizando pareja...');
+    
+    fetch('/api/editar-pareja', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            pareja_id: parseInt(parejaId),
+            nombre: nombre,
+            telefono: telefono || 'Sin teléfono',
+            categoria: categoria,
+            franjas: franjasChecked
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPareja'));
+            modal.hide();
+            
+            // Recargar para mostrar los cambios
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            Toast.error('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toast.error('Error al editar pareja');
     });
 }
 
