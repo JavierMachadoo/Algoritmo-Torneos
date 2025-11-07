@@ -206,6 +206,9 @@
                             <td><span class="badge bg-secondary">{{ pareja.categoria }}</span></td>
                             <td><small>{{ ', '.join(pareja.franjas_disponibles) or 'Sin especificar' }}</small></td>
                             <td>
+                                <button class="btn btn-sm btn-primary me-1" onclick="editarParejaTabla({{ pareja.id }}, '{{ pareja.nombre|replace("'", "\\'") }}', '{{ pareja.telefono|replace("'", "\\'") }}', '{{ pareja.categoria }}', {{ pareja.franjas_disponibles|tojson }})" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 <button class="btn btn-sm btn-danger" onclick="eliminarPareja({{ pareja.id }})">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -239,6 +242,91 @@
                 </div>
                 <h5>Generando grupos óptimos...</h5>
                 <p class="text-muted">Por favor espera un momento</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Pareja -->
+<div class="modal fade" id="modalEditarParejaTabla" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i> Editar Pareja
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editParejaId">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre de la Pareja</label>
+                    <input type="text" class="form-control" id="editPanejaNombre" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Teléfono</label>
+                    <input type="text" class="form-control" id="editParejaTelefono">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Categoría</label>
+                    <select class="form-select" id="editParejaCategoria" required>
+                        <option value="Cuarta">Cuarta</option>
+                        <option value="Quinta">Quinta</option>
+                        <option value="Sexta">Sexta</option>
+                        <option value="Séptima">Séptima</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Franjas Horarias Disponibles</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaJ18" value="Jueves 18:00">
+                                <label class="form-check-label" for="editFranjaJ18">Jueves 18:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaJ20" value="Jueves 20:00">
+                                <label class="form-check-label" for="editFranjaJ20">Jueves 20:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaJ22" value="Jueves 22:00">
+                                <label class="form-check-label" for="editFranjaJ22">Jueves 22:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaJ0" value="Jueves 00:00">
+                                <label class="form-check-label" for="editFranjaJ0">Jueves 00:00</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaS12" value="Sábado 12:00">
+                                <label class="form-check-label" for="editFranjaS12">Sábado 12:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaS14" value="Sábado 14:00">
+                                <label class="form-check-label" for="editFranjaS14">Sábado 14:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaS16" value="Sábado 16:00">
+                                <label class="form-check-label" for="editFranjaS16">Sábado 16:00</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editFranjaS18" value="Sábado 18:00">
+                                <label class="form-check-label" for="editFranjaS18">Sábado 18:00</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarEditarParejaTabla()">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                </button>
             </div>
         </div>
     </div>
@@ -314,6 +402,72 @@ function eliminarPareja(id) {
         },
         error: function() {
             Toast.error('Error al eliminar');
+        }
+    });
+}
+
+// Editar pareja desde tabla
+function editarParejaTabla(id, nombre, telefono, categoria, franjas) {
+    document.getElementById('editParejaId').value = id;
+    document.getElementById('editPanejaNombre').value = nombre;
+    document.getElementById('editParejaTelefono').value = telefono;
+    document.getElementById('editParejaCategoria').value = categoria;
+    
+    // Limpiar checkboxes
+    document.querySelectorAll('#modalEditarParejaTabla input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    // Marcar franjas actuales
+    franjas.forEach(franja => {
+        const checkbox = Array.from(document.querySelectorAll('#modalEditarParejaTabla input[type="checkbox"]'))
+            .find(cb => cb.value === franja);
+        if (checkbox) checkbox.checked = true;
+    });
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarParejaTabla'));
+    modal.show();
+}
+
+function confirmarEditarParejaTabla() {
+    const id = document.getElementById('editParejaId').value;
+    const nombre = document.getElementById('editPanejaNombre').value;
+    const telefono = document.getElementById('editParejaTelefono').value;
+    const categoria = document.getElementById('editParejaCategoria').value;
+    
+    const franjasChecked = [];
+    document.querySelectorAll('#modalEditarParejaTabla input[type="checkbox"]:checked').forEach(cb => {
+        franjasChecked.push(cb.value);
+    });
+    
+    if (!nombre) {
+        Toast.error('El nombre es requerido');
+        return;
+    }
+    
+    if (franjasChecked.length === 0) {
+        Toast.error('Selecciona al menos una franja horaria');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/editar-pareja',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pareja_id: parseInt(id),
+            nombre: nombre,
+            telefono: telefono || 'Sin teléfono',
+            categoria: categoria,
+            franjas: franjasChecked
+        }),
+        success: function(response) {
+            Toast.success(response.mensaje);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarParejaTabla'));
+            modal.hide();
+            setTimeout(() => location.reload(), 800);
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            Toast.error('Error: ' + error);
         }
     });
 }

@@ -363,6 +363,14 @@ def crear_grupo_manual():
     
     grupos_dict = resultado_data['grupos_por_categoria']
     
+    # Validar que la cancha no esté ocupada en ese horario
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
+                return jsonify({
+                    'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por un grupo de {cat}'
+                }), 400
+    
     # Asegurar que existe la categoría
     if categoria not in grupos_dict:
         grupos_dict[categoria] = []

@@ -845,18 +845,8 @@
                                          {% if tooltip %}title="{{ tooltip }}"{% endif %}>
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div class="flex-grow-1">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
-                                                        {{ slot_num + 1 }}. {{ pareja.nombre }}
-                                                    </div>
-                                                    <button class="btn btn-sm btn-outline-secondary p-0 px-1" 
-                                                            draggable="false"
-                                                            onmousedown="event.stopPropagation();"
-                                                            onclick="event.stopPropagation(); event.preventDefault(); abrirModalEditarPareja({{ pareja.id }}, '{{ pareja.nombre|replace("'", "\\'") }}', '{{ pareja.telefono|replace("'", "\\'") }}', '{{ categoria }}', {{ pareja.franjas_disponibles|tojson }})"
-                                                            title="Editar pareja"
-                                                            style="font-size: 0.7rem;">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
+                                                <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
+                                                    {{ slot_num + 1 }}. {{ pareja.nombre }}
                                                 </div>
                                                 <small class="text-muted d-block mt-1">
                                                     <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
@@ -924,26 +914,77 @@
                     <h5 class="fw-bold mb-3">🏆 Partidos de la Fase de Grupos</h5>
                     <div class="row">
                         {% for grupo in grupos %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-start" style="border-left: 4px solid {{ border_color }} !important;">
-                                <div class="card-body py-2">
-                                    <h6 class="fw-bold mb-2">
-                                        {% if loop.index == 1 %}Grupo A
-                                        {% elif loop.index == 2 %}Grupo B
-                                        {% elif loop.index == 3 %}Grupo C
-                                        {% elif loop.index == 4 %}Grupo D
-                                        {% else %}Grupo {{ loop.index }}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                                    <h6 class="mb-0 text-white fw-bold">
+                                        {% if loop.index == 1 %}GRUPO A
+                                        {% elif loop.index == 2 %}GRUPO B
+                                        {% elif loop.index == 3 %}GRUPO C
+                                        {% elif loop.index == 4 %}GRUPO D
+                                        {% else %}GRUPO {{ loop.index }}
                                         {% endif %}
                                     </h6>
-                                    <small class="text-muted d-block mb-2">
-                                        <i class="bi bi-clock-fill"></i> {{ grupo.franja_horaria or 'Por coordinar' }} | 
-                                        <i class="bi bi-geo-alt-fill"></i> Cancha {{ grupo.cancha or 'Por asignar' }}
-                                    </small>
-                                    <ul class="list-unstyled mb-0 small">
+                                </div>
+                                <div class="card-body" style="background-color: {{ bg_color }};">
+                                    <div class="mb-3 p-2 bg-white rounded border">
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-calendar3"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
+                                        </small>
+                                    </div>
+                                    
+                                    {% if grupo.partidos %}
+                                        {% set hora_base = grupo.franja_horaria.split(' ')[1] if grupo.franja_horaria and ' ' in grupo.franja_horaria else '20:00' %}
+                                        {% set hora_partes = hora_base.split(':') %}
+                                        {% set hora_inicio = hora_partes[0]|int %}
+                                        
                                         {% for partido in grupo.partidos %}
-                                        <li class="mb-1">• <strong>{{ partido.pareja1 }}</strong> vs <strong>{{ partido.pareja2 }}</strong></li>
+                                            {% set hora_partido = (hora_inicio + loop.index0) % 24 %}
+                                            {% set hora_str = '%02d:00'|format(hora_partido) %}
+                                            
+                                            <div class="partido-card mb-3 p-3 bg-white rounded border shadow-sm">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="me-2">
+                                                        <span class="badge bg-primary">
+                                                            <i class="bi bi-clock-fill"></i> {{ hora_str }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <small class="text-muted">Partido {{ loop.index }}</small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row g-0 align-items-center">
+                                                    <div class="col-5">
+                                                        <div class="text-end pe-2">
+                                                            <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="{{ partido.pareja1 }}">
+                                                                {{ partido.pareja1 }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <div class="text-center">
+                                                            <span class="badge bg-secondary">VS</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-5">
+                                                        <div class="ps-2">
+                                                            <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="{{ partido.pareja2 }}">
+                                                                {{ partido.pareja2 }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         {% endfor %}
-                                    </ul>
+                                    {% else %}
+                                        <div class="alert alert-light mb-0">
+                                            <i class="bi bi-info-circle"></i> No hay partidos generados aún
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -1083,8 +1124,6 @@ function dropEnSlot(event) {
 }
 
 function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
-    Toast.info('Asignando pareja al grupo...');
-    
     fetch('/api/asignar-pareja-a-grupo', {
         method: 'POST',
         headers: {
@@ -1114,8 +1153,6 @@ function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
 }
 
 function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDestino) {
-    Toast.info('Intercambiando parejas...');
-    
     fetch('/api/intercambiar-pareja', {
         method: 'POST',
         headers: {
@@ -1279,13 +1316,6 @@ function renderizarParejasNoAsignadas(categoria, parejas) {
                             </div>
                         </div>
                         <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-secondary btn-asignar-manual" 
-                                    draggable="false"
-                                    onmousedown="event.stopPropagation();"
-                                    onclick="event.stopPropagation(); event.preventDefault(); abrirModalEditarPareja(${pareja.id}, '${pareja.nombre.replace(/'/g, "\\'")}', '${(pareja.telefono || '').replace(/'/g, "\\'")}', '${categoria}', ${JSON.stringify(pareja.franjas_disponibles || [])})"
-                                    title="Editar pareja">
-                                <i class="bi bi-pencil"></i>
-                            </button>
                             <button class="btn btn-sm btn-outline-primary btn-asignar-manual" 
                                     draggable="false"
                                     onmousedown="event.stopPropagation();"
@@ -1441,8 +1471,6 @@ function confirmarAsignacionManual(parejaId, categoria) {
         return;
     }
     
-    Toast.info('Asignando pareja al grupo...');
-    
     fetch('/api/asignar-pareja-a-grupo', {
         method: 'POST',
         headers: {
@@ -1515,8 +1543,6 @@ function agregarParejaDesdeModal() {
         return;
     }
     
-    Toast.info('Agregando pareja...');
-    
     fetch('/api/agregar-pareja', {
         method: 'POST',
         headers: {
@@ -1543,8 +1569,7 @@ function agregarParejaDesdeModal() {
             
             // Volver a datos para re-ejecutar algoritmo
             setTimeout(() => {
-                Toast.info('Redirigiendo a datos para actualizar grupos...');
-                setTimeout(() => window.location.href = '/datos', 800);
+                window.location.href = '/datos';
             }, 1000);
         } else {
             Toast.error('Error: ' + data.error);
@@ -1576,8 +1601,6 @@ function confirmarCrearGrupo() {
         Toast.error('Debes completar todos los campos');
         return;
     }
-    
-    Toast.info('Creando grupo...');
     
     fetch('/api/crear-grupo-manual', {
         method: 'POST',
@@ -1631,8 +1654,6 @@ function confirmarEditarGrupo() {
         Toast.error('Debes completar todos los campos');
         return;
     }
-    
-    Toast.info('Actualizando grupo...');
     
     fetch('/api/editar-grupo', {
         method: 'POST',
@@ -1712,8 +1733,6 @@ function confirmarEditarPareja() {
         Toast.error('Selecciona al menos una franja horaria');
         return;
     }
-    
-    Toast.info('Actualizando pareja...');
     
     fetch('/api/editar-pareja', {
         method: 'POST',
@@ -1822,8 +1841,6 @@ function actualizarBadgesPosicion(parejaId, posicion, grupoId) {
 }
 
 function generarFinales(categoria) {
-    Toast.info('Generando fixture de finales...');
-    
     fetch(`/api/generar-fixture/${categoria}`, {
         method: 'POST',
         headers: {
