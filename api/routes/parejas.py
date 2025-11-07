@@ -376,11 +376,12 @@ def crear_grupo_manual():
     
     nuevo_id = max_id + 1
     
-    # Crear el nuevo grupo
+    # Crear el nuevo grupo con todos los atributos necesarios
     nuevo_grupo = {
         'id': nuevo_id,
         'franja_horaria': franja_horaria,
         'cancha': cancha,
+        'score': 0.0,  # Score de calidad del grupo
         'score_compatibilidad': 0.0,
         'parejas': [],
         'partidos': []

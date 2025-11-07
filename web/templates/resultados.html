@@ -905,12 +905,13 @@
                             </div>
                             
                             <div class="card-footer text-center" style="background-color: {{ bg_color }};">
-                                {% if grupo.score >= 3.0 %}
-                                    <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
-                                {% elif grupo.score >= 2.0 %}
-                                    <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                                {% set score = grupo.score | default(0.0) %}
+                                {% if score >= 3.0 %}
+                                    <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                                {% elif score >= 2.0 %}
+                                    <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
                                 {% else %}
-                                    <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(grupo.score) }}/3.0</span>
+                                    <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
                                 {% endif %}
                             </div>
                         </div>
