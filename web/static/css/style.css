@@ -6,6 +6,28 @@
     --septima-color: #9b7fed;
 }
 
+/* Navbar Mejorado */
+.navbar .nav-link {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.25rem;
+}
+
+.navbar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.navbar .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
 /* Tarjetas de Estadísticas por Categoría */
 .stat-cuarta {
     border-left: 5px solid var(--cuarta-color);

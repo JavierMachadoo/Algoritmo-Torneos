@@ -589,8 +589,8 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%">🏟️ CANCHA 1</th>
-                                        <th width="45%">🏟️ CANCHA 2</th>
+                                        <th width="45%"> CANCHA 1</th>
+                                        <th width="45%"> CANCHA 2</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -628,8 +628,8 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%">🏟️ CANCHA 1</th>
-                                        <th width="45%">🏟️ CANCHA 2</th>
+                                        <th width="45%"> CANCHA 1</th>
+                                        <th width="45%"> CANCHA 2</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -667,8 +667,8 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%">🏟️ CANCHA 1</th>
-                                        <th width="45%">🏟️ CANCHA 2</th>
+                                        <th width="45%"> CANCHA 1</th>
+                                        <th width="45%"> CANCHA 2</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -814,7 +814,7 @@
                                 </div>
 
                                 <!-- Parejas del Grupo con 3 slots fijos -->
-                                <h6 class="fw-bold mb-2">👥 Parejas:</h6>
+                                <h6 class="fw-bold mb-2"> Parejas:</h6>
                                 
                                 {% for slot_num in range(3) %}
                                 {% set pareja = grupo.parejas[slot_num] if slot_num < grupo.parejas|length else none %}
@@ -1904,17 +1904,26 @@ function confirmarEditarPareja() {
 // ==================== FUNCIONES PARA FINALES ====================
 
 function asignarPosicion(parejaId, posicion, categoria, grupoId) {
-    // Validar que no exista otra pareja con la misma posición en el mismo grupo
-    const parejasDelGrupo = document.querySelectorAll(`[data-grupo-id="${grupoId}"]`);
+    // Obtener el elemento de la pareja actual
+    const parejaElement = document.querySelector(`[data-pareja-id="${parejaId}"][data-grupo-id="${grupoId}"]`);
+    const posicionActual = parejaElement ? parseInt(parejaElement.dataset.posicion) : null;
     
-    for (let pareja of parejasDelGrupo) {
-        const parejaIdActual = parseInt(pareja.dataset.parejaId);
-        const posicionActual = parseInt(pareja.dataset.posicion);
+    // Si ya tiene esta posición, deseleccionar
+    if (posicionActual === posicion) {
+        posicion = 0; // 0 significa deseleccionar
+    } else {
+        // Validar que no exista otra pareja con la misma posición en el mismo grupo
+        const parejasDelGrupo = document.querySelectorAll(`[data-grupo-id="${grupoId}"]`);
         
-        // Si es otra pareja (no la misma) y tiene la misma posición
-        if (parejaIdActual !== parejaId && posicionActual === posicion) {
-            Toast.error(`Ya existe una pareja con la posición ${posicion}° en este grupo. Debes asignar posiciones diferentes (1°, 2° y 3°).`);
-            return;
+        for (let pareja of parejasDelGrupo) {
+            const parejaIdActual = parseInt(pareja.dataset.parejaId);
+            const posicionOtra = parseInt(pareja.dataset.posicion);
+            
+            // Si es otra pareja (no la misma) y tiene la misma posición
+            if (parejaIdActual !== parejaId && posicionOtra === posicion) {
+                Toast.error(`Ya existe una pareja con la posición ${posicion}° en este grupo. Debes asignar posiciones diferentes (1°, 2° y 3°).`);
+                return;
+            }
         }
     }
     
@@ -1932,7 +1941,10 @@ function asignarPosicion(parejaId, posicion, categoria, grupoId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
+            // Solo mostrar mensaje si hay texto (no cuando se deselecciona)
+            if (data.mensaje) {
+                // No mostrar notificación, solo actualizar UI silenciosamente
+            }
             // Actualizar solo los badges de posición sin recargar la página
             actualizarBadgesPosicion(parejaId, posicion, grupoId);
         } else {
@@ -1959,6 +1971,11 @@ function actualizarBadgesPosicion(parejaId, posicion, grupoId) {
     badges.forEach(badge => {
         badge.classList.remove('posicion-primero', 'posicion-segundo', 'posicion-tercero');
     });
+    
+    // Si posicion es 0 o null, solo limpiar (deseleccionar)
+    if (posicion === 0 || posicion === null) {
+        return;
+    }
     
     // Agregar clase solo al badge correspondiente
     const badgeIndex = posicion - 1; // 0, 1, 2
@@ -2046,7 +2063,7 @@ function renderizarFixture(categoria, fixture) {
     if (fixture.cuartos && fixture.cuartos.length > 0) {
         html += `
             <div class="fase-column">
-                <h4 class="text-center mb-4">⚔️ Cuartos de Final</h4>
+                <h4 class="text-center mb-4"> Cuartos de Final</h4>
                 ${fixture.cuartos.map(partido => renderizarPartido(partido, categoria)).join('')}
             </div>
         `;
@@ -2268,8 +2285,8 @@ function renderizarCalendarioFinales(calendario, tieneDatos) {
                 <thead class="table-dark">
                     <tr>
                         <th width="10%" class="text-center">HORA</th>
-                        <th width="45%">🏟️ CANCHA 1</th>
-                        <th width="45%">🏟️ CANCHA 2</th>
+                        <th width="45%"> CANCHA 1</th>
+                        <th width="45%"> CANCHA 2</th>
                     </tr>
                 </thead>
                 <tbody>

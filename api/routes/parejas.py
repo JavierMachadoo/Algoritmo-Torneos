@@ -9,10 +9,141 @@ from core import (
 from utils import CSVProcessor, CalendarioBuilder
 from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
+from utils.torneo_storage import storage
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+
+# ==================== HELPERS ====================
+
+def obtener_torneo_actual():
+    """Obtiene el ID del torneo actual de la sesión."""
+    return session.get('torneo_actual')
+
+
+def guardar_estado_torneo():
+    """Guarda el estado actual del torneo en el almacenamiento JSON."""
+    torneo_id = obtener_torneo_actual()
+    if not torneo_id:
+        return
+    
+    torneo = storage.cargar(torneo_id)
+    if not torneo:
+        return
+    
+    # Actualizar datos del torneo con lo que está en sesión
+    torneo['parejas'] = session.get('parejas', [])
+    torneo['resultado_algoritmo'] = session.get('resultado_algoritmo')
+    torneo['num_canchas'] = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
+    
+    # Determinar estado según el progreso
+    if torneo['resultado_algoritmo']:
+        torneo['estado'] = 'grupos_generados'
+    elif torneo['parejas']:
+        torneo['estado'] = 'creando'
+    
+    storage.guardar(torneo_id, torneo)
+
+
+def cargar_estado_torneo(torneo_id):
+    """Carga el estado de un torneo en la sesión."""
+    torneo = storage.cargar(torneo_id)
+    if not torneo:
+        return False
+    
+    session['torneo_actual'] = torneo_id
+    session['parejas'] = torneo.get('parejas', [])
+    session['resultado_algoritmo'] = torneo.get('resultado_algoritmo')
+    session['num_canchas'] = torneo.get('num_canchas', NUM_CANCHAS_DEFAULT)
+    session.modified = True
+    
+    return True
+
+
+# ==================== GESTIÓN DE TORNEOS ====================
+
+@api_bp.route('/torneos', methods=['GET'])
+def listar_torneos():
+    """Lista todos los torneos disponibles."""
+    torneos = storage.listar_todos()
+    return jsonify({
+        'success': True,
+        'torneos': torneos
+    })
+
+
+@api_bp.route('/torneos', methods=['POST'])
+def crear_torneo():
+    """Crea un nuevo torneo."""
+    data = request.json or {}
+    nombre = data.get('nombre')
+    
+    torneo_id = storage.crear_torneo(nombre)
+    cargar_estado_torneo(torneo_id)
+    
+    return jsonify({
+        'success': True,
+        'mensaje': f'Torneo "{storage.cargar(torneo_id)["nombre"]}" creado',
+        'torneo_id': torneo_id
+    })
+
+
+@api_bp.route('/torneos/<torneo_id>', methods=['GET'])
+def cargar_torneo(torneo_id):
+    """Carga un torneo existente en la sesión."""
+    if not cargar_estado_torneo(torneo_id):
+        return jsonify({'error': 'Torneo no encontrado'}), 404
+    
+    torneo = storage.cargar(torneo_id)
+    return jsonify({
+        'success': True,
+        'mensaje': f'Torneo "{torneo["nombre"]}" cargado',
+        'torneo': torneo
+    })
+
+
+@api_bp.route('/torneos/<torneo_id>', methods=['DELETE'])
+def eliminar_torneo(torneo_id):
+    """Elimina un torneo."""
+    torneo = storage.cargar(torneo_id)
+    if not torneo:
+        return jsonify({'error': 'Torneo no encontrado'}), 404
+    
+    nombre = torneo['nombre']
+    
+    if storage.eliminar(torneo_id):
+        # Si es el torneo actual, limpiar sesión
+        if session.get('torneo_actual') == torneo_id:
+            session.clear()
+        
+        return jsonify({
+            'success': True,
+            'mensaje': f'Torneo "{nombre}" eliminado'
+        })
+    
+    return jsonify({'error': 'Error al eliminar torneo'}), 500
+
+
+@api_bp.route('/torneos/<torneo_id>/nombre', methods=['PUT'])
+def actualizar_nombre_torneo(torneo_id):
+    """Actualiza el nombre de un torneo."""
+    data = request.json
+    nuevo_nombre = data.get('nombre', '').strip()
+    
+    if not nuevo_nombre:
+        return jsonify({'error': 'El nombre es requerido'}), 400
+    
+    if storage.actualizar_nombre(torneo_id, nuevo_nombre):
+        return jsonify({
+            'success': True,
+            'mensaje': 'Nombre actualizado'
+        })
+    
+    return jsonify({'error': 'Torneo no encontrado'}), 404
+
+
+# ==================== CARGA DE DATOS ====================
 
 @api_bp.route('/cargar-csv', methods=['POST'])
 def cargar_csv():
@@ -31,6 +162,7 @@ def cargar_csv():
         
         session['parejas'] = parejas
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,
@@ -70,6 +202,7 @@ def agregar_pareja():
     parejas.append(nueva_pareja)
     session['parejas'] = parejas
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     return jsonify({
         'success': True,
@@ -86,6 +219,7 @@ def eliminar_pareja(pareja_id):
     
     session['parejas'] = parejas
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     return jsonify({
         'success': True,
@@ -95,11 +229,38 @@ def eliminar_pareja(pareja_id):
 
 @api_bp.route('/limpiar-datos', methods=['POST'])
 def limpiar_datos():
-    """Limpia todos los datos de la sesión."""
-    session.clear()
+    """Limpia todos los datos del torneo actual."""
+    session['parejas'] = []
+    session['resultado_algoritmo'] = None
+    session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
+    
     return jsonify({
         'success': True,
         'mensaje': 'Datos limpiados correctamente'
+    })
+
+
+@api_bp.route('/obtener-parejas', methods=['GET'])
+def obtener_parejas():
+    """Obtiene la lista actualizada de parejas con estadísticas."""
+    parejas = session.get('parejas', [])
+    
+    # Calcular estadísticas
+    stats = {
+        'total': len(parejas),
+        'por_categoria': {
+            'Cuarta': sum(1 for p in parejas if p.get('categoria') == 'Cuarta'),
+            'Quinta': sum(1 for p in parejas if p.get('categoria') == 'Quinta'),
+            'Sexta': sum(1 for p in parejas if p.get('categoria') == 'Sexta'),
+            'Séptima': sum(1 for p in parejas if p.get('categoria') == 'Séptima')
+        }
+    }
+    
+    return jsonify({
+        'success': True,
+        'parejas': parejas,
+        'stats': stats
     })
 
 
@@ -161,6 +322,7 @@ def intercambiar_pareja():
         
         session['resultado_algoritmo'] = resultado
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,
@@ -190,6 +352,7 @@ def ejecutar_algoritmo():
         session['resultado_algoritmo'] = resultado
         session['num_canchas'] = NUM_CANCHAS_DEFAULT
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,
@@ -339,6 +502,7 @@ def asignar_pareja_a_grupo():
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     return jsonify({
         'success': True,
@@ -400,6 +564,7 @@ def crear_grupo_manual():
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     return jsonify({
         'success': True,
@@ -457,6 +622,7 @@ def editar_grupo():
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     return jsonify({
         'success': True,
@@ -539,6 +705,7 @@ def editar_pareja():
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
+    guardar_estado_torneo()  # Auto-guardar
     
     mensaje = '✓ Pareja actualizada correctamente'
     if cambio_categoria:
@@ -645,10 +812,10 @@ def asignar_posicion():
     """Asigna la posición final de una pareja en su grupo."""
     data = request.json
     pareja_id = data.get('pareja_id')
-    posicion = data.get('posicion')  # 1, 2, o 3
+    posicion = data.get('posicion')  # 0 (deseleccionar), 1, 2, o 3
     categoria = data.get('categoria')
     
-    if not all([pareja_id, posicion, categoria]):
+    if pareja_id is None or posicion is None or not categoria:
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
     try:
@@ -660,11 +827,17 @@ def asignar_posicion():
         grupos_categoria = resultado_data['grupos_por_categoria'].get(categoria, [])
         pareja_encontrada = False
         grupo_id = None
+        posicion_anterior = None
         
         for grupo in grupos_categoria:
             for pareja in grupo['parejas']:
                 if pareja['id'] == pareja_id:
-                    pareja['posicion_grupo'] = posicion
+                    posicion_anterior = pareja.get('posicion_grupo')
+                    # Si posicion es 0 o None, deseleccionar
+                    if posicion == 0:
+                        pareja['posicion_grupo'] = None
+                    else:
+                        pareja['posicion_grupo'] = posicion
                     pareja_encontrada = True
                     grupo_id = grupo['id']
                     break
@@ -677,14 +850,23 @@ def asignar_posicion():
         # Guardar cambios en sesión
         session['resultado_algoritmo'] = resultado_data
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         # Verificar si ya se pueden generar las finales
         puede_generar = verificar_posiciones_completas(grupos_categoria)
         
+        # Preparar mensaje según la acción
+        if posicion == 0:
+            mensaje = ''
+        else:
+            mensaje = f'✓ Posición {posicion}°'
+        
         return jsonify({
             'success': True,
-            'mensaje': f'✓ Posición {posicion}°',
-            'puede_generar_finales': puede_generar
+            'mensaje': mensaje,
+            'puede_generar_finales': puede_generar,
+            'posicion': posicion,
+            'posicion_anterior': posicion_anterior
         })
     
     except Exception as e:
@@ -742,6 +924,7 @@ def generar_fixture(categoria):
             session['fixtures'] = {}
         session['fixtures'][categoria] = fixture.to_dict()
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,
@@ -839,6 +1022,7 @@ def marcar_ganador():
         fixtures[categoria] = fixture.to_dict()
         session['fixtures'] = fixtures
         session.modified = True
+        guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,

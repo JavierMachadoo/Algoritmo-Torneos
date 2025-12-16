@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <!-- Header Principal -->
-    <div class="row justify-content-center mb-5">
+    <div class="row justify-content-center mb-4">
         <div class="col-lg-10">
             <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-center py-5">
@@ -21,6 +21,118 @@
                     <p class="text-white-50 mb-0">
                         Optimiza la organización de tu torneo de pádel
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de Torneos -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            {% if torneo_actual %}
+            <!-- Tarjeta de Torneo Activo -->
+            <div class="alert alert-success shadow-sm mb-4" role="alert">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="alert-heading mb-1">
+                            <i class="bi bi-check-circle-fill"></i> Torneo Activo
+                        </h5>
+                        <p class="mb-0">
+                            <strong>{{ torneo_actual.nombre }}</strong> 
+                            <span class="badge bg-primary ms-2">{{ torneo_actual.num_parejas or 0 }} parejas</span>
+                            <span class="badge bg-secondary ms-1">{{ torneo_actual.estado }}</span>
+                        </p>
+                    </div>
+                    <div>
+                        {% if torneo_actual.num_parejas > 0 %}
+                            {% if torneo_actual.estado == 'grupos_generados' %}
+                                <a href="{{ url_for('resultados') }}" class="btn btn-primary">
+                                    <i class="bi bi-trophy-fill"></i> Ver Grupos
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('datos') }}" class="btn btn-primary">
+                                    <i class="bi bi-people-fill"></i> Gestionar Parejas
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('datos') }}" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Agregar Parejas
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-header" style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%);">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-folder2-open"></i> Gestión de Torneos
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold">Cambiar de Torneo</label>
+                            <select class="form-select form-select-lg" id="torneoSelector" onchange="cargarTorneo()">
+                                <option value="">-- Selecciona un torneo --</option>
+                                {% for torneo in torneos %}
+                                <option value="{{ torneo.id }}" 
+                                        {% if torneo_actual and torneo.id == torneo_actual.id %}selected{% endif %}
+                                        data-nombre="{{ torneo.nombre }}"
+                                        data-parejas="{{ torneo.num_parejas }}"
+                                        data-estado="{{ torneo.estado }}">
+                                    {{ torneo.nombre }} ({{ torneo.num_parejas }} parejas - {{ torneo.estado }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-success btn-lg w-100" onclick="crearNuevoTorneo()">
+                                <i class="bi bi-plus-circle"></i> Nuevo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if torneos %}
+                    <hr>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> Torneos Recientes</h6>
+                    <div class="list-group">
+                        {% for torneo in torneos[:5] %}
+                        <div class="list-group-item {% if torneo_actual and torneo.id == torneo_actual.id %}active{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ torneo.nombre }}</strong>
+                                    {% if torneo_actual and torneo.id == torneo_actual.id %}
+                                        <span class="badge bg-light text-dark ms-2">Activo</span>
+                                    {% endif %}
+                                    <br>
+                                    <small {% if torneo_actual and torneo.id == torneo_actual.id %}class="text-white-50"{% else %}class="text-muted"{% endif %}>
+                                        <i class="bi bi-people"></i> {{ torneo.num_parejas }} parejas • 
+                                        <i class="bi bi-info-circle"></i> {{ torneo.estado }}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% if not (torneo_actual and torneo.id == torneo_actual.id) %}
+                                    <button class="btn btn-sm btn-primary me-1" 
+                                            onclick="cargarTorneoById('{{ torneo.id }}')">
+                                        <i class="bi bi-folder-open"></i> Cargar
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="eliminarTorneo('{{ torneo.id }}', '{{ torneo.nombre }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i> No hay torneos creados. Crea uno nuevo para comenzar.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -135,4 +247,66 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function crearNuevoTorneo() {
+    const nombre = prompt('Nombre del nuevo torneo:', `Torneo ${new Date().toLocaleDateString()}`);
+    if (!nombre) return;
+    
+    $.ajax({
+        url: '/api/torneos',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ nombre: nombre }),
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => window.location.href = '/datos', 500);
+        },
+        error: function(xhr) {
+            Toast.error('Error al crear torneo');
+        }
+    });
+}
+
+function cargarTorneo() {
+    const select = document.getElementById('torneoSelector');
+    const torneoId = select.value;
+    
+    if (!torneoId) return;
+    
+    cargarTorneoById(torneoId);
+}
+
+function cargarTorneoById(torneoId) {
+    $.ajax({
+        url: `/api/torneos/${torneoId}`,
+        type: 'GET',
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => window.location.href = '/datos', 500);
+        },
+        error: function(xhr) {
+            Toast.error('Error al cargar torneo');
+        }
+    });
+}
+
+function eliminarTorneo(torneoId, nombre) {
+    if (!confirm(`¿Estás seguro de eliminar el torneo "${nombre}"?`)) return;
+    
+    $.ajax({
+        url: `/api/torneos/${torneoId}`,
+        type: 'DELETE',
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => location.reload(), 800);
+        },
+        error: function(xhr) {
+            Toast.error('Error al eliminar torneo');
+        }
+    });
+}
+</script>
 {% endblock %}

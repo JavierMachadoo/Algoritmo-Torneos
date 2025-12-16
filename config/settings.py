@@ -6,9 +6,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'tu_clave_secreta_super_segura_aqui_123')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-SESSION_TYPE = 'filesystem'
-SESSION_FILE_DIR = BASE_DIR / 'flask_session'
-
 UPLOAD_FOLDER = BASE_DIR / 'data' / 'uploads'
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 

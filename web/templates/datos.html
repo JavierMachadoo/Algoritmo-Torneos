@@ -351,6 +351,8 @@ $('#formCargarCSV').on('submit', function(e) {
     e.preventDefault();
     
     const formData = new FormData(this);
+    const btnSubmit = $(this).find('button[type="submit"]');
+    btnSubmit.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Cargando...');
     
     $.ajax({
         url: '/api/cargar-csv',
@@ -360,11 +362,28 @@ $('#formCargarCSV').on('submit', function(e) {
         contentType: false,
         success: function(response) {
             Toast.success(response.mensaje);
-            setTimeout(() => actualizarListaParejas(), 800);
+            
+            // Si hay suficientes parejas, preguntar si desea ejecutar el algoritmo
+            if (response.parejas && response.parejas.length >= 3) {
+                setTimeout(() => {
+                    if (confirm(`${response.parejas.length} parejas cargadas. ¿Deseas generar los grupos automáticamente ahora?`)) {
+                        ejecutarAlgoritmoYRedirigir();
+                    } else {
+                        actualizarListaParejas();
+                        btnSubmit.prop('disabled', false).html('<i class="bi bi-upload"></i> Cargar Datos');
+                    }
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    actualizarListaParejas();
+                    btnSubmit.prop('disabled', false).html('<i class="bi bi-upload"></i> Cargar Datos');
+                }, 800);
+            }
         },
         error: function(xhr) {
             const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
             Toast.error('Error: ' + error);
+            btnSubmit.prop('disabled', false).html('<i class="bi bi-upload"></i> Cargar Datos');
         }
     });
 });
@@ -491,12 +510,20 @@ function confirmarEditarParejaTabla() {
 
 // Limpiar datos
 function limpiarDatos() {
+    if (!confirm('¿Estás seguro de que deseas eliminar todos los datos?')) {
+        return;
+    }
+    
     $.ajax({
         url: '/api/limpiar-datos',
         type: 'POST',
         success: function(response) {
             Toast.success('Datos limpiados correctamente');
-            setTimeout(() => actualizarListaParejas(), 500);
+            // Esperar un momento y recargar página porque toda la UI cambia
+            setTimeout(() => location.reload(), 800);
+        },
+        error: function() {
+            Toast.error('Error al limpiar datos');
         }
     });
 }
@@ -521,6 +548,32 @@ function ejecutarAlgoritmo() {
             const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
             Toast.error('Error: ' + error);
             console.error(xhr.responseJSON);
+        }
+    });
+}
+
+// Ejecutar algoritmo y redirigir (usado después de cargar CSV)
+function ejecutarAlgoritmoYRedirigir() {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    $.ajax({
+        url: '/api/ejecutar-algoritmo',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        success: function(response) {
+            modal.hide();
+            Toast.success('Grupos generados exitosamente');
+            setTimeout(() => window.location.href = '/resultados', 500);
+        },
+        error: function(xhr) {
+            modal.hide();
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            Toast.error('Error: ' + error);
+            console.error(xhr.responseJSON);
+            // Si falla, actualizar la lista normal
+            actualizarListaParejas();
         }
     });
 }
@@ -594,8 +647,127 @@ function filtrarPorCategoria(categoria) {
 // ==========================================
 
 function actualizarListaParejas() {
-    // Recargar la página pero más rápido y suave
-    location.reload();
+    // Obtener datos actualizados desde el servidor
+    $.ajax({
+        url: '/api/obtener-parejas',
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                actualizarInterfaz(response.parejas, response.stats);
+            }
+        },
+        error: function() {
+            // Si falla, recargar la página como fallback
+            location.reload();
+        }
+    });
+}
+
+function actualizarInterfaz(parejas, stats) {
+    // Actualizar estadísticas
+    actualizarEstadisticas(stats);
+    
+    // Actualizar tabla de parejas
+    actualizarTablaParejas(parejas);
+    
+    // Mostrar/ocultar sección de datos según si hay parejas
+    const seccionDatos = document.querySelector('.row.mt-5');
+    const btnEjecutar = document.getElementById('btnEjecutarAlgoritmo');
+    
+    if (parejas.length > 0) {
+        if (seccionDatos) seccionDatos.style.display = '';
+        if (btnEjecutar) btnEjecutar.parentElement.parentElement.style.display = '';
+    } else {
+        location.reload(); // Si no hay parejas, recargar para mostrar vista limpia
+    }
+}
+
+function actualizarEstadisticas(stats) {
+    // Actualizar contador total
+    const totalElement = document.querySelector('.stat-card:not(.stat-cuarta):not(.stat-quinta):not(.stat-sexta):not(.stat-septima) .display-6');
+    if (totalElement) {
+        totalElement.textContent = stats.total;
+    }
+    
+    // Actualizar contadores por categoría
+    const categorias = {
+        'Cuarta': '.stat-cuarta .display-6',
+        'Quinta': '.stat-quinta .display-6',
+        'Sexta': '.stat-sexta .display-6',
+        'Séptima': '.stat-septima .display-6'
+    };
+    
+    for (const [categoria, selector] of Object.entries(categorias)) {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.textContent = stats.por_categoria[categoria] || 0;
+        }
+    }
+}
+
+function actualizarTablaParejas(parejas) {
+    const tbody = document.getElementById('tablaParejas');
+    if (!tbody) return;
+    
+    // Limpiar tabla actual
+    tbody.innerHTML = '';
+    
+    // Si no hay parejas, mostrar mensaje
+    if (parejas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay parejas cargadas</td></tr>';
+        return;
+    }
+    
+    // Agregar filas de parejas
+    parejas.forEach((pareja, index) => {
+        const fila = document.createElement('tr');
+        fila.setAttribute('data-id', pareja.id);
+        fila.setAttribute('data-categoria', pareja.categoria);
+        
+        const franjas = pareja.franjas_disponibles ? pareja.franjas_disponibles.join(', ') : 'Sin especificar';
+        
+        fila.innerHTML = `
+            <td>${index + 1}</td>
+            <td class="fw-bold">${escapeHtml(pareja.nombre)}</td>
+            <td><i class="bi bi-telephone"></i> ${escapeHtml(pareja.telefono)}</td>
+            <td><span class="badge bg-secondary">${escapeHtml(pareja.categoria)}</span></td>
+            <td><small>${escapeHtml(franjas)}</small></td>
+            <td>
+                <button class="btn btn-sm btn-primary me-1" 
+                        data-pareja-id="${pareja.id}"
+                        data-pareja-nombre="${escapeHtml(pareja.nombre)}"
+                        data-pareja-telefono="${escapeHtml(pareja.telefono)}"
+                        data-pareja-categoria="${escapeHtml(pareja.categoria)}"
+                        data-pareja-franjas='${JSON.stringify(pareja.franjas_disponibles)}'
+                        onclick="editarParejaTabla(this)"
+                        title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarPareja(${pareja.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(fila);
+    });
+    
+    // Actualizar contador en el header de la tabla
+    const headerElement = document.querySelector('.card-header h5');
+    if (headerElement) {
+        headerElement.innerHTML = `<i class="bi bi-list-ul"></i> Listado de Parejas (${parejas.length})`;
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 </script>

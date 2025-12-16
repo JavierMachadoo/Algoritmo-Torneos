@@ -4,19 +4,16 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 """
 
 from flask import Flask, render_template, session, redirect, url_for, flash
-from flask_session import Session
-import os
-import shutil
 
 from config import (
     SECRET_KEY, 
-    SESSION_TYPE, 
     CATEGORIAS, 
     FRANJAS_HORARIAS, 
     EMOJI_CATEGORIA, 
     COLORES_CATEGORIA
 )
 from api import api_bp
+from utils.torneo_storage import storage
 
 
 def crear_app():
@@ -27,20 +24,8 @@ def crear_app():
     
     # Configuración básica
     app.secret_key = SECRET_KEY
-    app.config['SESSION_TYPE'] = SESSION_TYPE
     app.config['SESSION_PERMANENT'] = False
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-    Session(app)
-    
-    # Headers anti-cache para desarrollo (fuerza recarga siempre)
-    @app.after_request
-    def add_no_cache_headers(response):
-        if app.debug:
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            response.headers['Pragma'] = 'no-cache'
-            response.headers['Expires'] = '0'
-            response.headers['Last-Modified'] = 'Mon, 01 Jan 2024 00:00:00 GMT'
-        return response
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
@@ -49,18 +34,41 @@ def crear_app():
     @app.route('/')
     def inicio():
         """Página de inicio del sistema."""
-        return render_template('inicio.html')
+        torneos = storage.listar_todos()
+        torneo_actual_id = session.get('torneo_actual')
+        torneo_actual = None
+        
+        if torneo_actual_id:
+            torneo_actual = storage.cargar(torneo_actual_id)
+        
+        return render_template('inicio.html', 
+                             torneos=torneos,
+                             torneo_actual=torneo_actual)
     
     @app.route('/datos')
     def datos():
         """Página de gestión de parejas."""
+        # Asegurar que hay un torneo activo
+        torneo_id = session.get('torneo_actual')
+        if not torneo_id:
+            # Crear torneo automáticamente si no existe
+            torneo_id = storage.crear_torneo()
+            session['torneo_actual'] = torneo_id
+            session['parejas'] = []
+            session.modified = True
+        
         parejas = session.get('parejas', [])
         stats = _calcular_estadisticas(parejas)
+        
+        # Obtener info del torneo
+        torneo = storage.cargar(torneo_id)
+        
         return render_template('datos.html', 
                              parejas=parejas, 
                              stats=stats,
                              categorias=CATEGORIAS,
-                             franjas=FRANJAS_HORARIAS)
+                             franjas=FRANJAS_HORARIAS,
+                             torneo=torneo)
     
     @app.route('/resultados')
     def resultados():
@@ -71,11 +79,16 @@ def crear_app():
             flash('Primero debes ejecutar el algoritmo', 'warning')
             return redirect(url_for('datos'))
         
+        # Obtener info del torneo
+        torneo_id = session.get('torneo_actual')
+        torneo = storage.cargar(torneo_id) if torneo_id else None
+        
         return render_template('resultados.html', 
                              resultado=resultado,
                              categorias=CATEGORIAS,
                              colores=COLORES_CATEGORIA,
-                             emojis=EMOJI_CATEGORIA)
+                             emojis=EMOJI_CATEGORIA,
+                             torneo=torneo)
     
     return app
 
@@ -95,16 +108,6 @@ def _calcular_estadisticas(parejas):
     return stats
 
 
-def _limpiar_sesiones_antiguas():
-    """Elimina archivos de sesión antiguos al iniciar en modo desarrollo."""
-    session_dir = 'flask_session'
-    if os.path.exists(session_dir):
-        shutil.rmtree(session_dir)
-        print(f"✓ Sesiones antiguas eliminadas de {session_dir}/")
-
-
 if __name__ == '__main__':
-    _limpiar_sesiones_antiguas()
-    
     app = crear_app()
     app.run(debug=True, host='0.0.0.0', port=5000)
