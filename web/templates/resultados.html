@@ -4,6 +4,259 @@
 
 {% block extra_css %}
 <style>
+    /* ========== NUEVO DISEÑO ========== */
+    .resultados-page {
+        padding: 2rem 0 3rem;
+        min-height: 100vh;
+    }
+    
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: #718096;
+    }
+    
+    /* Grid de Categorías */
+    .categorias-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .categoria-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .categoria-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 6px;
+        transition: width 0.3s ease;
+    }
+    
+    .categoria-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .categoria-card:hover::before {
+        width: 100%;
+        opacity: 0.1;
+    }
+    
+    /* Colores por Categoría */
+    .categoria-cuarta::before { background: #28a745; }
+    .categoria-cuarta .categoria-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+    
+    .categoria-quinta::before { background: #ffc107; }
+    .categoria-quinta .categoria-icon { background: linear-gradient(135deg, #ffc107, #ffb700); }
+    
+    .categoria-sexta::before { background: #17a2b8; }
+    .categoria-sexta .categoria-icon { background: linear-gradient(135deg, #17a2b8, #138496); }
+    
+    .categoria-septima::before { background: #9b7fed; }
+    .categoria-septima .categoria-icon { background: linear-gradient(135deg, #9b7fed, #7c3aed); }
+    
+    .categoria-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .categoria-info {
+        flex: 1;
+    }
+    
+    .categoria-nombre {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .categoria-stats {
+        font-size: 0.95rem;
+        color: #718096;
+        margin: 0;
+    }
+    
+    .categoria-arrow {
+        font-size: 1.5rem;
+        color: #cbd5e0;
+        transition: all 0.3s ease;
+    }
+    
+    .categoria-card:hover .categoria-arrow {
+        color: #4a5568;
+        transform: translateX(5px);
+    }
+    
+    /* Estadísticas del Torneo */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .stat-icon-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-icon-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .stat-icon-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    }
+    
+    .stat-icon-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #718096;
+        margin: 0;
+    }
+    
+    /* Sección de Calendario */
+    .calendario-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    /* Botones Flotantes */
+    .floating-actions {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        z-index: 1000;
+    }
+    
+    .btn-float {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-float:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    
+    .btn-float-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Botón de Regresar dentro de Categoría */
+    .btn-back-categoria {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-back-categoria:hover {
+        background: #667eea;
+        color: white;
+        transform: translateX(-5px);
+    }
+    
+    /* ========== ESTILOS EXISTENTES ========== */
     .calendario-celda {
         min-height: 120px;
         border: 2px solid #dee2e6;
@@ -172,29 +425,130 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="display-5 fw-bold">
-                <i class="bi bi-trophy-fill"></i> Resultados del Torneo
-            </h1>
+<div class="container-fluid resultados-page">
+    <!-- Estadísticas del Torneo -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ resultado.estadisticas.parejas_asignadas }}/{{ resultado.estadisticas.total_parejas }}</h3>
+                        <p class="stat-label">Parejas Asignadas</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-primary">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ "%.0f"|format(resultado.estadisticas.porcentaje_asignacion) }}%</h3>
+                        <p class="stat-label">Tasa de Asignación</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-info">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ resultado.estadisticas.total_grupos }}</h3>
+                        <p class="stat-label">Grupos Formados</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-warning">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ "%.2f"|format(resultado.estadisticas.score_compatibilidad_promedio) }}/3.0</h3>
+                        <p class="stat-label">Calidad Promedio</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Botones de Navegación -->
-    <div class="row mb-4">
-        <div class="col">
-            <a href="{{ url_for('datos') }}" class="btn btn-outline-primary me-2">
-                <i class="bi bi-arrow-left"></i> Volver a Datos
-            </a>
-            <button class="btn btn-outline-secondary me-2" onclick="if(confirm('¿Ejecutar algoritmo nuevamente?')) window.location.href='{{ url_for('datos') }}'">
-                <i class="bi bi-arrow-clockwise"></i> Ejecutar de Nuevo
-            </button>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarPareja">
-                <i class="bi bi-plus-circle"></i> Agregar Pareja
-            </button>
+    <!-- Cards de Categorías -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="categorias-grid">
+                <!-- Cuarta -->
+                <div class="categoria-card categoria-cuarta" onclick="mostrarCategoria('cuarta')">
+                    <div class="categoria-icon">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="categoria-info">
+                        <h3 class="categoria-nombre">Cuarta</h3>
+                        <p class="categoria-stats">
+                            {{ resultado.grupos_por_categoria.Cuarta|length }} grupos
+                        </p>
+                    </div>
+                    <div class="categoria-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+
+                <!-- Quinta -->
+                <div class="categoria-card categoria-quinta" onclick="mostrarCategoria('quinta')">
+                    <div class="categoria-icon">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="categoria-info">
+                        <h3 class="categoria-nombre">Quinta</h3>
+                        <p class="categoria-stats">
+                            {{ resultado.grupos_por_categoria.Quinta|length }} grupos
+                        </p>
+                    </div>
+                    <div class="categoria-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+
+                <!-- Sexta -->
+                <div class="categoria-card categoria-sexta" onclick="mostrarCategoria('sexta')">
+                    <div class="categoria-icon">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="categoria-info">
+                        <h3 class="categoria-nombre">Sexta</h3>
+                        <p class="categoria-stats">
+                            {{ resultado.grupos_por_categoria.Sexta|length }} grupos
+                        </p>
+                    </div>
+                    <div class="categoria-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+
+                <!-- Séptima -->
+                <div class="categoria-card categoria-septima" onclick="mostrarCategoria('septima')">
+                    <div class="categoria-icon">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="categoria-info">
+                        <h3 class="categoria-nombre">Séptima</h3>
+                        <p class="categoria-stats">
+                            {{ resultado.grupos_por_categoria['Séptima']|length }} grupos
+                        </p>
+                    </div>
+                    <div class="categoria-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Botón de Acción Flotante -->
+    <div class="floating-actions">
+        <a href="{{ url_for('inicio') }}" class="btn-float btn-float-primary" title="Volver al inicio">
+            <i class="bi bi-house-fill"></i>
+        </a>
     </div>
 
     <!-- Modal Agregar Pareja -->
@@ -456,250 +810,189 @@
         </div>
     </div>
 
-    <!-- Estadísticas Generales -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h3 class="display-6 fw-bold text-success">
-                        {{ resultado.estadisticas.parejas_asignadas }}/{{ resultado.estadisticas.total_parejas }}
-                    </h3>
-                    <p class="text-muted mb-0">Parejas Asignadas</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h3 class="display-6 fw-bold text-primary">
-                        {{ "%.0f"|format(resultado.estadisticas.porcentaje_asignacion) }}%
-                    </h3>
-                    <p class="text-muted mb-0">Tasa de Asignación</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h3 class="display-6 fw-bold text-info">
-                        {{ resultado.estadisticas.total_grupos }}
-                    </h3>
-                    <p class="text-muted mb-0">Grupos Formados</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h3 class="display-6 fw-bold text-warning">
-                        {{ "%.2f"|format(resultado.estadisticas.score_compatibilidad_promedio) }}/3.0
-                    </h3>
-                    <p class="text-muted mb-0">Calidad Promedio</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabs de Resultados -->
-    <ul class="nav nav-tabs nav-fill mb-3" id="resultadosTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="cuarta-tab" data-bs-toggle="tab" data-bs-target="#cuarta" type="button">
-                🟢 Cuarta
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="quinta-tab" data-bs-toggle="tab" data-bs-target="#quinta" type="button">
-                🟡 Quinta
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="sexta-tab" data-bs-toggle="tab" data-bs-target="#sexta" type="button">
-                🔵 Sexta
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="septima-tab" data-bs-toggle="tab" data-bs-target="#septima" type="button">
-                🟣 Séptima
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario" type="button">
-                📅 Calendario General
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="finales-tab" data-bs-toggle="tab" data-bs-target="#finales-domingo" type="button" onclick="cargarCalendarioFinales()">
-                🏆 Finales (Domingo)
-            </button>
-        </li>
-    </ul>
-
-    <!-- Contenido de Tabs -->
+    <!-- Tabs de Resultados (Ocultos, controlados por JS) -->
     <div class="tab-content" id="resultadosTabsContent">
+        <!-- Vista de Calendario General (Inicio) -->
+        <div class="tab-pane fade show active" id="calendario-general" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="calendario-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="section-title mb-0">
+                                <i class="bi bi-calendar-week me-2"></i>Calendario General
+                            </h2>
+                            <button class="btn btn-success" onclick="exportarGoogleSheets()">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar a Google Sheets
+                            </button>
+                        </div>
+                        
+                        <!-- JUEVES -->
+                        <div class="mb-5">
+                            <h3 class="fw-bold text-primary mb-3">📆 JUEVES</h3>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover calendario-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th width="10%" class="text-center">HORA</th>
+                                            <th width="45%">🎾 CANCHA 1</th>
+                                            <th width="45%">🎾 CANCHA 2</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if resultado.calendario.Jueves %}
+                                            {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00'] %}
+                                                {% if hora in resultado.calendario.Jueves %}
+                                                <tr>
+                                                    <td class="text-center align-middle bg-light fw-bold">
+                                                        {{ hora }}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario.Jueves[hora][0] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario.Jueves[hora][0]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario.Jueves[hora][1] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario.Jueves[hora][1]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- VIERNES -->
+                        <div class="mb-5">
+                            <h3 class="fw-bold text-success mb-3">📆 VIERNES</h3>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover calendario-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th width="10%" class="text-center">HORA</th>
+                                            <th width="45%">🎾 CANCHA 1</th>
+                                            <th width="45%">🎾 CANCHA 2</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if resultado.calendario.Viernes %}
+                                            {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'] %}
+                                                {% if hora in resultado.calendario.Viernes %}
+                                                <tr>
+                                                    <td class="text-center align-middle bg-light fw-bold">
+                                                        {{ hora }}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario.Viernes[hora][0] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario.Viernes[hora][0]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario.Viernes[hora][1] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario.Viernes[hora][1]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- SÁBADO -->
+                        <div class="mb-5">
+                            <h3 class="fw-bold text-warning mb-3">📆 SÁBADO</h3>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover calendario-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th width="10%" class="text-center">HORA</th>
+                                            <th width="45%">🎾 CANCHA 1</th>
+                                            <th width="45%">🎾 CANCHA 2</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if resultado.calendario['Sábado'] %}
+                                            {% for hora in ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'] %}
+                                                {% if hora in resultado.calendario['Sábado'] %}
+                                                <tr>
+                                                    <td class="text-center align-middle bg-light fw-bold">
+                                                        {{ hora }}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario['Sábado'][hora][0] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario['Sábado'][hora][0]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="calendario-celda">
+                                                        {% if resultado.calendario['Sábado'][hora][1] %}
+                                                            {{ mostrar_partido_simple(resultado.calendario['Sábado'][hora][1]) }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Cuarta -->
-        <div class="tab-pane fade show active" id="cuarta" role="tabpanel">
+        <div class="tab-pane fade" id="cuarta" role="tabpanel">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <button class="btn-back-categoria" onclick="volverGeneral()">
+                        <i class="bi bi-arrow-left"></i>Volver
+                    </button>
+                </div>
+            </div>
             {{ mostrar_grupos_categoria('Cuarta', resultado.grupos_por_categoria.Cuarta, '#90EE90', '#f0fff0') }}
         </div>
 
         <!-- Quinta -->
         <div class="tab-pane fade" id="quinta" role="tabpanel">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <button class="btn-back-categoria" onclick="volverGeneral()">
+                        <i class="bi bi-arrow-left"></i>Volver
+                    </button>
+                </div>
+            </div>
             {{ mostrar_grupos_categoria('Quinta', resultado.grupos_por_categoria.Quinta, '#FFD700', '#fffef0') }}
         </div>
 
         <!-- Sexta -->
         <div class="tab-pane fade" id="sexta" role="tabpanel">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <button class="btn-back-categoria" onclick="volverGeneral()">
+                        <i class="bi bi-arrow-left"></i>Volver
+                    </button>
+                </div>
+            </div>
             {{ mostrar_grupos_categoria('Sexta', resultado.grupos_por_categoria.Sexta, '#87CEEB', '#f0f8ff') }}
         </div>
 
         <!-- Séptima -->
         <div class="tab-pane fade" id="septima" role="tabpanel">
-            {{ mostrar_grupos_categoria('Séptima', resultado.grupos_por_categoria['Séptima'], '#DDA0DD', '#fff0ff') }}
-        </div>
-
-        <!-- Calendario General -->
-        <div class="tab-pane fade" id="calendario" role="tabpanel">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-0">
-                            <i class="bi bi-calendar-week"></i> Calendario de Partidos
-                        </h4>
-                        <small>Programación semanal por canchas</small>
-                    </div>
-                    <button class="btn btn-success" onclick="exportarGoogleSheets()">
-                        <i class="bi bi-file-earmark-spreadsheet"></i> Exportar a Google Sheets
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <button class="btn-back-categoria" onclick="volverGeneral()">
+                        <i class="bi bi-arrow-left"></i>Volver
                     </button>
                 </div>
-                <div class="card-body p-4">
-                    
-                    <!-- DEBUG: Mostrar estructura del calendario -->
-                    {% if not resultado.calendario.Jueves and not resultado.calendario.Viernes and not resultado.calendario['Sábado'] %}
-                    <div class="alert alert-warning">
-                        <h5>Debug: No hay datos en el calendario</h5>
-                        <p>Estructura recibida:</p>
-                        <pre>{{ resultado.calendario|tojson(indent=2) }}</pre>
-                    </div>
-                    {% endif %}>
-                    
-                    <!-- JUEVES -->
-                    <div class="mb-5">
-                        <h3 class="fw-bold text-primary mb-3">📆 JUEVES</h3>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover calendario-table">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%"> CANCHA 1</th>
-                                        <th width="45%"> CANCHA 2</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for franja in ['18:00', '19:00', '20:00', '21:00', '22:00'] %}
-                                    <tr>
-                                        <td class="fw-bold text-center align-middle bg-light">
-                                            {{ franja }}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario.Jueves[franja][0] %}
-                                                {{ mostrar_partido_simple(resultado.calendario.Jueves[franja][0]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario.Jueves[franja][1] %}
-                                                {{ mostrar_partido_simple(resultado.calendario.Jueves[franja][1]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- VIERNES -->
-                    <div class="mb-5">
-                        <h3 class="fw-bold text-primary mb-3">📆 VIERNES</h3>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover calendario-table">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%"> CANCHA 1</th>
-                                        <th width="45%"> CANCHA 2</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for franja in ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'] %}
-                                    <tr>
-                                        <td class="fw-bold text-center align-middle bg-light">
-                                            {{ franja }}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario.Viernes[franja][0] %}
-                                                {{ mostrar_partido_simple(resultado.calendario.Viernes[franja][0]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario.Viernes[franja][1] %}
-                                                {{ mostrar_partido_simple(resultado.calendario.Viernes[franja][1]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- SÁBADO -->
-                    <div class="mb-3">
-                        <h3 class="fw-bold text-primary mb-3">📆 SÁBADO</h3>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover calendario-table">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th width="10%" class="text-center">HORA</th>
-                                        <th width="45%"> CANCHA 1</th>
-                                        <th width="45%"> CANCHA 2</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for franja in ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'] %}
-                                    <tr>
-                                        <td class="fw-bold text-center align-middle bg-light">
-                                            {{ franja }}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario['Sábado'][franja][0] %}
-                                                {{ mostrar_partido_simple(resultado.calendario['Sábado'][franja][0]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="calendario-celda-simple">
-                                            {% if resultado.calendario['Sábado'][franja][1] %}
-                                                {{ mostrar_partido_simple(resultado.calendario['Sábado'][franja][1]) }}
-                                            {% else %}
-                                                <span class="text-muted">Libre</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                </div>
             </div>
+            {{ mostrar_grupos_categoria('Séptima', resultado.grupos_por_categoria['Séptima'], '#DDA0DD', '#fff0ff') }}
         </div>
 
         <!-- Finales Domingo -->
@@ -1082,6 +1375,48 @@
 
 {% block extra_js %}
 <script>
+// ==================== NAVEGACIÓN ENTRE VISTAS ====================
+function mostrarCategoria(categoria) {
+    // Ocultar vista general
+    document.getElementById('calendario-general').classList.remove('show', 'active');
+    
+    // Ocultar todas las categorías primero
+    const categorias = ['cuarta', 'quinta', 'sexta', 'septima'];
+    categorias.forEach(cat => {
+        const tab = document.getElementById(cat);
+        if (tab) {
+            tab.classList.remove('show', 'active');
+        }
+    });
+    
+    // Mostrar vista de categoría específica
+    const categoriaTab = document.getElementById(categoria);
+    if (categoriaTab) {
+        categoriaTab.classList.add('show', 'active');
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function volverGeneral() {
+    // Ocultar todas las categorías
+    const categorias = ['cuarta', 'quinta', 'sexta', 'septima'];
+    categorias.forEach(cat => {
+        const tab = document.getElementById(cat);
+        if (tab) {
+            tab.classList.remove('show', 'active');
+        }
+    });
+    
+    // Mostrar vista general
+    document.getElementById('calendario-general').classList.add('show', 'active');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ==================== DRAG AND DROP ====================
 let draggedPareja = null;
 let dragTimeout = null;
 

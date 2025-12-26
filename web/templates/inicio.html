@@ -3,308 +3,831 @@
 {% block title %}Inicio - Torneo de Pádel{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Header Principal -->
+<div class="container inicio-page">
+    <!-- Header Principal - Simple y Elegante -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center mb-5 mt-4">
+            <div class="app-logo mb-4">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <h1 class="app-title mb-2">Generador de Grupos</h1>
+            <p class="app-subtitle">Torneo de Pádel</p>
+        </div>
+    </div>
+
+    <!-- Botón de Acción Principal -->
+    {% if parejas %}
     <div class="row justify-content-center mb-4">
-        <div class="col-lg-10">
-            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-center py-5">
-                    <div class="mb-4">
-                        <i class="bi bi-trophy-fill" style="font-size: 4rem; color: #ffd700;"></i>
+        <div class="col-lg-8">
+            <div class="action-bar">
+                {% if not resultado %}
+                <button class="btn-generar-grupos" onclick="ejecutarAlgoritmo()">
+                    <i class="bi bi-cpu me-2"></i>Generar Grupos
+                </button>
+                {% endif %}
+                {% if resultado %}
+                <a href="{{ url_for('resultados') }}" class="btn-ver-resultados">
+                    <i class="bi bi-trophy me-2"></i>Ver Grupos Generados
+                </a>
+                {% endif %}
+                <button class="btn-limpiar" onclick="limpiarDatos()">
+                    <i class="bi bi-trash me-2"></i>Limpiar Datos
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sección de Carga de Datos -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Tabs de Carga -->
+            <ul class="nav nav-pills nav-fill mb-4 custom-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="csv-tab" data-bs-toggle="pill" 
+                            data-bs-target="#csv" type="button">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>Cargar CSV
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="manual-tab" data-bs-toggle="pill" 
+                            data-bs-target="#manual" type="button">
+                        <i class="bi bi-pencil-square me-2"></i>Entrada Manual
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de Tabs -->
+            <div class="tab-content">
+                <!-- Tab CSV -->
+                <div class="tab-pane fade show active" id="csv" role="tabpanel">
+                    <div class="upload-card">
+                        <div class="upload-icon mb-3">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                        <h3 class="mb-3">Cargar archivo CSV</h3>
+                        <p class="text-muted mb-4">
+                            Arrastra tu archivo aquí o haz clic para seleccionar
+                        </p>
+                        
+                        <form id="formCargarCSV" enctype="multipart/form-data">
+                            <div class="file-input-wrapper">
+                                <input type="file" class="file-input" id="archivoCSV" 
+                                       name="archivo" accept=".csv" required>
+                                <label for="archivoCSV" class="file-label">
+                                    <i class="bi bi-folder2-open me-2"></i>Seleccionar Archivo
+                                </label>
+                            </div>
+                            <div id="fileName" class="file-name mt-3"></div>
+                            <button type="submit" class="btn-upload mt-3" id="btnUpload" disabled>
+                                <i class="bi bi-upload me-2"></i>Cargar Datos
+                            </button>
+                        </form>
+
+                        <div class="alert alert-info mt-4 text-start">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>
+                                <strong>Formato requerido:</strong> El CSV debe incluir columnas para 
+                                Nombre, Teléfono, Categoría y franjas horarias disponibles.
+                            </small>
+                        </div>
                     </div>
-                    <h1 class="display-2 fw-bold mb-3 text-white">
-                        Generador de Grupos
-                    </h1>
-                    <p class="lead fs-4 text-white opacity-90">
-                        Sistema inteligente de formación de grupos por compatibilidad horaria
-                    </p>
-                    <p class="text-white-50 mb-0">
-                        Optimiza la organización de tu torneo de pádel
-                    </p>
+                </div>
+
+                <!-- Tab Manual -->
+                <div class="tab-pane fade" id="manual" role="tabpanel">
+                    <div class="manual-card">
+                        <h3 class="mb-4">Agregar pareja manualmente</h3>
+                        
+                        <form id="formAgregarPareja">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        Nombre de la pareja <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" name="nombre" 
+                                           placeholder="Ej: Juan Pérez / María López" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Teléfono</label>
+                                    <input type="text" class="form-control" name="telefono" 
+                                           placeholder="Ej: 099123456">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" name="categoria" required>
+                                        {% for cat in categorias %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">
+                                    Franjas horarias disponibles <span class="text-danger">*</span>
+                                </label>
+                                <div class="row g-2">
+                                    {% for franja in franjas %}
+                                    <div class="col-md-6">
+                                        <div class="franja-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="franjas[]" value="{{ franja }}" 
+                                                   id="franja{{ loop.index }}">
+                                            <label class="form-check-label" for="franja{{ loop.index }}">
+                                                {{ franja }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-submit">
+                                <i class="bi bi-plus-circle me-2"></i>Agregar Pareja
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Selector de Torneos -->
-    <div class="row justify-content-center mb-5">
+    <!-- Lista de Parejas Cargadas -->
+    {% if parejas %}
+    <div class="row justify-content-center mt-5">
         <div class="col-lg-10">
-            {% if torneo_actual %}
-            <!-- Tarjeta de Torneo Activo -->
-            <div class="alert alert-success shadow-sm mb-4" role="alert">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="alert-heading mb-1">
-                            <i class="bi bi-check-circle-fill"></i> Torneo Activo
-                        </h5>
-                        <p class="mb-0">
-                            <strong>{{ torneo_actual.nombre }}</strong> 
-                            <span class="badge bg-primary ms-2">{{ torneo_actual.num_parejas or 0 }} parejas</span>
-                            <span class="badge bg-secondary ms-1">{{ torneo_actual.estado }}</span>
-                        </p>
-                    </div>
-                    <div>
-                        {% if torneo_actual.num_parejas > 0 %}
-                            {% if torneo_actual.estado == 'grupos_generados' %}
-                                <a href="{{ url_for('resultados') }}" class="btn btn-primary">
-                                    <i class="bi bi-trophy-fill"></i> Ver Grupos
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('datos') }}" class="btn btn-primary">
-                                    <i class="bi bi-people-fill"></i> Gestionar Parejas
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <a href="{{ url_for('datos') }}" class="btn btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar Parejas
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
             <div class="card shadow-sm border-0">
-                <div class="card-header" style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%);">
+                <div class="card-header bg-gradient-primary">
                     <h5 class="mb-0 text-white">
-                        <i class="bi bi-folder2-open"></i> Gestión de Torneos
+                        <i class="bi bi-people-fill me-2"></i>Parejas Cargadas ({{ parejas|length }})
                     </h5>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-9">
-                            <label class="form-label fw-bold">Cambiar de Torneo</label>
-                            <select class="form-select form-select-lg" id="torneoSelector" onchange="cargarTorneo()">
-                                <option value="">-- Selecciona un torneo --</option>
-                                {% for torneo in torneos %}
-                                <option value="{{ torneo.id }}" 
-                                        {% if torneo_actual and torneo.id == torneo_actual.id %}selected{% endif %}
-                                        data-nombre="{{ torneo.nombre }}"
-                                        data-parejas="{{ torneo.num_parejas }}"
-                                        data-estado="{{ torneo.estado }}">
-                                    {{ torneo.nombre }} ({{ torneo.num_parejas }} parejas - {{ torneo.estado }})
-                                </option>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Categoría</th>
+                                    <th>Franjas</th>
+                                    <th width="80">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pareja in parejas %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td><strong>{{ pareja.nombre }}</strong></td>
+                                    <td>{{ pareja.telefono }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ pareja.categoria|lower }}">
+                                            {{ pareja.categoria }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ pareja.franjas_disponibles|length }} disponibles
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" 
+                                                onclick="eliminarPareja({{ pareja.id }})">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
                                 {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button class="btn btn-success btn-lg w-100" onclick="crearNuevoTorneo()">
-                                <i class="bi bi-plus-circle"></i> Nuevo
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {% if torneos %}
-                    <hr>
-                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> Torneos Recientes</h6>
-                    <div class="list-group">
-                        {% for torneo in torneos[:5] %}
-                        <div class="list-group-item {% if torneo_actual and torneo.id == torneo_actual.id %}active{% endif %}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ torneo.nombre }}</strong>
-                                    {% if torneo_actual and torneo.id == torneo_actual.id %}
-                                        <span class="badge bg-light text-dark ms-2">Activo</span>
-                                    {% endif %}
-                                    <br>
-                                    <small {% if torneo_actual and torneo.id == torneo_actual.id %}class="text-white-50"{% else %}class="text-muted"{% endif %}>
-                                        <i class="bi bi-people"></i> {{ torneo.num_parejas }} parejas • 
-                                        <i class="bi bi-info-circle"></i> {{ torneo.estado }}
-                                    </small>
-                                </div>
-                                <div>
-                                    {% if not (torneo_actual and torneo.id == torneo_actual.id) %}
-                                    <button class="btn btn-sm btn-primary me-1" 
-                                            onclick="cargarTorneoById('{{ torneo.id }}')">
-                                        <i class="bi bi-folder-open"></i> Cargar
-                                    </button>
-                                    {% endif %}
-                                    <button class="btn btn-sm btn-danger" 
-                                            onclick="eliminarTorneo('{{ torneo.id }}', '{{ torneo.nombre }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info text-center">
-                        <i class="bi bi-info-circle"></i> No hay torneos creados. Crea uno nuevo para comenzar.
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pasos del Proceso -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm hover-card border-0">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-file-earmark-arrow-up display-1 text-primary"></i>
-                    </div>
-                    <h3 class="h4 fw-bold mb-3">Ingresar Datos</h3>
-                    <p class="text-muted mb-0">
-                        Carga las parejas desde un archivo CSV o ingresa los datos manualmente
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm hover-card border-0">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-cpu display-1 text-success"></i>
-                    </div>
-                    <h3 class="h4 fw-bold mb-3">Ejecutar Algoritmo</h3>
-                    <p class="text-muted mb-0">
-                        El sistema genera grupos compatibles automáticamente
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm hover-card border-0">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-calendar-check display-1 text-info"></i>
-                    </div>
-                    <h3 class="h4 fw-bold mb-3">Ver Resultados</h3>
-                    <p class="text-muted mb-0">
-                        Consulta los grupos y el calendario visual de partidos
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Características -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-lg-10">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h3 class="card-title mb-4 text-center fw-bold">
-                        Características Principales
-                    </h3>
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-start mb-3">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>Agrupación inteligente por categoría y horarios</span>
-                            </div>
-                            <div class="d-flex align-items-start mb-3">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>4 categorías: Cuarta, Quinta, Sexta y Séptima</span>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>Grupos de 3 parejas con partidos todos contra todos</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-start mb-3">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>Calendario visual con colores por categoría</span>
-                            </div>
-                            <div class="d-flex align-items-start mb-3">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>Gestión de 2 canchas simultáneas</span>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
-                                <span>8 franjas horarias disponibles</span>
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
+</div>
 
-    <!-- Botón de Acción -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-lg-6 text-center">
-            <a href="{{ url_for('datos') }}" class="btn btn-lg shadow-lg px-5 py-3" 
-               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-weight: 600; font-size: 1.1rem;">
-                <i class="bi bi-arrow-right-circle me-2"></i>COMENZAR
-            </a>
+<!-- Modales de Confirmación -->
+<!-- Modal: Confirmar Limpiar Datos -->
+<div class="modal fade" id="modalConfirmarLimpiar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar acción
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Estás seguro de limpiar todos los datos?</p>
+                <p class="text-muted small mb-0">Esta acción eliminará todas las parejas y grupos generados.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarLimpiarDatos()">
+                    <i class="bi bi-trash me-1"></i>Sí, limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminar Pareja -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash text-danger me-2"></i>
+                    Eliminar pareja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Deseas eliminar esta pareja?</p>
+                <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminarPareja()">
+                    <i class="bi bi-trash me-1"></i>Sí, eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Generar Grupos -->
+<div class="modal fade" id="modalConfirmarGenerar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-cpu text-success me-2"></i>
+                    Generar grupos
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Deseas generar los grupos automáticamente?</p>
+                <p class="text-muted small mb-0">El algoritmo formará grupos optimizados según las franjas horarias.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarGenerarGrupos()">
+                    <i class="bi bi-check-circle me-1"></i>Sí, generar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Loading -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <h5>Generando grupos...</h5>
+                <p class="text-muted mb-0">Por favor espera</p>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .hover-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Estilos para modales */
+.modal-content {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+}
+
+.modal-body {
+    padding: 1rem 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.modal-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* Página de Inicio - Diseño Moderno y Minimalista */
+.inicio-page {
+    min-height: 90vh;
+    padding: 1rem 0 3rem;
+}
+
+/* Header de la App */
+.app-logo i {
+    font-size: 4rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.app-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2d3748;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+.app-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    font-weight: 400;
+}
+
+/* Barra de Acciones */
+.action-bar {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Botón Generar Grupos - Verde y Grande */
+.btn-generar-grupos {
+    flex: 1;
+    min-width: 250px;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-generar-grupos:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(72, 187, 120, 0.5);
+}
+
+.btn-generar-grupos:active {
+    transform: translateY(-1px);
+}
+
+/* Botón Ver Resultados */
+.btn-ver-resultados {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-ver-resultados:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    color: white;
+}
+
+/* Botón Limpiar */
+.btn-limpiar {
+    background: white;
+    color: #e53e3e;
+    border: 2px solid #fc8181;
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-limpiar:hover {
+    background: #e53e3e;
+    color: white;
+    border-color: #e53e3e;
+    transform: translateY(-2px);
+}
+
+/* Tabs Personalizados */
+.custom-tabs {
+    background: white;
+    border-radius: 50px;
+    padding: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.custom-tabs .nav-link {
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: #718096;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.custom-tabs .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Card de Upload */
+.upload-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 2px dashed #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.upload-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+.upload-icon i {
+    font-size: 4rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.upload-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+/* File Input */
+.file-input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.file-label {
+    display: inline-block;
+    padding: 0.875rem 2rem;
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    color: #4a5568;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-label:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.file-name {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.btn-upload {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-upload:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.btn-upload:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Card Manual */
+.manual-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.manual-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.franja-check {
+    background: #f7fafc;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.franja-check:hover {
+    border-color: #667eea;
+    background: #edf2f7;
+}
+
+.franja-check input:checked ~ label,
+.franja-check:has(input:checked) {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.5);
+}
+
+/* Header de tabla con gradiente */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Badges de categoría */
+.badge.bg-cuarta { background-color: #28a745 !important; }
+.badge.bg-quinta { background-color: #ffc107 !important; color: #000 !important; }
+.badge.bg-sexta { background-color: #17a2b8 !important; }
+.badge.bg-septima,
+.badge.bg-séptima { background-color: #9b7fed !important; color: white !important; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 2rem;
     }
     
-    .hover-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    .upload-card, .manual-card {
+        padding: 2rem 1.5rem;
     }
+    
+    .custom-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+    }
+    
+    .btn-generar-grupos {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .btn-ver-resultados,
+    .btn-limpiar {
+        width: 100%;
+    }
+}
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function crearNuevoTorneo() {
-    const nombre = prompt('Nombre del nuevo torneo:', `Torneo ${new Date().toLocaleDateString()}`);
-    if (!nombre) return;
+// ==================== FILE INPUT ====================
+document.getElementById('archivoCSV').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    const fileNameDiv = document.getElementById('fileName');
+    const btnUpload = document.getElementById('btnUpload');
+    
+    if (fileName) {
+        fileNameDiv.innerHTML = `<i class="bi bi-file-earmark-text me-2"></i><strong>${fileName}</strong>`;
+        btnUpload.disabled = false;
+    } else {
+        fileNameDiv.innerHTML = '';
+        btnUpload.disabled = true;
+    }
+});
+
+// ==================== CARGAR CSV ====================
+document.getElementById('formCargarCSV').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const btnUpload = document.getElementById('btnUpload');
+    const originalText = btnUpload.innerHTML;
+    
+    btnUpload.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
+    btnUpload.disabled = true;
     
     $.ajax({
-        url: '/api/torneos',
+        url: '/api/cargar-csv',
         type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ nombre: nombre }),
-        success: function(response) {
-            Toast.success(response.mensaje);
-            setTimeout(() => window.location.href = '/datos', 500);
-        },
-        error: function(xhr) {
-            Toast.error('Error al crear torneo');
-        }
-    });
-}
-
-function cargarTorneo() {
-    const select = document.getElementById('torneoSelector');
-    const torneoId = select.value;
-    
-    if (!torneoId) return;
-    
-    cargarTorneoById(torneoId);
-}
-
-function cargarTorneoById(torneoId) {
-    $.ajax({
-        url: `/api/torneos/${torneoId}`,
-        type: 'GET',
-        success: function(response) {
-            Toast.success(response.mensaje);
-            setTimeout(() => window.location.href = '/datos', 500);
-        },
-        error: function(xhr) {
-            Toast.error('Error al cargar torneo');
-        }
-    });
-}
-
-function eliminarTorneo(torneoId, nombre) {
-    if (!confirm(`¿Estás seguro de eliminar el torneo "${nombre}"?`)) return;
-    
-    $.ajax({
-        url: `/api/torneos/${torneoId}`,
-        type: 'DELETE',
+        data: formData,
+        processData: false,
+        contentType: false,
         success: function(response) {
             Toast.success(response.mensaje);
             setTimeout(() => location.reload(), 800);
         },
         error: function(xhr) {
-            Toast.error('Error al eliminar torneo');
+            Toast.error(xhr.responseJSON?.error || 'Error al cargar CSV');
+            btnUpload.innerHTML = originalText;
+            btnUpload.disabled = false;
+        }
+    });
+});
+
+// ==================== AGREGAR PAREJA MANUAL ====================
+document.getElementById('formAgregarPareja').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const nombre = formData.get('nombre').trim();
+    const telefono = formData.get('telefono').trim();
+    const categoria = formData.get('categoria');
+    const franjas = formData.getAll('franjas[]');
+    
+    if (!nombre) {
+        Toast.error('El nombre es obligatorio');
+        return;
+    }
+    
+    if (franjas.length === 0) {
+        Toast.error('Selecciona al menos una franja horaria');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/agregar-pareja',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            nombre: nombre,
+            telefono: telefono || 'Sin teléfono',
+            categoria: categoria,
+            franjas: franjas
+        }),
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => location.reload(), 500);
+        },
+        error: function(xhr) {
+            Toast.error(xhr.responseJSON?.error || 'Error al agregar pareja');
+        }
+    });
+});
+
+// ==================== ELIMINAR PAREJA ====================
+let parejaIdAEliminar = null;
+
+function eliminarPareja(parejaId) {
+    parejaIdAEliminar = parejaId;
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
+    modal.show();
+}
+
+function confirmarEliminarPareja() {
+    if (!parejaIdAEliminar) return;
+    
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar'));
+    modal.hide();
+    
+    $.ajax({
+        url: '/api/eliminar-pareja',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: parejaIdAEliminar }),
+        success: function(response) {
+            Toast.success(response.mensaje);
+            setTimeout(() => location.reload(), 500);
+        },
+        error: function(xhr) {
+            Toast.error(xhr.responseJSON?.error || 'Error al eliminar pareja');
+        }
+    });
+    
+    parejaIdAEliminar = null;
+}
+
+// ==================== LIMPIAR DATOS ====================
+function limpiarDatos() {
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarLimpiar'));
+    modal.show();
+}
+
+function confirmarLimpiarDatos() {
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarLimpiar'));
+    modal.hide();
+    
+    $.ajax({
+        url: '/api/limpiar-datos',
+        type: 'POST',
+        success: function(response) {
+            Toast.success(response.mensaje || 'Datos eliminados');
+            setTimeout(() => location.reload(), 500);
+        },
+        error: function(xhr) {
+            Toast.error(xhr.responseJSON?.error || 'Error al limpiar datos');
+        }
+    });
+}
+
+// ==================== EJECUTAR ALGORITMO ====================
+function ejecutarAlgoritmo() {
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarGenerar'));
+    modal.show();
+}
+
+function confirmarGenerarGrupos() {
+    // Cerrar modal de confirmación
+    const modalConfirm = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarGenerar'));
+    modalConfirm.hide();
+    
+    // Mostrar modal de loading
+    const modalLoading = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modalLoading.show();
+    
+    $.ajax({
+        url: '/api/ejecutar-algoritmo',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ num_canchas: 2 }),
+        success: function(response) {
+            modalLoading.hide();
+            Toast.success(response.mensaje);
+            setTimeout(() => window.location.href = '/resultados', 800);
+        },
+        error: function(xhr) {
+            modalLoading.hide();
+            Toast.error(xhr.responseJSON?.error || 'Error al ejecutar algoritmo');
         }
     });
 }

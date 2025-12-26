@@ -30,45 +30,36 @@ def crear_app():
     # Registrar blueprints
     app.register_blueprint(api_bp)
     
+    # Middleware: Sincronizar sesión con almacenamiento
+    @app.before_request
+    def cargar_torneo():
+        """Carga el torneo actual en la sesión si no está cargado."""
+        if 'parejas' not in session:
+            torneo = storage.cargar()
+            session['parejas'] = torneo.get('parejas', [])
+            session['resultado_algoritmo'] = torneo.get('resultado_algoritmo')
+            session['num_canchas'] = torneo.get('num_canchas', 2)
+            session.modified = True
+    
     # Rutas principales
     @app.route('/')
     def inicio():
-        """Página de inicio del sistema."""
-        torneos = storage.listar_todos()
-        torneo_actual_id = session.get('torneo_actual')
-        torneo_actual = None
-        
-        if torneo_actual_id:
-            torneo_actual = storage.cargar(torneo_actual_id)
+        """Página de inicio - Carga de datos."""
+        parejas = session.get('parejas', [])
+        resultado = session.get('resultado_algoritmo')
+        torneo = storage.cargar()
         
         return render_template('inicio.html', 
-                             torneos=torneos,
-                             torneo_actual=torneo_actual)
+                             parejas=parejas,
+                             resultado=resultado,
+                             torneo=torneo,
+                             categorias=CATEGORIAS,
+                             franjas=FRANJAS_HORARIAS)
     
     @app.route('/datos')
     def datos():
-        """Página de gestión de parejas."""
-        # Asegurar que hay un torneo activo
-        torneo_id = session.get('torneo_actual')
-        if not torneo_id:
-            # Crear torneo automáticamente si no existe
-            torneo_id = storage.crear_torneo()
-            session['torneo_actual'] = torneo_id
-            session['parejas'] = []
-            session.modified = True
-        
-        parejas = session.get('parejas', [])
-        stats = _calcular_estadisticas(parejas)
-        
-        # Obtener info del torneo
-        torneo = storage.cargar(torneo_id)
-        
-        return render_template('datos.html', 
-                             parejas=parejas, 
-                             stats=stats,
-                             categorias=CATEGORIAS,
-                             franjas=FRANJAS_HORARIAS,
-                             torneo=torneo)
+        """Redirige a inicio - ya no se usa esta página."""
+        return redirect(url_for('inicio'))
     
     @app.route('/resultados')
     def resultados():
@@ -76,12 +67,10 @@ def crear_app():
         resultado = session.get('resultado_algoritmo')
         
         if not resultado:
-            flash('Primero debes ejecutar el algoritmo', 'warning')
-            return redirect(url_for('datos'))
+            flash('Primero debes generar los grupos', 'warning')
+            return redirect(url_for('inicio'))
         
-        # Obtener info del torneo
-        torneo_id = session.get('torneo_actual')
-        torneo = storage.cargar(torneo_id) if torneo_id else None
+        torneo = storage.cargar()
         
         return render_template('resultados.html', 
                              resultado=resultado,
@@ -91,21 +80,6 @@ def crear_app():
                              torneo=torneo)
     
     return app
-
-
-def _calcular_estadisticas(parejas):
-    """Calcula estadísticas básicas de las parejas cargadas."""
-    stats = {
-        'total': len(parejas),
-        'por_categoria': {cat: 0 for cat in CATEGORIAS}
-    }
-    
-    for pareja in parejas:
-        cat = pareja.get('categoria', '')
-        if cat in stats['por_categoria']:
-            stats['por_categoria'][cat] += 1
-    
-    return stats
 
 
 if __name__ == '__main__':

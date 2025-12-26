@@ -17,6 +17,10 @@
     {% block extra_css %}{% endblock %}
     
     <style>
+        .navbar .nav-link:hover {
+            background: rgba(255,255,255,0.25) !important;
+            transform: translateY(-2px);
+        }
         .toast-container {
             position: fixed;
             top: 80px;
@@ -32,30 +36,30 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%); box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="{{ url_for('inicio') }}" style="font-size: 1.3rem;">
-                <i class="bi bi-trophy-fill text-warning"></i> <span class="text-white">Torneo de Pádel</span>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 1rem 0;">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('inicio') }}" style="font-size: 1.5rem;">
+                <i class="bi bi-trophy-fill text-warning me-2" style="font-size: 1.8rem;"></i>
+                <span class="text-white">Torneo de Pádel</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto gap-2">
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ url_for('inicio') }}" style="font-weight: 500;">
-                            <i class="bi bi-house-door-fill"></i> Torneos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ url_for('datos') }}" style="font-weight: 500;">
-                            <i class="bi bi-people-fill"></i> Parejas
+                        <a class="nav-link text-white px-4 py-2 rounded-pill {{ 'active' if request.endpoint == 'inicio' or request.endpoint == 'datos' else '' }}" 
+                           href="{{ url_for('inicio') }}" 
+                           style="font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; {{ 'background: rgba(255,255,255,0.2);' if request.endpoint == 'inicio' or request.endpoint == 'datos' else '' }}">
+                            <i class="bi bi-table me-2"></i>Datos
                         </a>
                     </li>
                     {% if session.get('resultado_algoritmo') %}
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ url_for('resultados') }}" style="font-weight: 500;">
-                            <i class="bi bi-trophy-fill"></i> Grupos
+                        <a class="nav-link text-white px-4 py-2 rounded-pill {{ 'active' if request.endpoint == 'resultados' else '' }}" 
+                           href="{{ url_for('resultados') }}" 
+                           style="font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; {{ 'background: rgba(255,255,255,0.2);' if request.endpoint == 'resultados' else '' }}">
+                            <i class="bi bi-grid-3x3-gap-fill me-2"></i>Grupos
                         </a>
                     </li>
                     {% endif %}

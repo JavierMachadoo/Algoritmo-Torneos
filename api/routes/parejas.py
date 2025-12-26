@@ -17,20 +17,9 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # ==================== HELPERS ====================
 
-def obtener_torneo_actual():
-    """Obtiene el ID del torneo actual de la sesión."""
-    return session.get('torneo_actual')
-
-
 def guardar_estado_torneo():
     """Guarda el estado actual del torneo en el almacenamiento JSON."""
-    torneo_id = obtener_torneo_actual()
-    if not torneo_id:
-        return
-    
-    torneo = storage.cargar(torneo_id)
-    if not torneo:
-        return
+    torneo = storage.cargar()
     
     # Actualizar datos del torneo con lo que está en sesión
     torneo['parejas'] = session.get('parejas', [])
@@ -42,105 +31,10 @@ def guardar_estado_torneo():
         torneo['estado'] = 'grupos_generados'
     elif torneo['parejas']:
         torneo['estado'] = 'creando'
+    else:
+        torneo['estado'] = 'creando'
     
-    storage.guardar(torneo_id, torneo)
-
-
-def cargar_estado_torneo(torneo_id):
-    """Carga el estado de un torneo en la sesión."""
-    torneo = storage.cargar(torneo_id)
-    if not torneo:
-        return False
-    
-    session['torneo_actual'] = torneo_id
-    session['parejas'] = torneo.get('parejas', [])
-    session['resultado_algoritmo'] = torneo.get('resultado_algoritmo')
-    session['num_canchas'] = torneo.get('num_canchas', NUM_CANCHAS_DEFAULT)
-    session.modified = True
-    
-    return True
-
-
-# ==================== GESTIÓN DE TORNEOS ====================
-
-@api_bp.route('/torneos', methods=['GET'])
-def listar_torneos():
-    """Lista todos los torneos disponibles."""
-    torneos = storage.listar_todos()
-    return jsonify({
-        'success': True,
-        'torneos': torneos
-    })
-
-
-@api_bp.route('/torneos', methods=['POST'])
-def crear_torneo():
-    """Crea un nuevo torneo."""
-    data = request.json or {}
-    nombre = data.get('nombre')
-    
-    torneo_id = storage.crear_torneo(nombre)
-    cargar_estado_torneo(torneo_id)
-    
-    return jsonify({
-        'success': True,
-        'mensaje': f'Torneo "{storage.cargar(torneo_id)["nombre"]}" creado',
-        'torneo_id': torneo_id
-    })
-
-
-@api_bp.route('/torneos/<torneo_id>', methods=['GET'])
-def cargar_torneo(torneo_id):
-    """Carga un torneo existente en la sesión."""
-    if not cargar_estado_torneo(torneo_id):
-        return jsonify({'error': 'Torneo no encontrado'}), 404
-    
-    torneo = storage.cargar(torneo_id)
-    return jsonify({
-        'success': True,
-        'mensaje': f'Torneo "{torneo["nombre"]}" cargado',
-        'torneo': torneo
-    })
-
-
-@api_bp.route('/torneos/<torneo_id>', methods=['DELETE'])
-def eliminar_torneo(torneo_id):
-    """Elimina un torneo."""
-    torneo = storage.cargar(torneo_id)
-    if not torneo:
-        return jsonify({'error': 'Torneo no encontrado'}), 404
-    
-    nombre = torneo['nombre']
-    
-    if storage.eliminar(torneo_id):
-        # Si es el torneo actual, limpiar sesión
-        if session.get('torneo_actual') == torneo_id:
-            session.clear()
-        
-        return jsonify({
-            'success': True,
-            'mensaje': f'Torneo "{nombre}" eliminado'
-        })
-    
-    return jsonify({'error': 'Error al eliminar torneo'}), 500
-
-
-@api_bp.route('/torneos/<torneo_id>/nombre', methods=['PUT'])
-def actualizar_nombre_torneo(torneo_id):
-    """Actualiza el nombre de un torneo."""
-    data = request.json
-    nuevo_nombre = data.get('nombre', '').strip()
-    
-    if not nuevo_nombre:
-        return jsonify({'error': 'El nombre es requerido'}), 400
-    
-    if storage.actualizar_nombre(torneo_id, nuevo_nombre):
-        return jsonify({
-            'success': True,
-            'mensaje': 'Nombre actualizado'
-        })
-    
-    return jsonify({'error': 'Torneo no encontrado'}), 404
+    storage.guardar(torneo)
 
 
 # ==================== CARGA DE DATOS ====================
@@ -161,8 +55,9 @@ def cargar_csv():
         parejas = CSVProcessor.procesar_dataframe(df)
         
         session['parejas'] = parejas
+        session['resultado_algoritmo'] = None  # Limpiar resultados anteriores
         session.modified = True
-        guardar_estado_torneo()  # Auto-guardar
+        guardar_estado_torneo()
         
         return jsonify({
             'success': True,
@@ -202,7 +97,7 @@ def agregar_pareja():
     parejas.append(nueva_pareja)
     session['parejas'] = parejas
     session.modified = True
-    guardar_estado_torneo()  # Auto-guardar
+    guardar_estado_torneo()
     
     return jsonify({
         'success': True,
@@ -211,15 +106,18 @@ def agregar_pareja():
     })
 
 
-@api_bp.route('/eliminar-pareja/<int:pareja_id>', methods=['DELETE'])
-def eliminar_pareja(pareja_id):
+@api_bp.route('/eliminar-pareja', methods=['POST'])
+def eliminar_pareja():
     """Elimina una pareja del torneo."""
+    data = request.json
+    pareja_id = data.get('id')
+    
     parejas = session.get('parejas', [])
     parejas = [p for p in parejas if p['id'] != pareja_id]
     
     session['parejas'] = parejas
     session.modified = True
-    guardar_estado_torneo()  # Auto-guardar
+    guardar_estado_torneo()
     
     return jsonify({
         'success': True,
@@ -233,7 +131,9 @@ def limpiar_datos():
     session['parejas'] = []
     session['resultado_algoritmo'] = None
     session.modified = True
-    guardar_estado_torneo()  # Auto-guardar
+    
+    # Limpiar también en el almacenamiento
+    storage.limpiar()
     
     return jsonify({
         'success': True,
