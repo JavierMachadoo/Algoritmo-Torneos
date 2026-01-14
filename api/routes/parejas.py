@@ -17,6 +17,75 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # ==================== HELPERS ====================
 
+def recalcular_score_grupo(grupo_dict):
+    """Recalcula el score de compatibilidad de un grupo según sus parejas actuales."""
+    parejas = grupo_dict.get('parejas', [])
+    franja_asignada = grupo_dict.get('franja_horaria')
+    
+    if len(parejas) < 2:
+        grupo_dict['score'] = 0.0
+        grupo_dict['score_compatibilidad'] = 0.0
+        return
+    
+    if not franja_asignada:
+        # Si no hay franja asignada, usar algoritmo original
+        parejas_obj = [Pareja.from_dict(p) for p in parejas]
+        
+        if len(parejas_obj) < 3:
+            # Grupo incompleto: calcular compatibilidad parcial
+            franjas_p1 = set(parejas_obj[0].franjas_disponibles)
+            franjas_p2 = set(parejas_obj[1].franjas_disponibles)
+            franjas_comunes = franjas_p1 & franjas_p2
+            score = 2.0 if franjas_comunes else 0.0
+        else:
+            # Usar lógica del algoritmo
+            algoritmo = AlgoritmoGrupos(parejas_obj)
+            score, _ = algoritmo._calcular_compatibilidad(parejas_obj)
+    else:
+        # Si hay franja asignada, calcular score acumulativo por pareja
+        dia_asignado = franja_asignada.split(' ')[0] if ' ' in franja_asignada else ''
+        score = 0.0
+        
+        for pareja in parejas:
+            franjas_pareja = pareja.get('franjas_disponibles', [])
+            
+            if franja_asignada in franjas_pareja:
+                # Horario exacto: suma 1.0
+                score += 1.0
+            elif dia_asignado:
+                # Verificar si al menos tiene el mismo día
+                dias_pareja = set(f.split(' ')[0] for f in franjas_pareja if ' ' in f)
+                if dia_asignado in dias_pareja:
+                    # Mismo día, hora diferente: suma 0.5
+                    score += 0.5
+                # Si no tiene el día: suma 0.0 (no suma nada)
+    
+    grupo_dict['score'] = score
+    grupo_dict['score_compatibilidad'] = score
+
+
+def regenerar_calendario(resultado_data):
+    """Regenera el calendario completo basándose en los grupos actuales."""
+    try:
+        # Deserializar resultado
+        resultado_obj = deserializar_resultado(resultado_data)
+        
+        # Obtener número de canchas
+        num_canchas = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
+        
+        # Regenerar calendario usando CalendarioBuilder
+        calendario_builder = CalendarioBuilder(num_canchas)
+        calendario = calendario_builder.organizar_partidos(resultado_obj)
+        
+        # Actualizar en resultado_data
+        resultado_data['calendario'] = calendario
+        
+        return calendario
+    except Exception as e:
+        print(f"Error al regenerar calendario: {str(e)}")
+        return resultado_data.get('calendario', {})
+
+
 def guardar_estado_torneo():
     """Guarda el estado actual del torneo en el almacenamiento JSON."""
     torneo = storage.cargar()
@@ -220,6 +289,13 @@ def intercambiar_pareja():
                 grupo_destino_obj['parejas'].append(pareja_movida)
             mensaje = f"Pareja {pareja_movida['nombre']} movida al slot {slot_destino + 1}"
         
+        # Recalcular scores de ambos grupos
+        recalcular_score_grupo(grupo_origen_obj)
+        recalcular_score_grupo(grupo_destino_obj)
+        
+        # Regenerar calendario completo
+        regenerar_calendario(resultado)
+        
         session['resultado_algoritmo'] = resultado
         session.modified = True
         guardar_estado_torneo()  # Auto-guardar
@@ -399,6 +475,12 @@ def asignar_pareja_a_grupo():
     else:
         grupo_encontrado['parejas'].append(pareja_a_asignar)
     
+    # Recalcular score del grupo
+    recalcular_score_grupo(grupo_encontrado)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
+    
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
@@ -461,6 +543,9 @@ def crear_grupo_manual():
     
     grupos_dict[categoria].append(nuevo_grupo)
     
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
+    
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
@@ -518,6 +603,12 @@ def editar_grupo():
     # Actualizar datos del grupo
     grupo_encontrado['franja_horaria'] = franja_horaria
     grupo_encontrado['cancha'] = cancha
+    
+    # Recalcular score de compatibilidad del grupo
+    recalcular_score_grupo(grupo_encontrado)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
@@ -591,6 +682,8 @@ def editar_pareja():
     if cambio_categoria and grupo_contenedor:
         # Remover del grupo actual
         grupo_contenedor['parejas'].remove(pareja_encontrada)
+        # Recalcular score del grupo afectado
+        recalcular_score_grupo(grupo_contenedor)
         # Actualizar categoría
         pareja_encontrada['categoria'] = categoria
         # Agregar a no asignadas
@@ -601,6 +694,13 @@ def editar_pareja():
     pareja_encontrada['telefono'] = telefono
     pareja_encontrada['categoria'] = categoria
     pareja_encontrada['franjas_disponibles'] = franjas
+    
+    # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
+    if grupo_contenedor and not cambio_categoria:
+        recalcular_score_grupo(grupo_contenedor)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
