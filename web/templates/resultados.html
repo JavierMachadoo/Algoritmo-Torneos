@@ -517,6 +517,53 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+    
+    /* Estilos para disponibilidad de canchas */
+    #disponibilidadCard {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    #disponibilidadCard .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+    
+    #disponibilidadInfo .alert {
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    #disponibilidadInfo .alert:hover {
+        transform: translateX(3px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #disponibilidadInfo .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #28a745;
+        color: #155724;
+    }
+    
+    #disponibilidadInfo .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-color: #dc3545;
+        color: #721c24;
+    }
+    
+    #disponibilidadInfo .alert-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-color: #17a2b8;
+        color: #0c5460;
+    }
+    
+    #disponibilidadInfo .alert-secondary {
+        opacity: 0.6;
+    }
 </style>
 {% endblock %}
 
@@ -723,6 +770,20 @@
                             </select>
                         </div>
                     </form>
+
+                    <!-- Visualización de Disponibilidad -->
+                    <div class="card bg-light mt-3" id="disponibilidadCard" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-calendar-check"></i> Disponibilidad de Canchas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="disponibilidadInfo" class="row g-2">
+                                <!-- Se llenará dinámicamente con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -2316,13 +2377,120 @@ function agregarParejaDesdeModal() {
 
 // ==================== CREAR Y EDITAR GRUPOS ====================
 
+// Variable global para almacenar disponibilidad
+let disponibilidadGlobal = null;
+
 function abrirModalCrearGrupo(categoria) {
     document.getElementById('crearGrupoCategoria').value = categoria;
     document.getElementById('crearGrupoFranja').value = '';
     document.getElementById('crearGrupoCancha').value = '';
     
+    // Ocultar el card de disponibilidad inicialmente
+    document.getElementById('disponibilidadCard').style.display = 'none';
+    
+    // Cargar disponibilidad
+    cargarDisponibilidad();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCrearGrupo'));
     modal.show();
+}
+
+function cargarDisponibilidad() {
+    fetch('/api/franjas-disponibles')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                disponibilidadGlobal = data.disponibilidad;
+                // Agregar event listeners a los selects
+                document.getElementById('crearGrupoFranja').addEventListener('change', actualizarDisponibilidad);
+                document.getElementById('crearGrupoCancha').addEventListener('change', actualizarDisponibilidad);
+            }
+        })
+        .catch(error => console.error('Error al cargar disponibilidad:', error));
+}
+
+function actualizarDisponibilidad() {
+    const franja = document.getElementById('crearGrupoFranja').value;
+    const canchaSeleccionada = document.getElementById('crearGrupoCancha').value;
+    const disponibilidadCard = document.getElementById('disponibilidadCard');
+    const disponibilidadInfo = document.getElementById('disponibilidadInfo');
+    
+    if (!franja && !canchaSeleccionada) {
+        disponibilidadCard.style.display = 'none';
+        return;
+    }
+    
+    disponibilidadCard.style.display = 'block';
+    disponibilidadInfo.innerHTML = '';
+    
+    if (!disponibilidadGlobal) {
+        disponibilidadInfo.innerHTML = '<div class="col-12 text-center">Cargando...</div>';
+        return;
+    }
+    
+    // Si hay franja seleccionada, mostrar disponibilidad de canchas para esa franja
+    if (franja && disponibilidadGlobal[franja]) {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Canchas para ' + franja + ':</h6></div>';
+        
+        Object.keys(disponibilidadGlobal[franja]).forEach(cancha => {
+            const info = disponibilidadGlobal[franja][cancha];
+            const disponible = info.disponible;
+            const colorClass = disponible ? 'success' : 'danger';
+            const icono = disponible ? '✓' : '✗';
+            const texto = disponible ? 'Disponible' : `Ocupada (${info.ocupada_por})`;
+            
+            disponibilidadInfo.innerHTML += `
+                <div class="col-6">
+                    <div class="alert alert-${colorClass} mb-2 py-2 px-3">
+                        <strong>${icono} Cancha ${cancha}:</strong> ${texto}
+                    </div>
+                </div>
+            `;
+        });
+    }
+    // Si hay cancha seleccionada, mostrar franjas disponibles para esa cancha
+    else if (canchaSeleccionada) {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Franjas para Cancha ' + canchaSeleccionada + ':</h6></div>';
+        
+        Object.keys(disponibilidadGlobal).forEach(franja => {
+            const info = disponibilidadGlobal[franja][canchaSeleccionada];
+            if (info) {
+                const disponible = info.disponible;
+                const colorClass = disponible ? 'success' : 'secondary';
+                const icono = disponible ? '✓' : '✗';
+                
+                if (disponible) {
+                    disponibilidadInfo.innerHTML += `
+                        <div class="col-12 col-md-6">
+                            <div class="alert alert-${colorClass} mb-2 py-2 px-3">
+                                ${icono} <strong>${franja}</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        });
+    }
+    // Si no hay nada seleccionado, mostrar resumen general
+    else {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Resumen General:</h6></div>';
+        
+        Object.keys(disponibilidadGlobal).forEach(franja => {
+            const canchas = disponibilidadGlobal[franja];
+            const disponibles = Object.values(canchas).filter(c => c.disponible).length;
+            const total = Object.keys(canchas).length;
+            
+            if (disponibles > 0) {
+                disponibilidadInfo.innerHTML += `
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-info mb-2 py-2 px-3">
+                            <strong>${franja}:</strong> ${disponibles}/${total} canchas libres
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
 }
 
 function confirmarCrearGrupo() {

@@ -492,6 +492,60 @@ def asignar_pareja_a_grupo():
     })
 
 
+@api_bp.route('/franjas-disponibles', methods=['GET'])
+def obtener_franjas_disponibles():
+    """Obtiene las franjas disponibles para cada cancha."""
+    from config.settings import FRANJAS_HORARIAS
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    num_canchas = session.get('num_canchas', 2)
+    
+    # Crear un diccionario de franjas ocupadas por cancha
+    franjas_ocupadas = {}
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            franja = grupo.get('franja_horaria')
+            cancha = str(grupo.get('cancha'))
+            if franja and cancha:
+                if franja not in franjas_ocupadas:
+                    franjas_ocupadas[franja] = set()
+                franjas_ocupadas[franja].add(cancha)
+    
+    # Construir la respuesta con disponibilidad por franja y cancha
+    disponibilidad = {}
+    for franja in FRANJAS_HORARIAS:
+        disponibilidad[franja] = {}
+        for cancha_num in range(1, num_canchas + 1):
+            cancha_str = str(cancha_num)
+            ocupada = franja in franjas_ocupadas and cancha_str in franjas_ocupadas[franja]
+            
+            # Si está ocupada, buscar qué categoría la ocupa
+            categoria_ocupante = None
+            if ocupada:
+                for cat, grupos in grupos_dict.items():
+                    for grupo in grupos:
+                        if grupo.get('franja_horaria') == franja and str(grupo.get('cancha')) == cancha_str:
+                            categoria_ocupante = cat
+                            break
+                    if categoria_ocupante:
+                        break
+            
+            disponibilidad[franja][cancha_str] = {
+                'disponible': not ocupada,
+                'ocupada_por': categoria_ocupante
+            }
+    
+    return jsonify({
+        'success': True,
+        'disponibilidad': disponibilidad,
+        'num_canchas': num_canchas
+    })
+
+
 @api_bp.route('/crear-grupo-manual', methods=['POST'])
 def crear_grupo_manual():
     """Crea un nuevo grupo manualmente para una categoría."""
