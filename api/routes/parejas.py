@@ -146,6 +146,7 @@ def agregar_pareja():
     telefono = data.get('telefono', '').strip()
     categoria = data.get('categoria', 'Cuarta')
     franjas = data.get('franjas', [])
+    desde_resultados = data.get('desde_resultados', False)
     
     if not nombre:
         return jsonify({'error': 'El nombre es obligatorio'}), 400
@@ -155,8 +156,10 @@ def agregar_pareja():
     
     parejas = session.get('parejas', [])
     
+    # Generar nuevo ID único
+    max_id = max([p['id'] for p in parejas], default=0)
     nueva_pareja = {
-        'id': len(parejas) + 1,
+        'id': max_id + 1,
         'nombre': nombre,
         'telefono': telefono or 'Sin teléfono',
         'categoria': categoria,
@@ -165,13 +168,30 @@ def agregar_pareja():
     
     parejas.append(nueva_pareja)
     session['parejas'] = parejas
+    
+    # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
+    if desde_resultados:
+        resultado_data = session.get('resultado_algoritmo')
+        if resultado_data:
+            # Agregar a parejas no asignadas
+            parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+            parejas_sin_asignar.append(nueva_pareja)
+            resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
+            
+            # Actualizar estadísticas
+            if 'estadisticas' in resultado_data:
+                resultado_data['estadisticas']['total_parejas'] = len(parejas)
+            
+            session['resultado_algoritmo'] = resultado_data
+    
     session.modified = True
     guardar_estado_torneo()
     
     return jsonify({
         'success': True,
         'mensaje': f'Pareja "{nombre}" agregada correctamente',
-        'pareja': nueva_pareja
+        'pareja': nueva_pareja,
+        'desde_resultados': desde_resultados
     })
 
 
@@ -504,7 +524,19 @@ def obtener_franjas_disponibles():
     grupos_dict = resultado_data['grupos_por_categoria']
     num_canchas = session.get('num_canchas', 2)
     
-    # Crear un diccionario de franjas ocupadas por cancha
+    # Mapeo de franjas a horas que ocupan
+    franjas_a_horas_mapa = {
+        'Jueves 18:00': ['18:00', '19:00', '20:00'],
+        'Jueves 20:00': ['20:00', '21:00', '22:00'],
+        'Viernes 18:00': ['18:00', '19:00', '20:00'],
+        'Viernes 21:00': ['21:00', '22:00', '23:00'],
+        'Sábado 09:00': ['09:00', '10:00', '11:00'],
+        'Sábado 12:00': ['12:00', '13:00', '14:00'],
+        'Sábado 16:00': ['16:00', '17:00', '18:00'],
+        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+    }
+    
+    # Crear un diccionario de franjas ocupadas por cancha con info detallada
     franjas_ocupadas = {}
     for cat, grupos in grupos_dict.items():
         for grupo in grupos:
@@ -512,8 +544,8 @@ def obtener_franjas_disponibles():
             cancha = str(grupo.get('cancha'))
             if franja and cancha:
                 if franja not in franjas_ocupadas:
-                    franjas_ocupadas[franja] = set()
-                franjas_ocupadas[franja].add(cancha)
+                    franjas_ocupadas[franja] = {}
+                franjas_ocupadas[franja][cancha] = cat
     
     # Construir la respuesta con disponibilidad por franja y cancha
     disponibilidad = {}
@@ -521,22 +553,31 @@ def obtener_franjas_disponibles():
         disponibilidad[franja] = {}
         for cancha_num in range(1, num_canchas + 1):
             cancha_str = str(cancha_num)
-            ocupada = franja in franjas_ocupadas and cancha_str in franjas_ocupadas[franja]
             
-            # Si está ocupada, buscar qué categoría la ocupa
-            categoria_ocupante = None
-            if ocupada:
-                for cat, grupos in grupos_dict.items():
-                    for grupo in grupos:
-                        if grupo.get('franja_horaria') == franja and str(grupo.get('cancha')) == cancha_str:
-                            categoria_ocupante = cat
-                            break
-                    if categoria_ocupante:
+            # Verificar si está ocupada directamente
+            ocupada_directa = franja in franjas_ocupadas and cancha_str in franjas_ocupadas[franja]
+            categoria_ocupante = franjas_ocupadas.get(franja, {}).get(cancha_str)
+            
+            # Verificar solapamientos (especialmente Jueves 18:00 y 20:00)
+            solapamiento = None
+            horas_franja = franjas_a_horas_mapa.get(franja, [])
+            
+            for otra_franja, cat_por_cancha in franjas_ocupadas.items():
+                if otra_franja != franja and cancha_str in cat_por_cancha:
+                    horas_otra = franjas_a_horas_mapa.get(otra_franja, [])
+                    horas_comunes = set(horas_franja) & set(horas_otra)
+                    if horas_comunes:
+                        solapamiento = {
+                            'franja': otra_franja,
+                            'categoria': cat_por_cancha[cancha_str],
+                            'horas_conflicto': sorted(list(horas_comunes))
+                        }
                         break
             
             disponibilidad[franja][cancha_str] = {
-                'disponible': not ocupada,
-                'ocupada_por': categoria_ocupante
+                'disponible': not ocupada_directa,
+                'ocupada_por': categoria_ocupante,
+                'solapamiento': solapamiento
             }
     
     return jsonify({
@@ -563,13 +604,39 @@ def crear_grupo_manual():
     
     grupos_dict = resultado_data['grupos_por_categoria']
     
-    # Validar que la cancha no esté ocupada en ese horario
+    # Mapeo de franjas a horas
+    franjas_a_horas_mapa = {
+        'Jueves 18:00': ['18:00', '19:00', '20:00'],
+        'Jueves 20:00': ['20:00', '21:00', '22:00'],
+        'Viernes 18:00': ['18:00', '19:00', '20:00'],
+        'Viernes 21:00': ['21:00', '22:00', '23:00'],
+        'Sábado 09:00': ['09:00', '10:00', '11:00'],
+        'Sábado 12:00': ['12:00', '13:00', '14:00'],
+        'Sábado 16:00': ['16:00', '17:00', '18:00'],
+        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+    }
+    
+    # Validar que la cancha no esté ocupada directamente
     for cat, grupos in grupos_dict.items():
         for grupo in grupos:
             if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
                 return jsonify({
                     'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por un grupo de {cat}'
                 }), 400
+    
+    # Validar solapamientos horarios
+    horas_nueva_franja = franjas_a_horas_mapa.get(franja_horaria, [])
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            if str(grupo.get('cancha')) == str(cancha):
+                franja_existente = grupo.get('franja_horaria')
+                horas_existente = franjas_a_horas_mapa.get(franja_existente, [])
+                horas_conflicto = set(horas_nueva_franja) & set(horas_existente)
+                
+                if horas_conflicto:
+                    return jsonify({
+                        'error': f'Conflicto: La Cancha {cancha} tiene un solapamiento horario con {franja_existente} (grupo de {cat}) en las horas: {", ".join(sorted(horas_conflicto))}'
+                    }), 400
     
     # Asegurar que existe la categoría
     if categoria not in grupos_dict:

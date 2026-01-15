@@ -1,7 +1,7 @@
 {
   "nombre": "Torneo 26/12/2025",
   "fecha_creacion": "2025-12-26T13:18:53.825559",
-  "fecha_modificacion": "2026-01-14T18:47:28.696911",
+  "fecha_modificacion": "2026-01-15T12:51:26.033998",
   "parejas": [
     {
       "categoria": "Cuarta",
@@ -299,594 +299,18 @@
       "id": 28,
       "nombre": "Germán Idiarte Borda - Nico Soba",
       "telefono": "098620161"
+    },
+    {
+      "categoria": "Cuarta",
+      "franjas_disponibles": [
+        "Sábado 09:00"
+      ],
+      "id": 29,
+      "nombre": "Carlos Di petta / Santi Olivera",
+      "telefono": "0993940"
     }
   ],
   "resultado_algoritmo": {
-    "grupos_por_categoria": {
-      "Cuarta": [
-        {
-          "id": 1,
-          "parejas": [
-            {
-              "id": 1,
-              "nombre": "Enrique Fraga - Diego Leiros",
-              "telefono": "097165808",
-              "categoria": "Cuarta",
-              "franjas_disponibles": [
-                "Jueves 20:00"
-              ],
-              "grupo_asignado": 1,
-              "posicion_grupo": null
-            },
-            {
-              "id": 4,
-              "nombre": "Nico Silvera y Rodri Franco",
-              "telefono": "099020252",
-              "categoria": "Cuarta",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 1,
-              "posicion_grupo": null
-            },
-            {
-              "id": 14,
-              "nombre": "Joaquin Oliveira y Demetrio Ferreira",
-              "telefono": "091802797",
-              "categoria": "Cuarta",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Viernes 18:00"
-              ],
-              "grupo_asignado": 1,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Enrique Fraga - Diego Leiros",
-              "pareja2": "Nico Silvera y Rodri Franco"
-            },
-            {
-              "pareja1": "Enrique Fraga - Diego Leiros",
-              "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
-            },
-            {
-              "pareja1": "Nico Silvera y Rodri Franco",
-              "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
-            }
-          ],
-          "franja_horaria": "Jueves 18:00",
-          "cancha": 1,
-          "score": 2.5
-        }
-      ],
-      "Séptima": [
-        {
-          "id": 2,
-          "parejas": [
-            {
-              "id": 2,
-              "nombre": "Gabril y Mario",
-              "telefono": "095 888 336",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Viernes 21:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 189,
-              "posicion_grupo": null
-            },
-            {
-              "id": 3,
-              "nombre": "Gabriel y Mario Larrosa",
-              "telefono": "O95 888 336",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Viernes 21:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 176,
-              "posicion_grupo": null
-            },
-            {
-              "id": 5,
-              "nombre": "Nicolas Romay Javier Machin",
-              "telefono": "098493472",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Jueves 20:00",
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 181,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Gabril y Mario",
-              "pareja2": "Gabriel y Mario Larrosa"
-            },
-            {
-              "pareja1": "Gabril y Mario",
-              "pareja2": "Nicolas Romay Javier Machin"
-            },
-            {
-              "pareja1": "Gabriel y Mario Larrosa",
-              "pareja2": "Nicolas Romay Javier Machin"
-            }
-          ],
-          "franja_horaria": "Viernes 21:00",
-          "cancha": 1,
-          "score": 3.0
-        },
-        {
-          "id": 65,
-          "parejas": [
-            {
-              "id": 9,
-              "nombre": "Nelson y gaby",
-              "telefono": "099690328",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 184,
-              "posicion_grupo": null
-            },
-            {
-              "id": 18,
-              "nombre": "Facu Olivera y Victoria Fernandez",
-              "telefono": "099034734",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Viernes 18:00",
-                "Viernes 21:00",
-                "Sábado 09:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 189,
-              "posicion_grupo": null
-            },
-            {
-              "id": 25,
-              "nombre": "Jonathan Ferri - Ricardo García",
-              "telefono": "099914964",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Viernes 18:00"
-              ],
-              "grupo_asignado": 170,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Nelson y gaby",
-              "pareja2": "Facu Olivera y Victoria Fernandez"
-            },
-            {
-              "pareja1": "Nelson y gaby",
-              "pareja2": "Jonathan Ferri - Ricardo García"
-            },
-            {
-              "pareja1": "Facu Olivera y Victoria Fernandez",
-              "pareja2": "Jonathan Ferri - Ricardo García"
-            }
-          ],
-          "franja_horaria": "Viernes 18:00",
-          "cancha": 1,
-          "score": 3.0
-        },
-        {
-          "id": 72,
-          "parejas": [
-            {
-              "id": 13,
-              "nombre": "Stella / Juan",
-              "telefono": "099597273 / 092035657",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Jueves 20:00",
-                "Viernes 21:00",
-                "Sábado 09:00",
-                "Sábado 12:00",
-                "Sábado 16:00",
-                "Sábado 19:00"
-              ],
-              "grupo_asignado": 188,
-              "posicion_grupo": null
-            },
-            {
-              "id": 22,
-              "nombre": "Mateo Rodriguez Matias Barenchi",
-              "telefono": "092226274",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Sábado 16:00",
-                "Sábado 19:00"
-              ],
-              "grupo_asignado": 168,
-              "posicion_grupo": null
-            },
-            {
-              "id": 28,
-              "nombre": "Germán Idiarte Borda - Nico Soba",
-              "telefono": "098620161",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Sábado 16:00"
-              ],
-              "grupo_asignado": 170,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Stella / Juan",
-              "pareja2": "Mateo Rodriguez Matias Barenchi"
-            },
-            {
-              "pareja1": "Stella / Juan",
-              "pareja2": "Germán Idiarte Borda - Nico Soba"
-            },
-            {
-              "pareja1": "Mateo Rodriguez Matias Barenchi",
-              "pareja2": "Germán Idiarte Borda - Nico Soba"
-            }
-          ],
-          "franja_horaria": "Sábado 16:00",
-          "cancha": 1,
-          "score": 3.0
-        },
-        {
-          "id": 73,
-          "parejas": [
-            {
-              "id": 19,
-              "nombre": "Santiago Cheker y Nicolas Genova",
-              "telefono": "098294266",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Sábado 09:00",
-                "Sábado 19:00"
-              ],
-              "grupo_asignado": 186,
-              "posicion_grupo": null
-            },
-            {
-              "id": 26,
-              "nombre": "Yisela Quintana",
-              "telefono": "095299693",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Sábado 09:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 189,
-              "posicion_grupo": null
-            },
-            {
-              "id": 27,
-              "nombre": "Lucia Marino y Catalina Quiroz",
-              "telefono": "099285690",
-              "categoria": "Séptima",
-              "franjas_disponibles": [
-                "Viernes 21:00",
-                "Sábado 09:00"
-              ],
-              "grupo_asignado": 188,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Santiago Cheker y Nicolas Genova",
-              "pareja2": "Yisela Quintana"
-            },
-            {
-              "pareja1": "Santiago Cheker y Nicolas Genova",
-              "pareja2": "Lucia Marino y Catalina Quiroz"
-            },
-            {
-              "pareja1": "Yisela Quintana",
-              "pareja2": "Lucia Marino y Catalina Quiroz"
-            }
-          ],
-          "franja_horaria": "Sábado 09:00",
-          "cancha": 1,
-          "score": 3.0
-        }
-      ],
-      "Sexta": [
-        {
-          "id": 370,
-          "parejas": [
-            {
-              "id": 6,
-              "nombre": "Daniel Fedorchuk //  Marcelo Pardo",
-              "telefono": "097462469 Marcelo 094543354 Daniel",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Jueves 20:00",
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 422,
-              "posicion_grupo": null
-            },
-            {
-              "id": 12,
-              "nombre": "Diego Martínez// Bruno Graffigna",
-              "telefono": "098317011",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 416,
-              "posicion_grupo": null
-            },
-            {
-              "id": 23,
-              "nombre": "Javier Machado / Mathias Hartwich",
-              "telefono": "094005497",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Viernes 18:00",
-                "Sábado 09:00",
-                "Sábado 12:00",
-                "Sábado 16:00",
-                "Sábado 19:00"
-              ],
-              "grupo_asignado": 425,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
-              "pareja2": "Diego Martínez// Bruno Graffigna"
-            },
-            {
-              "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
-              "pareja2": "Javier Machado / Mathias Hartwich"
-            },
-            {
-              "pareja1": "Diego Martínez// Bruno Graffigna",
-              "pareja2": "Javier Machado / Mathias Hartwich"
-            }
-          ],
-          "franja_horaria": "Viernes 18:00",
-          "cancha": 2,
-          "score": 3.0
-        },
-        {
-          "id": 371,
-          "parejas": [
-            {
-              "id": 7,
-              "nombre": "Augusto y Pablito",
-              "telefono": "091 261 367",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 425,
-              "posicion_grupo": null
-            },
-            {
-              "id": 17,
-              "nombre": "Santi Olivera y Carlos Di Peta",
-              "telefono": "099034734",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Sábado 09:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 423,
-              "posicion_grupo": null
-            },
-            {
-              "id": 21,
-              "nombre": "Agustín Bonilla / Facundo Silva",
-              "telefono": "092055305",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Sábado 09:00",
-                "Sábado 12:00"
-              ],
-              "grupo_asignado": 424,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Augusto y Pablito",
-              "pareja2": "Santi Olivera y Carlos Di Peta"
-            },
-            {
-              "pareja1": "Augusto y Pablito",
-              "pareja2": "Agustín Bonilla / Facundo Silva"
-            },
-            {
-              "pareja1": "Santi Olivera y Carlos Di Peta",
-              "pareja2": "Agustín Bonilla / Facundo Silva"
-            }
-          ],
-          "franja_horaria": "Sábado 12:00",
-          "cancha": 1,
-          "score": 3.0
-        },
-        {
-          "id": 372,
-          "parejas": [
-            {
-              "id": 10,
-              "nombre": "Daniel Fedorczuk y Marcelo",
-              "telefono": "094543354",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Jueves 20:00"
-              ],
-              "grupo_asignado": 415,
-              "posicion_grupo": null
-            },
-            {
-              "id": 16,
-              "nombre": "Diego sacarelo",
-              "telefono": "099449583",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 421,
-              "posicion_grupo": null
-            },
-            {
-              "id": 24,
-              "nombre": "Stella San Martin . Franco",
-              "telefono": "092035657",
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Viernes 21:00",
-                "Sábado 09:00"
-              ],
-              "grupo_asignado": 422,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Daniel Fedorczuk y Marcelo",
-              "pareja2": "Diego sacarelo"
-            },
-            {
-              "pareja1": "Daniel Fedorczuk y Marcelo",
-              "pareja2": "Stella San Martin . Franco"
-            },
-            {
-              "pareja1": "Diego sacarelo",
-              "pareja2": "Stella San Martin . Franco"
-            }
-          ],
-          "franja_horaria": "Jueves 20:00",
-          "cancha": 1,
-          "score": 3.0
-        }
-      ],
-      "Quinta": [
-        {
-          "id": 426,
-          "parejas": [
-            {
-              "id": 8,
-              "nombre": "Jose Miqueiro - Andres Salort",
-              "telefono": "099136127",
-              "categoria": "Quinta",
-              "franjas_disponibles": [
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 426,
-              "posicion_grupo": null
-            },
-            {
-              "id": 11,
-              "nombre": "Martín Ortiz - Rodrigo Oviedo",
-              "telefono": "095808342",
-              "categoria": "Quinta",
-              "franjas_disponibles": [
-                "Jueves 18:00",
-                "Jueves 20:00",
-                "Viernes 18:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 426,
-              "posicion_grupo": null
-            },
-            {
-              "id": 20,
-              "nombre": "Alejandro Vazquez , nicolas",
-              "telefono": "57011430",
-              "categoria": "Quinta",
-              "franjas_disponibles": [
-                "Jueves 20:00",
-                "Viernes 21:00"
-              ],
-              "grupo_asignado": 426,
-              "posicion_grupo": null
-            }
-          ],
-          "partidos": [
-            {
-              "pareja1": "Jose Miqueiro - Andres Salort",
-              "pareja2": "Martín Ortiz - Rodrigo Oviedo"
-            },
-            {
-              "pareja1": "Jose Miqueiro - Andres Salort",
-              "pareja2": "Alejandro Vazquez , nicolas"
-            },
-            {
-              "pareja1": "Martín Ortiz - Rodrigo Oviedo",
-              "pareja2": "Alejandro Vazquez , nicolas"
-            }
-          ],
-          "franja_horaria": "Viernes 21:00",
-          "cancha": 2,
-          "score": 3.0
-        }
-      ]
-    },
-    "estadisticas": {
-      "total_parejas": 28,
-      "parejas_asignadas": 27,
-      "parejas_sin_asignar": 1,
-      "porcentaje_asignacion": 96.42857142857143,
-      "total_grupos": 9,
-      "grupos_por_categoria": {
-        "Cuarta": 1,
-        "Séptima": 4,
-        "Sexta": 3,
-        "Quinta": 1
-      },
-      "parejas_por_categoria": {
-        "Cuarta": 3,
-        "Séptima": 12,
-        "Sexta": 9,
-        "Quinta": 3
-      },
-      "score_compatibilidad_promedio": 2.9444444444444446,
-      "grupos_compatibilidad_perfecta": 8,
-      "grupos_compatibilidad_parcial": 1
-    },
-    "parejas_sin_asignar": [
-      {
-        "id": 15,
-        "nombre": "Mateo Rodriguez  Matias barenchi",
-        "telefono": "092226274",
-        "categoria": "Sexta",
-        "franjas_disponibles": [
-          "Sábado 16:00",
-          "Sábado 19:00"
-        ],
-        "grupo_asignado": 425,
-        "posicion_grupo": null
-      }
-    ],
     "calendario": {
       "Jueves": {
         "18:00": [
@@ -943,86 +367,86 @@
       "Viernes": {
         "18:00": [
           {
-            "categoria": "Séptima",
-            "grupo_id": 65,
-            "pareja1": "Nelson y gaby",
-            "pareja2": "Facu Olivera y Victoria Fernandez"
-          },
-          {
             "categoria": "Sexta",
             "grupo_id": 370,
             "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
             "pareja2": "Diego Martínez// Bruno Graffigna"
-          }
-        ],
-        "19:00": [
+          },
           {
             "categoria": "Séptima",
             "grupo_id": 65,
             "pareja1": "Nelson y gaby",
-            "pareja2": "Jonathan Ferri - Ricardo García"
-          },
+            "pareja2": "Facu Olivera y Victoria Fernandez"
+          }
+        ],
+        "19:00": [
           {
             "categoria": "Sexta",
             "grupo_id": 370,
             "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
             "pareja2": "Javier Machado / Mathias Hartwich"
-          }
-        ],
-        "20:00": [
+          },
           {
             "categoria": "Séptima",
             "grupo_id": 65,
-            "pareja1": "Facu Olivera y Victoria Fernandez",
+            "pareja1": "Nelson y gaby",
             "pareja2": "Jonathan Ferri - Ricardo García"
-          },
+          }
+        ],
+        "20:00": [
           {
             "categoria": "Sexta",
             "grupo_id": 370,
             "pareja1": "Diego Martínez// Bruno Graffigna",
             "pareja2": "Javier Machado / Mathias Hartwich"
+          },
+          {
+            "categoria": "Séptima",
+            "grupo_id": 65,
+            "pareja1": "Facu Olivera y Victoria Fernandez",
+            "pareja2": "Jonathan Ferri - Ricardo García"
           }
         ],
         "21:00": [
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabril y Mario",
-            "pareja2": "Gabriel y Mario Larrosa"
-          },
           {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Martín Ortiz - Rodrigo Oviedo"
-          }
-        ],
-        "22:00": [
+          },
           {
             "categoria": "Séptima",
             "grupo_id": 2,
             "pareja1": "Gabril y Mario",
-            "pareja2": "Nicolas Romay Javier Machin"
-          },
+            "pareja2": "Gabriel y Mario Larrosa"
+          }
+        ],
+        "22:00": [
           {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Alejandro Vazquez , nicolas"
-          }
-        ],
-        "23:00": [
+          },
           {
             "categoria": "Séptima",
             "grupo_id": 2,
-            "pareja1": "Gabriel y Mario Larrosa",
+            "pareja1": "Gabril y Mario",
             "pareja2": "Nicolas Romay Javier Machin"
-          },
+          }
+        ],
+        "23:00": [
           {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Martín Ortiz - Rodrigo Oviedo",
             "pareja2": "Alejandro Vazquez , nicolas"
+          },
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabriel y Mario Larrosa",
+            "pareja2": "Nicolas Romay Javier Machin"
           }
         ]
       },
@@ -1121,7 +545,621 @@
           null
         ]
       }
-    }
+    },
+    "estadisticas": {
+      "grupos_compatibilidad_parcial": 1,
+      "grupos_compatibilidad_perfecta": 8,
+      "grupos_por_categoria": {
+        "Cuarta": 1,
+        "Quinta": 1,
+        "Sexta": 3,
+        "Séptima": 4
+      },
+      "parejas_asignadas": 27,
+      "parejas_por_categoria": {
+        "Cuarta": 3,
+        "Quinta": 3,
+        "Sexta": 9,
+        "Séptima": 12
+      },
+      "parejas_sin_asignar": 1,
+      "porcentaje_asignacion": 96.42857142857143,
+      "score_compatibilidad_promedio": 2.9444444444444446,
+      "total_grupos": 9,
+      "total_parejas": 29
+    },
+    "grupos_por_categoria": {
+      "Cuarta": [
+        {
+          "cancha": 1,
+          "franja_horaria": "Jueves 18:00",
+          "id": 1,
+          "parejas": [
+            {
+              "categoria": "Cuarta",
+              "franjas_disponibles": [
+                "Jueves 20:00"
+              ],
+              "grupo_asignado": 1,
+              "id": 1,
+              "nombre": "Enrique Fraga - Diego Leiros",
+              "posicion_grupo": null,
+              "telefono": "097165808"
+            },
+            {
+              "categoria": "Cuarta",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 1,
+              "id": 4,
+              "nombre": "Nico Silvera y Rodri Franco",
+              "posicion_grupo": null,
+              "telefono": "099020252"
+            },
+            {
+              "categoria": "Cuarta",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Viernes 18:00"
+              ],
+              "grupo_asignado": 1,
+              "id": 14,
+              "nombre": "Joaquin Oliveira y Demetrio Ferreira",
+              "posicion_grupo": null,
+              "telefono": "091802797"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Enrique Fraga - Diego Leiros",
+              "pareja2": "Nico Silvera y Rodri Franco"
+            },
+            {
+              "pareja1": "Enrique Fraga - Diego Leiros",
+              "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
+            },
+            {
+              "pareja1": "Nico Silvera y Rodri Franco",
+              "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
+            }
+          ],
+          "score": 2.5
+        },
+        {
+          "cancha": "2",
+          "franja_horaria": "Sábado 09:00",
+          "id": 427,
+          "parejas": [
+            {
+              "categoria": "Cuarta",
+              "franjas_disponibles": [
+                "Sábado 09:00"
+              ],
+              "id": 29,
+              "nombre": "Carlos Di petta / Santi Olivera",
+              "telefono": "0993940"
+            }
+          ],
+          "partidos": [],
+          "score": 0.0,
+          "score_compatibilidad": 0.0
+        }
+      ],
+      "Quinta": [
+        {
+          "cancha": 2,
+          "franja_horaria": "Viernes 21:00",
+          "id": 426,
+          "parejas": [
+            {
+              "categoria": "Quinta",
+              "franjas_disponibles": [
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 426,
+              "id": 8,
+              "nombre": "Jose Miqueiro - Andres Salort",
+              "posicion_grupo": null,
+              "telefono": "099136127"
+            },
+            {
+              "categoria": "Quinta",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Jueves 20:00",
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 426,
+              "id": 11,
+              "nombre": "Martín Ortiz - Rodrigo Oviedo",
+              "posicion_grupo": null,
+              "telefono": "095808342"
+            },
+            {
+              "categoria": "Quinta",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 426,
+              "id": 20,
+              "nombre": "Alejandro Vazquez , nicolas",
+              "posicion_grupo": null,
+              "telefono": "57011430"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Jose Miqueiro - Andres Salort",
+              "pareja2": "Martín Ortiz - Rodrigo Oviedo"
+            },
+            {
+              "pareja1": "Jose Miqueiro - Andres Salort",
+              "pareja2": "Alejandro Vazquez , nicolas"
+            },
+            {
+              "pareja1": "Martín Ortiz - Rodrigo Oviedo",
+              "pareja2": "Alejandro Vazquez , nicolas"
+            }
+          ],
+          "score": 3.0
+        }
+      ],
+      "Sexta": [
+        {
+          "cancha": 2,
+          "franja_horaria": "Viernes 18:00",
+          "id": 370,
+          "parejas": [
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Jueves 20:00",
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 422,
+              "id": 6,
+              "nombre": "Daniel Fedorchuk //  Marcelo Pardo",
+              "posicion_grupo": null,
+              "telefono": "097462469 Marcelo 094543354 Daniel"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 416,
+              "id": 12,
+              "nombre": "Diego Martínez// Bruno Graffigna",
+              "posicion_grupo": null,
+              "telefono": "098317011"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Viernes 18:00",
+                "Sábado 09:00",
+                "Sábado 12:00",
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 425,
+              "id": 23,
+              "nombre": "Javier Machado / Mathias Hartwich",
+              "posicion_grupo": null,
+              "telefono": "094005497"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
+              "pareja2": "Diego Martínez// Bruno Graffigna"
+            },
+            {
+              "pareja1": "Daniel Fedorchuk //  Marcelo Pardo",
+              "pareja2": "Javier Machado / Mathias Hartwich"
+            },
+            {
+              "pareja1": "Diego Martínez// Bruno Graffigna",
+              "pareja2": "Javier Machado / Mathias Hartwich"
+            }
+          ],
+          "score": 3.0
+        },
+        {
+          "cancha": 1,
+          "franja_horaria": "Sábado 12:00",
+          "id": 371,
+          "parejas": [
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 425,
+              "id": 7,
+              "nombre": "Augusto y Pablito",
+              "posicion_grupo": null,
+              "telefono": "091 261 367"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 423,
+              "id": 17,
+              "nombre": "Santi Olivera y Carlos Di Peta",
+              "posicion_grupo": null,
+              "telefono": "099034734"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 424,
+              "id": 21,
+              "nombre": "Agustín Bonilla / Facundo Silva",
+              "posicion_grupo": null,
+              "telefono": "092055305"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Augusto y Pablito",
+              "pareja2": "Santi Olivera y Carlos Di Peta"
+            },
+            {
+              "pareja1": "Augusto y Pablito",
+              "pareja2": "Agustín Bonilla / Facundo Silva"
+            },
+            {
+              "pareja1": "Santi Olivera y Carlos Di Peta",
+              "pareja2": "Agustín Bonilla / Facundo Silva"
+            }
+          ],
+          "score": 3.0
+        },
+        {
+          "cancha": "2",
+          "franja_horaria": "Jueves 20:00",
+          "id": 372,
+          "parejas": [
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Jueves 20:00"
+              ],
+              "grupo_asignado": 415,
+              "id": 10,
+              "nombre": "Daniel Fedorczuk y Marcelo",
+              "posicion_grupo": null,
+              "telefono": "094543354"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 421,
+              "id": 16,
+              "nombre": "Diego sacarelo",
+              "posicion_grupo": null,
+              "telefono": "099449583"
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00",
+                "Sábado 09:00"
+              ],
+              "grupo_asignado": 422,
+              "id": 24,
+              "nombre": "Stella San Martin . Franco",
+              "posicion_grupo": null,
+              "telefono": "092035657"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Daniel Fedorczuk y Marcelo",
+              "pareja2": "Diego sacarelo"
+            },
+            {
+              "pareja1": "Daniel Fedorczuk y Marcelo",
+              "pareja2": "Stella San Martin . Franco"
+            },
+            {
+              "pareja1": "Diego sacarelo",
+              "pareja2": "Stella San Martin . Franco"
+            }
+          ],
+          "score": 3.0,
+          "score_compatibilidad": 3.0
+        },
+        {
+          "cancha": "2",
+          "franja_horaria": "Sábado 12:00",
+          "id": 428,
+          "parejas": [
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 425,
+              "id": 15,
+              "nombre": "Mateo Rodriguez  Matias barenchi",
+              "posicion_grupo": null,
+              "telefono": "092226274"
+            }
+          ],
+          "partidos": [],
+          "score": 0.0,
+          "score_compatibilidad": 0.0
+        }
+      ],
+      "Séptima": [
+        {
+          "cancha": 1,
+          "franja_horaria": "Viernes 21:00",
+          "id": 2,
+          "parejas": [
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 189,
+              "id": 2,
+              "nombre": "Gabril y Mario",
+              "posicion_grupo": null,
+              "telefono": "095 888 336"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 176,
+              "id": 3,
+              "nombre": "Gabriel y Mario Larrosa",
+              "posicion_grupo": null,
+              "telefono": "O95 888 336"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Jueves 20:00",
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 181,
+              "id": 5,
+              "nombre": "Nicolas Romay Javier Machin",
+              "posicion_grupo": null,
+              "telefono": "098493472"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Gabril y Mario",
+              "pareja2": "Gabriel y Mario Larrosa"
+            },
+            {
+              "pareja1": "Gabril y Mario",
+              "pareja2": "Nicolas Romay Javier Machin"
+            },
+            {
+              "pareja1": "Gabriel y Mario Larrosa",
+              "pareja2": "Nicolas Romay Javier Machin"
+            }
+          ],
+          "score": 3.0
+        },
+        {
+          "cancha": 1,
+          "franja_horaria": "Viernes 18:00",
+          "id": 65,
+          "parejas": [
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ],
+              "grupo_asignado": 184,
+              "id": 9,
+              "nombre": "Nelson y gaby",
+              "posicion_grupo": null,
+              "telefono": "099690328"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Viernes 18:00",
+                "Viernes 21:00",
+                "Sábado 09:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 189,
+              "id": 18,
+              "nombre": "Facu Olivera y Victoria Fernandez",
+              "posicion_grupo": null,
+              "telefono": "099034734"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Viernes 18:00"
+              ],
+              "grupo_asignado": 170,
+              "id": 25,
+              "nombre": "Jonathan Ferri - Ricardo García",
+              "posicion_grupo": null,
+              "telefono": "099914964"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Nelson y gaby",
+              "pareja2": "Facu Olivera y Victoria Fernandez"
+            },
+            {
+              "pareja1": "Nelson y gaby",
+              "pareja2": "Jonathan Ferri - Ricardo García"
+            },
+            {
+              "pareja1": "Facu Olivera y Victoria Fernandez",
+              "pareja2": "Jonathan Ferri - Ricardo García"
+            }
+          ],
+          "score": 3.0
+        },
+        {
+          "cancha": 1,
+          "franja_horaria": "Sábado 16:00",
+          "id": 72,
+          "parejas": [
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Jueves 20:00",
+                "Viernes 21:00",
+                "Sábado 09:00",
+                "Sábado 12:00",
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 188,
+              "id": 13,
+              "nombre": "Stella / Juan",
+              "posicion_grupo": null,
+              "telefono": "099597273 / 092035657"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 168,
+              "id": 22,
+              "nombre": "Mateo Rodriguez Matias Barenchi",
+              "posicion_grupo": null,
+              "telefono": "092226274"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 18:00",
+                "Sábado 16:00"
+              ],
+              "grupo_asignado": 170,
+              "id": 28,
+              "nombre": "Germán Idiarte Borda - Nico Soba",
+              "posicion_grupo": null,
+              "telefono": "098620161"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Stella / Juan",
+              "pareja2": "Mateo Rodriguez Matias Barenchi"
+            },
+            {
+              "pareja1": "Stella / Juan",
+              "pareja2": "Germán Idiarte Borda - Nico Soba"
+            },
+            {
+              "pareja1": "Mateo Rodriguez Matias Barenchi",
+              "pareja2": "Germán Idiarte Borda - Nico Soba"
+            }
+          ],
+          "score": 3.0
+        },
+        {
+          "cancha": 1,
+          "franja_horaria": "Sábado 09:00",
+          "id": 73,
+          "parejas": [
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Sábado 09:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 186,
+              "id": 19,
+              "nombre": "Santiago Cheker y Nicolas Genova",
+              "posicion_grupo": null,
+              "telefono": "098294266"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Sábado 12:00"
+              ],
+              "grupo_asignado": 189,
+              "id": 26,
+              "nombre": "Yisela Quintana",
+              "posicion_grupo": null,
+              "telefono": "095299693"
+            },
+            {
+              "categoria": "Séptima",
+              "franjas_disponibles": [
+                "Viernes 21:00",
+                "Sábado 09:00"
+              ],
+              "grupo_asignado": 188,
+              "id": 27,
+              "nombre": "Lucia Marino y Catalina Quiroz",
+              "posicion_grupo": null,
+              "telefono": "099285690"
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Santiago Cheker y Nicolas Genova",
+              "pareja2": "Yisela Quintana"
+            },
+            {
+              "pareja1": "Santiago Cheker y Nicolas Genova",
+              "pareja2": "Lucia Marino y Catalina Quiroz"
+            },
+            {
+              "pareja1": "Yisela Quintana",
+              "pareja2": "Lucia Marino y Catalina Quiroz"
+            }
+          ],
+          "score": 3.0
+        }
+      ]
+    },
+    "parejas_sin_asignar": []
   },
   "num_canchas": 2,
   "estado": "grupos_generados"

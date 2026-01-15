@@ -549,6 +549,12 @@
         color: #155724;
     }
     
+    #disponibilidadInfo .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        border-color: #ffc107;
+        color: #856404;
+    }
+    
     #disponibilidadInfo .alert-danger {
         background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         border-color: #dc3545;
@@ -572,6 +578,12 @@
     <!-- Estadísticas del Torneo -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">📊 Estadísticas del Torneo</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarPareja">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Pareja Manual
+                </button>
+            </div>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-success">
@@ -2204,7 +2216,8 @@ function cargarGruposDisponibles(categoria) {
     gruposCards.forEach((card, index) => {
         const grupoId = card.dataset.grupoId;
         const letra = ['A', 'B', 'C', 'D'][index] || index + 1;
-        const parejas = card.querySelectorAll('.pareja-item');
+        // Contar solo slots que tienen parejas (tienen data-pareja-id válido)
+        const parejas = card.querySelectorAll('.pareja-slot[data-pareja-id]');
         const numParejas = parejas.length;
         
         const option = document.createElement('option');
@@ -2228,9 +2241,9 @@ function cargarGruposDisponibles(categoria) {
             container.style.display = 'block';
             selectPareja.innerHTML = '<option value="">-- Selecciona pareja a reemplazar --</option>';
             
-            // Buscar parejas del grupo
+            // Buscar parejas del grupo (solo las que tienen data-pareja-id)
             const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"]`);
-            const parejas = grupoCard.querySelectorAll('.pareja-item');
+            const parejas = grupoCard.querySelectorAll('.pareja-slot[data-pareja-id]');
             
             parejas.forEach(pareja => {
                 const option = document.createElement('option');
@@ -2345,13 +2358,14 @@ function agregarParejaDesdeModal() {
             nombre: nombre,
             telefono: telefono || 'Sin teléfono',
             categoria: categoria,
-            franjas: franjasChecked
+            franjas: franjasChecked,
+            desde_resultados: true
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
+            Toast.success(data.mensaje + ' - Agregada a parejas no asignadas');
             
             // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarPareja'));
@@ -2360,11 +2374,16 @@ function agregarParejaDesdeModal() {
             // Limpiar formulario
             form.reset();
             
-            // Volver a datos para re-ejecutar algoritmo (esto sí necesita redirect)
-            Toast.info('Redirigiendo para re-ejecutar el algoritmo...');
-            setTimeout(() => {
-                window.location.href = '/datos';
-            }, 1000);
+            // Actualizar la categoría correspondiente para reflejar la nueva pareja
+            if (data.desde_resultados) {
+                actualizarCategoria(categoria);
+            } else {
+                // Si no hay resultados, redirigir a datos
+                Toast.info('Redirigiendo para re-ejecutar el algoritmo...');
+                setTimeout(() => {
+                    window.location.href = '/datos';
+                }, 1000);
+            }
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -2435,12 +2454,30 @@ function actualizarDisponibilidad() {
         Object.keys(disponibilidadGlobal[franja]).forEach(cancha => {
             const info = disponibilidadGlobal[franja][cancha];
             const disponible = info.disponible;
-            const colorClass = disponible ? 'success' : 'danger';
-            const icono = disponible ? '✓' : '✗';
-            const texto = disponible ? 'Disponible' : `Ocupada (${info.ocupada_por})`;
+            const solapamiento = info.solapamiento;
+            
+            let colorClass, icono, texto;
+            
+            if (disponible && !solapamiento) {
+                // Completamente disponible
+                colorClass = 'success';
+                icono = '✓';
+                texto = 'Disponible';
+            } else if (disponible && solapamiento) {
+                // Disponible pero con solapamiento
+                colorClass = 'warning';
+                icono = '⚠';
+                const horas = solapamiento.horas_conflicto.join(', ');
+                texto = `Parcialmente ocupada: ${solapamiento.franja} (${solapamiento.categoria}) solapa en ${horas}`;
+            } else {
+                // Ocupada
+                colorClass = 'danger';
+                icono = '✗';
+                texto = `Ocupada (${info.ocupada_por})`;
+            }
             
             disponibilidadInfo.innerHTML += `
-                <div class="col-6">
+                <div class="col-12">
                     <div class="alert alert-${colorClass} mb-2 py-2 px-3">
                         <strong>${icono} Cancha ${cancha}:</strong> ${texto}
                     </div>
@@ -2456,18 +2493,31 @@ function actualizarDisponibilidad() {
             const info = disponibilidadGlobal[franja][canchaSeleccionada];
             if (info) {
                 const disponible = info.disponible;
-                const colorClass = disponible ? 'success' : 'secondary';
-                const icono = disponible ? '✓' : '✗';
+                const solapamiento = info.solapamiento;
                 
-                if (disponible) {
-                    disponibilidadInfo.innerHTML += `
-                        <div class="col-12 col-md-6">
-                            <div class="alert alert-${colorClass} mb-2 py-2 px-3">
-                                ${icono} <strong>${franja}</strong>
-                            </div>
-                        </div>
-                    `;
+                let colorClass, icono, texto;
+                
+                if (disponible && !solapamiento) {
+                    colorClass = 'success';
+                    icono = '✓';
+                    texto = franja;
+                } else if (disponible && solapamiento) {
+                    colorClass = 'warning';
+                    icono = '⚠';
+                    const horas = solapamiento.horas_conflicto.join(', ');
+                    texto = `${franja} - Solapamiento con ${solapamiento.franja} en ${horas}`;
+                } else {
+                    // No mostrar las ocupadas en esta vista
+                    return;
                 }
+                
+                disponibilidadInfo.innerHTML += `
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-${colorClass} mb-2 py-2 px-3">
+                            ${icono} <strong>${texto}</strong>
+                        </div>
+                    </div>
+                `;
             }
         });
     }
@@ -2477,14 +2527,20 @@ function actualizarDisponibilidad() {
         
         Object.keys(disponibilidadGlobal).forEach(franja => {
             const canchas = disponibilidadGlobal[franja];
-            const disponibles = Object.values(canchas).filter(c => c.disponible).length;
+            const disponibles = Object.values(canchas).filter(c => c.disponible && !c.solapamiento).length;
+            const conSolapamiento = Object.values(canchas).filter(c => c.disponible && c.solapamiento).length;
             const total = Object.keys(canchas).length;
             
-            if (disponibles > 0) {
+            if (disponibles > 0 || conSolapamiento > 0) {
+                let texto = `${disponibles}/${total} canchas libres`;
+                if (conSolapamiento > 0) {
+                    texto += ` (${conSolapamiento} con solapamiento)`;
+                }
+                
                 disponibilidadInfo.innerHTML += `
                     <div class="col-12 col-md-6">
                         <div class="alert alert-info mb-2 py-2 px-3">
-                            <strong>${franja}:</strong> ${disponibles}/${total} canchas libres
+                            <strong>${franja}:</strong> ${texto}
                         </div>
                     </div>
                 `;
@@ -3307,13 +3363,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para actualizar solo el contenido de una categoría específica
 function actualizarCategoria(categoria) {
-    // Por ahora, la forma más sencilla es recargar toda la página
-    // pero manteniendo el tab activo
+    // Guardar la categoría activa y recargar la página para reflejar los cambios
     sessionStorage.setItem('tabActivo', categoria.toLowerCase());
     window.location.reload();
-    
-    // TODO: En futuro se puede mejorar para actualizar solo el HTML de la categoría
-    // sin recargar, pero requiere más endpoints en el backend
 }
 
 // Función para actualizar todas las categorías (más rápido que reload completo)
