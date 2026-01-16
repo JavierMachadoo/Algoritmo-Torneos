@@ -469,3 +469,37 @@ hr {
     margin: 1.5rem 0;
     opacity: 0.15;
 }
+
+/* Estados de Parejas en Tabla de Datos */
+.pareja-sin-asignar {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545;
+}
+
+.pareja-sin-asignar:hover {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.pareja-fuera-horario {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-left: 4px solid #ffc107;
+}
+
+.pareja-fuera-horario:hover {
+    background-color: rgba(255, 193, 7, 0.15) !important;
+}
+
+/* Iconos de estado con animación */
+.pareja-sin-asignar .bi-exclamation-triangle-fill,
+.pareja-fuera-horario .bi-exclamation-circle-fill {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}

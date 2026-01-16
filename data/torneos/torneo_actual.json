@@ -1,7 +1,7 @@
 {
   "nombre": "Torneo 26/12/2025",
   "fecha_creacion": "2025-12-26T13:18:53.825559",
-  "fecha_modificacion": "2026-01-15T12:51:26.033998",
+  "fecha_modificacion": "2026-01-16T17:51:12.436880",
   "parejas": [
     {
       "categoria": "Cuarta",
@@ -299,15 +299,6 @@
       "id": 28,
       "nombre": "Germán Idiarte Borda - Nico Soba",
       "telefono": "098620161"
-    },
-    {
-      "categoria": "Cuarta",
-      "franjas_disponibles": [
-        "Sábado 09:00"
-      ],
-      "id": 29,
-      "nombre": "Carlos Di petta / Santi Olivera",
-      "telefono": "0993940"
     }
   ],
   "resultado_algoritmo": {
@@ -414,12 +405,7 @@
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Martín Ortiz - Rodrigo Oviedo"
           },
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabril y Mario",
-            "pareja2": "Gabriel y Mario Larrosa"
-          }
+          null
         ],
         "22:00": [
           {
@@ -428,12 +414,7 @@
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Alejandro Vazquez , nicolas"
           },
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabril y Mario",
-            "pareja2": "Nicolas Romay Javier Machin"
-          }
+          null
         ],
         "23:00": [
           {
@@ -442,12 +423,7 @@
             "pareja1": "Martín Ortiz - Rodrigo Oviedo",
             "pareja2": "Alejandro Vazquez , nicolas"
           },
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabriel y Mario Larrosa",
-            "pareja2": "Nicolas Romay Javier Machin"
-          }
+          null
         ]
       },
       "Sábado": {
@@ -566,7 +542,7 @@
       "porcentaje_asignacion": 96.42857142857143,
       "score_compatibilidad_promedio": 2.9444444444444446,
       "total_grupos": 9,
-      "total_parejas": 29
+      "total_parejas": 28
     },
     "grupos_por_categoria": {
       "Cuarta": [
@@ -578,6 +554,7 @@
             {
               "categoria": "Cuarta",
               "franjas_disponibles": [
+                "Jueves 18:00",
                 "Jueves 20:00"
               ],
               "grupo_asignado": 1,
@@ -626,31 +603,13 @@
               "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
             }
           ],
-          "score": 2.5
-        },
-        {
-          "cancha": "2",
-          "franja_horaria": "Sábado 09:00",
-          "id": 427,
-          "parejas": [
-            {
-              "categoria": "Cuarta",
-              "franjas_disponibles": [
-                "Sábado 09:00"
-              ],
-              "id": 29,
-              "nombre": "Carlos Di petta / Santi Olivera",
-              "telefono": "0993940"
-            }
-          ],
-          "partidos": [],
-          "score": 0.0,
-          "score_compatibilidad": 0.0
+          "score": 3.0,
+          "score_compatibilidad": 3.0
         }
       ],
       "Quinta": [
         {
-          "cancha": 2,
+          "cancha": 1,
           "franja_horaria": "Viernes 21:00",
           "id": 426,
           "parejas": [
@@ -832,7 +791,7 @@
           "score": 3.0
         },
         {
-          "cancha": "2",
+          "cancha": 2,
           "franja_horaria": "Jueves 20:00",
           "id": 372,
           "parejas": [
@@ -887,13 +846,12 @@
               "pareja2": "Stella San Martin . Franco"
             }
           ],
-          "score": 3.0,
-          "score_compatibilidad": 3.0
+          "score": 3.0
         },
         {
           "cancha": "2",
-          "franja_horaria": "Sábado 12:00",
-          "id": 428,
+          "franja_horaria": "Sábado 16:00",
+          "id": 427,
           "parejas": [
             {
               "categoria": "Sexta",
@@ -916,7 +874,7 @@
       "Séptima": [
         {
           "cancha": 1,
-          "franja_horaria": "Viernes 21:00",
+          "franja_horaria": "Jueves 20:00",
           "id": 2,
           "parejas": [
             {

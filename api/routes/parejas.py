@@ -232,8 +232,43 @@ def limpiar_datos():
 
 @api_bp.route('/obtener-parejas', methods=['GET'])
 def obtener_parejas():
-    """Obtiene la lista actualizada de parejas con estadísticas."""
+    """Obtiene la lista actualizada de parejas con estadísticas y estado de asignación."""
     parejas = session.get('parejas', [])
+    resultado = session.get('resultado_algoritmo')
+    
+    # Enriquecer parejas con información de asignación
+    parejas_enriquecidas = []
+    for pareja in parejas:
+        pareja_info = pareja.copy()
+        pareja_info['grupo_asignado'] = None
+        pareja_info['franja_asignada'] = None
+        pareja_info['esta_asignada'] = False
+        pareja_info['fuera_de_horario'] = False
+        
+        # Si hay resultado del algoritmo, buscar asignación
+        if resultado:
+            # Buscar en grupos
+            for categoria, grupos in resultado.get('grupos_por_categoria', {}).items():
+                for grupo in grupos:
+                    for p in grupo.get('parejas', []):
+                        if p['id'] == pareja['id']:
+                            pareja_info['grupo_asignado'] = grupo['id']
+                            pareja_info['franja_asignada'] = grupo.get('franja_horaria')
+                            pareja_info['esta_asignada'] = True
+                            
+                            # Verificar si está fuera de horario
+                            franja_asignada = grupo.get('franja_horaria')
+                            if franja_asignada:
+                                franjas_disponibles = pareja.get('franjas_disponibles', [])
+                                if franja_asignada not in franjas_disponibles:
+                                    pareja_info['fuera_de_horario'] = True
+                            break
+                    if pareja_info['esta_asignada']:
+                        break
+                if pareja_info['esta_asignada']:
+                    break
+        
+        parejas_enriquecidas.append(pareja_info)
     
     # Calcular estadísticas
     stats = {
@@ -248,7 +283,7 @@ def obtener_parejas():
     
     return jsonify({
         'success': True,
-        'parejas': parejas,
+        'parejas': parejas_enriquecidas,
         'stats': stats
     })
 
@@ -815,6 +850,17 @@ def editar_pareja():
     pareja_encontrada['telefono'] = telefono
     pareja_encontrada['categoria'] = categoria
     pareja_encontrada['franjas_disponibles'] = franjas
+    
+    # IMPORTANTE: También actualizar en la lista base de parejas
+    parejas_base = session.get('parejas', [])
+    for pareja_base in parejas_base:
+        if pareja_base['id'] == pareja_id:
+            pareja_base['nombre'] = nombre
+            pareja_base['telefono'] = telefono
+            pareja_base['categoria'] = categoria
+            pareja_base['franjas_disponibles'] = franjas
+            break
+    session['parejas'] = parejas_base
     
     # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
     if grupo_contenedor and not cambio_categoria:

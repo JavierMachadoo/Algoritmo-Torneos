@@ -49,8 +49,46 @@ def crear_app():
         resultado = session.get('resultado_algoritmo')
         torneo = storage.cargar()
         
+        # Enriquecer parejas con información de asignación
+        parejas_enriquecidas = []
+        for pareja in parejas:
+            pareja_info = pareja.copy()
+            pareja_info['grupo_asignado'] = None
+            pareja_info['franja_asignada'] = None
+            pareja_info['esta_asignada'] = False
+            pareja_info['fuera_de_horario'] = False
+            
+            # Si hay resultado del algoritmo, buscar asignación
+            if resultado:
+                for categoria, grupos in resultado.get('grupos_por_categoria', {}).items():
+                    for grupo in grupos:
+                        for p in grupo.get('parejas', []):
+                            if p['id'] == pareja['id']:
+                                pareja_info['grupo_asignado'] = grupo['id']
+                                pareja_info['franja_asignada'] = grupo.get('franja_horaria')
+                                pareja_info['esta_asignada'] = True
+                                
+                                # Verificar si está fuera de horario
+                                franja_asignada = grupo.get('franja_horaria')
+                                if franja_asignada:
+                                    franjas_disponibles = pareja.get('franjas_disponibles', [])
+                                    if franja_asignada not in franjas_disponibles:
+                                        pareja_info['fuera_de_horario'] = True
+                                break
+                        if pareja_info['esta_asignada']:
+                            break
+                    if pareja_info['esta_asignada']:
+                        break
+            
+            parejas_enriquecidas.append(pareja_info)
+        
+        # Ordenar parejas por categoría
+        orden_categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima']
+        parejas_ordenadas = sorted(parejas_enriquecidas, 
+                                  key=lambda p: orden_categorias.index(p.get('categoria', 'Cuarta')))
+        
         return render_template('inicio.html', 
-                             parejas=parejas,
+                             parejas=parejas_ordenadas,
                              resultado=resultado,
                              torneo=torneo,
                              categorias=CATEGORIAS,
