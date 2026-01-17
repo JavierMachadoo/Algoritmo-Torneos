@@ -22,7 +22,8 @@ def recalcular_score_grupo(grupo_dict):
     parejas = grupo_dict.get('parejas', [])
     franja_asignada = grupo_dict.get('franja_horaria')
     
-    if len(parejas) < 2:
+    # Si no hay parejas, score es 0
+    if len(parejas) == 0:
         grupo_dict['score'] = 0.0
         grupo_dict['score_compatibilidad'] = 0.0
         return
@@ -31,8 +32,11 @@ def recalcular_score_grupo(grupo_dict):
         # Si no hay franja asignada, usar algoritmo original
         parejas_obj = [Pareja.from_dict(p) for p in parejas]
         
-        if len(parejas_obj) < 3:
-            # Grupo incompleto: calcular compatibilidad parcial
+        if len(parejas_obj) < 2:
+            # Con 1 pareja, no se puede calcular compatibilidad sin franja
+            score = 0.0
+        elif len(parejas_obj) < 3:
+            # Grupo incompleto con 2 parejas: calcular compatibilidad parcial
             franjas_p1 = set(parejas_obj[0].franjas_disponibles)
             franjas_p2 = set(parejas_obj[1].franjas_disponibles)
             franjas_comunes = franjas_p1 & franjas_p2
@@ -65,9 +69,9 @@ def recalcular_score_grupo(grupo_dict):
 
 
 def regenerar_calendario(resultado_data):
-    """Regenera el calendario completo basándose en los grupos actuales."""
+    """Regenera el calendario completo y los partidos de cada grupo basándose en las parejas actuales."""
     try:
-        # Deserializar resultado
+        # Deserializar resultado (esto regenera los partidos de cada grupo automáticamente)
         resultado_obj = deserializar_resultado(resultado_data)
         
         # Obtener número de canchas
@@ -77,12 +81,28 @@ def regenerar_calendario(resultado_data):
         calendario_builder = CalendarioBuilder(num_canchas)
         calendario = calendario_builder.organizar_partidos(resultado_obj)
         
-        # Actualizar en resultado_data
+        # Actualizar calendario en resultado_data
         resultado_data['calendario'] = calendario
+        
+        # Actualizar partidos de cada grupo en resultado_data
+        for categoria, grupos_obj in resultado_obj.grupos_por_categoria.items():
+            grupos_list = resultado_data['grupos_por_categoria'].get(categoria, [])
+            for grupo_obj in grupos_obj:
+                # Buscar el grupo correspondiente en resultado_data por ID
+                for grupo_dict in grupos_list:
+                    if grupo_dict['id'] == grupo_obj.id:
+                        # Actualizar partidos
+                        grupo_dict['partidos'] = [
+                            {'pareja1': p1.nombre, 'pareja2': p2.nombre}
+                            for p1, p2 in grupo_obj.partidos
+                        ]
+                        break
         
         return calendario
     except Exception as e:
         print(f"Error al regenerar calendario: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return resultado_data.get('calendario', {})
 
 
@@ -211,6 +231,64 @@ def eliminar_pareja():
     return jsonify({
         'success': True,
         'mensaje': 'Pareja eliminada correctamente'
+    })
+
+
+@api_bp.route('/remover-pareja-de-grupo', methods=['POST'])
+def remover_pareja_de_grupo():
+    """Remueve una pareja de un grupo y la devuelve a parejas no asignadas."""
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    
+    if not pareja_id:
+        return jsonify({'error': 'Falta pareja_id'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Buscar la pareja en los grupos
+    pareja_encontrada = None
+    grupo_contenedor = None
+    
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            for idx, pareja in enumerate(grupo.get('parejas', [])):
+                if pareja.get('id') == pareja_id:
+                    pareja_encontrada = grupo['parejas'].pop(idx)
+                    grupo_contenedor = grupo
+                    break
+            if pareja_encontrada:
+                break
+        if pareja_encontrada:
+            break
+    
+    if not pareja_encontrada:
+        return jsonify({'error': 'Pareja no encontrada en ningún grupo'}), 404
+    
+    # Limpiar la posición de grupo antes de agregar a no asignadas
+    pareja_encontrada['posicion_grupo'] = None
+    
+    # Agregar a parejas no asignadas
+    parejas_sin_asignar.append(pareja_encontrada)
+    
+    # Recalcular score del grupo afectado
+    recalcular_score_grupo(grupo_contenedor)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    guardar_estado_torneo()
+    
+    return jsonify({
+        'success': True,
+        'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas'
     })
 
 
@@ -1255,32 +1333,30 @@ def obtener_categoria(categoria):
     """Devuelve solo el HTML de una categoría específica para actualización parcial."""
     from flask import render_template_string
     
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
-    
-    resultado_dict = session['resultado']
     
     # Verificar que la categoría existe
     if categoria not in resultado_dict.get('grupos_por_categoria', {}):
         return jsonify({'error': f'Categoría {categoria} no encontrada'}), 404
     
-    # Aquí deberías renderizar solo la sección de la categoría
-    # Por ahora devolvemos un JSON simple, luego lo mejoramos
+    # Devolver datos de la categoría
     return jsonify({
         'success': True,
         'categoria': categoria,
         'grupos': resultado_dict['grupos_por_categoria'][categoria],
-        'no_asignadas': resultado_dict['parejas_no_asignadas'].get(categoria, [])
+        'parejas_sin_asignar': [p for p in resultado_dict.get('parejas_sin_asignar', []) if p.get('categoria') == categoria]
     })
 
 
 @api_bp.route('/obtener-grupo/<categoria>/<int:grupo_id>', methods=['GET'])
 def obtener_grupo(categoria, grupo_id):
     """Devuelve el HTML de un grupo específico."""
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
-    resultado_dict = session['resultado']
     grupos = resultado_dict.get('grupos_por_categoria', {}).get(categoria, [])
     
     # Buscar el grupo
@@ -1298,14 +1374,46 @@ def obtener_grupo(categoria, grupo_id):
 @api_bp.route('/obtener-no-asignadas/<categoria>', methods=['GET'])
 def obtener_no_asignadas(categoria):
     """Devuelve las parejas no asignadas de una categoría."""
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
-    resultado_dict = session['resultado']
-    no_asignadas = resultado_dict.get('parejas_no_asignadas', {}).get(categoria, [])
+    parejas_sin_asignar = resultado_dict.get('parejas_sin_asignar', [])
+    parejas_categoria = [p for p in parejas_sin_asignar if p.get('categoria') == categoria]
     
     return jsonify({
         'success': True,
         'categoria': categoria,
-        'parejas': no_asignadas
+        'parejas': parejas_categoria
+    })
+
+
+@api_bp.route('/obtener-datos-categoria/<categoria>', methods=['GET'])
+def obtener_datos_categoria(categoria):
+    """Devuelve todos los datos actualizados de una categoría para actualización dinámica."""
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    # Obtener grupos de la categoría
+    grupos = resultado_dict.get('grupos_por_categoria', {}).get(categoria, [])
+    
+    # Obtener parejas no asignadas
+    parejas_sin_asignar = resultado_dict.get('parejas_sin_asignar', [])
+    parejas_no_asignadas = [p for p in parejas_sin_asignar if p.get('categoria') == categoria]
+    
+    # Obtener partidos de esta categoría
+    partidos_por_grupo = resultado_dict.get('partidos_por_grupo', {})
+    partidos_categoria = {}
+    for grupo in grupos:
+        grupo_id = str(grupo.get('id'))
+        if grupo_id in partidos_por_grupo:
+            partidos_categoria[grupo_id] = partidos_por_grupo[grupo_id]
+    
+    return jsonify({
+        'success': True,
+        'categoria': categoria,
+        'grupos': grupos,
+        'parejas_no_asignadas': parejas_no_asignadas,
+        'partidos': partidos_categoria
     })

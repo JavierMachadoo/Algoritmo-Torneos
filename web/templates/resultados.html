@@ -968,8 +968,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1007,8 +1007,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1046,8 +1046,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1221,20 +1221,6 @@
                     </button>
                 </div>
                 
-                <!-- Leyenda de compatibilidad horaria -->
-                <div class="alert alert-info mb-3">
-                    <strong>📌 Compatibilidad Horaria:</strong>
-                    <span class="ms-2">⚪ Normal = Horario exacto elegido</span>
-                    <span class="ms-2">🟡 Amarillo = Mismo día, horario diferente</span>
-                    <span class="ms-2">🔴 Rojo = Día no elegido</span>
-                    <br>
-                    <small class="text-muted mt-2 d-block">
-                        <strong>Puntuación por pareja:</strong> 
-                        1.0 = Horario exacto • 0.5 = Mismo día, hora diferente • 0.0 = Día no elegido
-                        <br><strong>Score total:</strong> Suma de las 3 parejas (ej: 2.5 = 2 exactas + 1 mismo día)
-                    </small>
-                </div>
-
                 <!-- Parejas No Asignadas -->
                 <div id="parejas-no-asignadas-{{ categoria }}" class="mb-4">
                     <!-- Se carga dinámicamente -->
@@ -1527,20 +1513,6 @@
             </button>
         </div>
         
-        <!-- Leyenda de compatibilidad horaria -->
-        <div class="alert alert-info mb-3">
-            <strong>📌 Compatibilidad Horaria:</strong>
-            <span class="ms-2">⚪ Normal = Horario exacto elegido</span>
-            <span class="ms-2">🟡 Amarillo = Mismo día, horario diferente</span>
-            <span class="ms-2">🔴 Rojo = Día no elegido</span>
-            <br>
-            <small class="text-muted mt-2 d-block">
-                <strong>Puntuación por pareja:</strong> 
-                1.0 = Horario exacto • 0.5 = Mismo día, hora diferente • 0.0 = Día no elegido
-                <br><strong>Score total:</strong> Suma de las 3 parejas (ej: 2.5 = 2 exactas + 1 mismo día)
-            </small>
-        </div>
-
         <!-- Parejas No Asignadas -->
         <div id="parejas-no-asignadas-{{ categoria }}" class="mb-4">
             <!-- Se carga dinámicamente -->
@@ -1945,16 +1917,14 @@ function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
             // Actualizar manteniendo el tab activo
             actualizarCategoria(categoria);
         } else {
-            Toast.error('Error: ' + (data.error || 'Error desconocido'));
+            console.error('Error:', data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Toast.error('Error al asignar pareja');
     });
 }
 
@@ -1974,17 +1944,15 @@ function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDesti
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
             // Actualizar manteniendo el tab activo
             const categoriaActual = obtenerCategoriaActual();
             actualizarCategoria(categoriaActual);
         } else {
-            Toast.error('Error: ' + data.error);
+            console.error('Error:', data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Toast.error('Error al intercambiar parejas');
     });
 }
 
@@ -2575,11 +2543,19 @@ function confirmarCrearGrupo() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal y actualizar
+            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalCrearGrupo'));
             modal.hide();
             
-            actualizarCategoria(categoria);
+            // Para crear grupo necesitamos reload porque es un elemento nuevo en el DOM
+            sessionStorage.setItem('tabPrincipal', 'series-main');
+            sessionStorage.setItem('tabCategoria', `series-${categoria.toLowerCase()}`);
+            const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+            sessionStorage.setItem('scrollPos', scrollPos);
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 300); // Pequeño delay para que se cierre el modal
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -2685,7 +2661,7 @@ function eliminarParejaGrupo(parejaId) {
         return;
     }
     
-    fetch('/api/eliminar-pareja', {
+    fetch('/api/remover-pareja-de-grupo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pareja_id: parejaId })
@@ -3326,46 +3302,278 @@ function renderizarCalendarioFinales(calendario, tieneDatos) {
 // SISTEMA DE ACTUALIZACIÓN SELECTIVA SIN RECARGAR
 // ==========================================
 
-// Variable global para mantener el tab activo
-let tabActivo = 'cuarta';
-
 // Función para obtener la categoría del tab actual
 function obtenerCategoriaActual() {
+    // Obtener del sessionStorage la categoría activa
+    const tabCategoria = sessionStorage.getItem('tabCategoria') || 'series-cuarta';
+    // Extraer solo la categoría (sin el prefijo 'series-')
+    const categoria = tabCategoria.replace('series-', '');
     // Capitalizar primera letra
-    return tabActivo.charAt(0).toUpperCase() + tabActivo.slice(1);
+    return categoria.charAt(0).toUpperCase() + categoria.slice(1);
 }
 
 // Detectar cambios de tab
 document.addEventListener('DOMContentLoaded', function() {
+    // PRIMERO: Restaurar tabs INMEDIATAMENTE (sin esperas)
+    const tabPrincipalGuardado = sessionStorage.getItem('tabPrincipal');
+    const tabCategoriaGuardado = sessionStorage.getItem('tabCategoria');
+    
+    // 1. Restaurar tab principal (SERIES) - INMEDIATO
+    if (tabPrincipalGuardado === 'series-main') {
+        const mainTabButton = document.querySelector('[data-bs-target="#series-main"]');
+        if (mainTabButton) {
+            const tab = new bootstrap.Tab(mainTabButton);
+            tab.show();
+        }
+    }
+    
+    // 2. Restaurar tab de categoría (ej: series-quinta) - INMEDIATO SIN TIMEOUT
+    if (tabCategoriaGuardado) {
+        const tabButton = document.querySelector(`[data-bs-target="#${tabCategoriaGuardado}"]`);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+            
+            // 3. Extraer la categoría para restaurar sub-tab de SERIE
+            const categoria = tabCategoriaGuardado.replace('series-', '');
+            const serieButton = document.querySelector(`#serie-${categoria}-tab`);
+            if (serieButton && !serieButton.classList.contains('active')) {
+                const serieTab = new bootstrap.Tab(serieButton);
+                serieTab.show();
+            }
+        }
+    }
+    
+    // DESPUÉS: Configurar listeners para futuros cambios
     const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
     tabs.forEach(tab => {
         tab.addEventListener('shown.bs.tab', function(e) {
             // Extraer el ID del tab desde data-bs-target
             const target = e.target.getAttribute('data-bs-target');
             if (target) {
-                tabActivo = target.replace('#', '');
-                sessionStorage.setItem('tabActivo', tabActivo);
+                const targetId = target.replace('#', '');
+                
+                // Guardar tabs principales (fixture-main, series-main, finales-main)
+                if (['fixture-main', 'series-main', 'finales-main'].includes(targetId)) {
+                    sessionStorage.setItem('tabPrincipal', targetId);
+                }
+                
+                // Guardar tabs de categoría en SERIES (series-cuarta, series-quinta, etc.)
+                if (targetId.startsWith('series-')) {
+                    sessionStorage.setItem('tabCategoria', targetId);
+                }
             }
         });
     });
     
-    // Restaurar tab activo si existe
-    const tabGuardado = sessionStorage.getItem('tabActivo');
-    if (tabGuardado && tabGuardado !== 'cuarta') {
-        const tabButton = document.querySelector(`[data-bs-target="#${tabGuardado}"]`);
-        if (tabButton) {
-            const tab = new bootstrap.Tab(tabButton);
-            tab.show();
-            tabActivo = tabGuardado;
-        }
+    // Restaurar posición del scroll
+    const scrollPos = sessionStorage.getItem('scrollPos');
+    if (scrollPos) {
+        // Usar setTimeout para asegurar que el DOM esté completamente renderizado
+        setTimeout(() => {
+            window.scrollTo(0, parseInt(scrollPos));
+            sessionStorage.removeItem('scrollPos');
+        }, 150);
     }
 });
 
 // Función para actualizar solo el contenido de una categoría específica
 function actualizarCategoria(categoria) {
-    // Guardar la categoría activa y recargar la página para reflejar los cambios
-    sessionStorage.setItem('tabActivo', categoria.toLowerCase());
-    window.location.reload();
+    // NO hacer reload - actualizar dinámicamente SIN flash
+    const categoriaNormalizada = categoria.charAt(0).toUpperCase() + categoria.slice(1);
+    
+    // Obtener datos actualizados del servidor
+    fetch(`/api/obtener-datos-categoria/${categoriaNormalizada}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 1. Actualizar parejas no asignadas
+            actualizarParejasNoAsignadas(categoriaNormalizada, data.parejas_no_asignadas);
+            
+            // 2. Actualizar grupos (parejas dentro de cada grupo)
+            actualizarGrupos(categoriaNormalizada, data.grupos);
+            
+            // 3. Actualizar partidos
+            actualizarPartidos(categoriaNormalizada, data.partidos);
+            
+            // 4. Reinicializar drag and drop
+            inicializarDragAndDrop();
+        } else {
+            console.error('Error al actualizar');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Función auxiliar para actualizar parejas no asignadas
+function actualizarParejasNoAsignadas(categoria, parejas) {
+    // Usar la función existente renderizarParejasNoAsignadas
+    renderizarParejasNoAsignadas(categoria, parejas);
+}
+
+// Función auxiliar para actualizar grupos
+function actualizarGrupos(categoria, grupos) {
+    grupos.forEach((grupo, index) => {
+        const grupoCard = document.querySelector(`[data-grupo-id="${grupo.id}"][data-categoria="${categoria}"]`);
+        if (!grupoCard) return;
+        
+        const cardBody = grupoCard.querySelector('.card-body');
+        if (!cardBody) return;
+        
+        // Actualizar info de franja y cancha
+        const alertInfo = cardBody.querySelector('.alert-light');
+        if (alertInfo) {
+            alertInfo.innerHTML = `
+                <small class="d-block">
+                    <i class="bi bi-clock-fill"></i> <strong>${grupo.franja_horaria || 'Por coordinar'}</strong>
+                </small>
+                <small class="d-block">
+                    <i class="bi bi-geo-alt-fill"></i> <strong>Cancha ${grupo.cancha || 'Por asignar'}</strong>
+                </small>
+            `;
+        }
+        
+        // Actualizar parejas (slots)
+        const parejasContainer = cardBody.querySelector('h6.fw-bold').nextElementSibling;
+        if (!parejasContainer) return;
+        
+        let parejasHtml = '';
+        for (let slot = 0; slot < 3; slot++) {
+            const pareja = grupo.parejas[slot];
+            
+            if (pareja) {
+                const franjaAsignada = grupo.franja_horaria;
+                const franjasPareja = pareja.franjas_disponibles || [];
+                const compatibleExacto = franjaAsignada && franjasPareja.includes(franjaAsignada);
+                
+                let compatibleParcial = false;
+                if (franjaAsignada && !compatibleExacto && franjasPareja.length > 0) {
+                    const diaAsignado = franjaAsignada.split(' ')[0];
+                    compatibleParcial = franjasPareja.some(f => f.split(' ')[0] === diaAsignado);
+                }
+                
+                const borderClass = compatibleExacto ? '' : (compatibleParcial ? 'border-warning border-2' : 'border-danger border-2');
+                const textClass = compatibleExacto ? '' : (compatibleParcial ? 'text-warning' : 'text-danger');
+                const tooltip = compatibleExacto ? '' : (compatibleParcial ? 'Esta pareja eligió este día pero en otro horario' : 'Esta pareja no eligió este día');
+                
+                parejasHtml += `
+                    <div class="pareja-slot mb-2 p-2 bg-white rounded border ${borderClass}" 
+                         draggable="true"
+                         data-pareja-id="${pareja.id}"
+                         data-pareja-nombre="${pareja.nombre}"
+                         data-grupo-origen="${grupo.id}"
+                         data-grupo-id="${grupo.id}"
+                         data-slot="${slot}"
+                         data-posicion="${pareja.posicion_grupo || ''}"
+                         ondragstart="dragStart(event)"
+                         ondrop="dropEnSlot(event)"
+                         ondragover="allowDropSlot(event)"
+                         ondragleave="removeDragOverSlot(event)"
+                         ${tooltip ? `title="${tooltip}"` : ''}>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-truncate ${textClass}" title="${pareja.nombre}">
+                                    ${slot + 1}. ${pareja.nombre}
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-clock"></i> ${franjasPareja.join(', ') || 'Sin horarios'}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-telephone"></i> ${pareja.telefono}
+                                </small>
+                            </div>
+                            <div class="ms-2 d-flex gap-1">
+                                <span class="posicion-badge ${pareja.posicion_grupo === 1 ? 'posicion-primero' : ''}" 
+                                      onclick="asignarPosicion(${pareja.id}, 1, '${categoria}', ${grupo.id})"
+                                      title="1° Puesto">🥇</span>
+                                <span class="posicion-badge ${pareja.posicion_grupo === 2 ? 'posicion-segundo' : ''}"
+                                      onclick="asignarPosicion(${pareja.id}, 2, '${categoria}', ${grupo.id})"
+                                      title="2° Puesto">🥈</span>
+                                <span class="posicion-badge ${pareja.posicion_grupo === 3 ? 'posicion-tercero' : ''}"
+                                      onclick="asignarPosicion(${pareja.id}, 3, '${categoria}', ${grupo.id})"
+                                      title="3° Puesto">🥉</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                parejasHtml += `
+                    <div class="pareja-slot pareja-slot-vacio mb-2 p-2 bg-light rounded border border-dashed" 
+                         data-grupo-id="${grupo.id}"
+                         data-slot="${slot}"
+                         ondrop="dropEnSlot(event)"
+                         ondragover="allowDropSlot(event)"
+                         ondragleave="removeDragOverSlot(event)"
+                         style="min-height: 80px; display: flex; align-items: center; justify-content: center; border-style: dashed !important;">
+                        <div class="text-muted text-center">
+                            <i class="bi bi-plus-circle"></i>
+                            <small class="d-block">Slot ${slot + 1} vacío</small>
+                            <small class="d-block" style="font-size: 0.7rem;">Arrastra una pareja aquí</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Reemplazar el contenido de parejas
+        const h6 = cardBody.querySelector('h6.fw-bold');
+        if (h6) {
+            // Eliminar todos los divs de pareja-slot existentes
+            const existingSlots = cardBody.querySelectorAll('.pareja-slot, .pareja-slot-vacio');
+            existingSlots.forEach(slot => slot.remove());
+            
+            // Insertar el nuevo HTML después del h6
+            h6.insertAdjacentHTML('afterend', parejasHtml);
+        }
+        
+        // Actualizar score en el footer
+        const footer = grupoCard.querySelector('.card-footer');
+        if (footer) {
+            const score = grupo.score || 0.0;
+            let badgeHtml = '';
+            if (score === 3.0) {
+                badgeHtml = `<span class="badge bg-success">✅ Perfecto: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 2.5) {
+                badgeHtml = `<span class="badge bg-success">✅ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 2.0) {
+                badgeHtml = `<span class="badge bg-warning text-dark">⚠️ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 1.0) {
+                badgeHtml = `<span class="badge bg-info text-white">📅 Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score > 0.0) {
+                badgeHtml = `<span class="badge bg-warning text-dark">⚠️ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else {
+                badgeHtml = `<span class="badge bg-danger">❌ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            }
+            footer.innerHTML = badgeHtml;
+        }
+    });
+}
+
+// Función auxiliar para actualizar partidos
+function actualizarPartidos(categoria, partidos) {
+    Object.keys(partidos).forEach(grupoId => {
+        const container = document.querySelector(`#partidos-grupo-${grupoId}`);
+        if (!container) return;
+        
+        const partidosGrupo = partidos[grupoId];
+        if (!partidosGrupo || partidosGrupo.length === 0) {
+            container.innerHTML = '<p class="text-muted">No hay partidos generados aún</p>';
+            return;
+        }
+        
+        const html = `
+            <ul class="list-group list-group-flush">
+                ${partidosGrupo.map(p => `
+                    <li class="list-group-item">
+                        <strong>${p.pareja1}</strong> vs <strong>${p.pareja2}</strong>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+        container.innerHTML = html;
+    });
 }
 
 // Función para actualizar todas las categorías (más rápido que reload completo)

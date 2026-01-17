@@ -1,7 +1,7 @@
 {
   "nombre": "Torneo 26/12/2025",
   "fecha_creacion": "2025-12-26T13:18:53.825559",
-  "fecha_modificacion": "2026-01-16T17:51:12.436880",
+  "fecha_modificacion": "2026-01-16T23:06:35.095367",
   "parejas": [
     {
       "categoria": "Cuarta",
@@ -405,7 +405,12 @@
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Martín Ortiz - Rodrigo Oviedo"
           },
-          null
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabril y Mario",
+            "pareja2": "Gabriel y Mario Larrosa"
+          }
         ],
         "22:00": [
           {
@@ -414,7 +419,12 @@
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Alejandro Vazquez , nicolas"
           },
-          null
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabril y Mario",
+            "pareja2": "Nicolas Romay Javier Machin"
+          }
         ],
         "23:00": [
           {
@@ -423,7 +433,12 @@
             "pareja1": "Martín Ortiz - Rodrigo Oviedo",
             "pareja2": "Alejandro Vazquez , nicolas"
           },
-          null
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabriel y Mario Larrosa",
+            "pareja2": "Nicolas Romay Javier Machin"
+          }
         ]
       },
       "Sábado": {
@@ -554,7 +569,6 @@
             {
               "categoria": "Cuarta",
               "franjas_disponibles": [
-                "Jueves 18:00",
                 "Jueves 20:00"
               ],
               "grupo_asignado": 1,
@@ -603,13 +617,12 @@
               "pareja2": "Joaquin Oliveira y Demetrio Ferreira"
             }
           ],
-          "score": 3.0,
-          "score_compatibilidad": 3.0
+          "score": 2.5
         }
       ],
       "Quinta": [
         {
-          "cancha": 1,
+          "cancha": 2,
           "franja_horaria": "Viernes 21:00",
           "id": 426,
           "parejas": [
@@ -791,7 +804,7 @@
           "score": 3.0
         },
         {
-          "cancha": 2,
+          "cancha": 1,
           "franja_horaria": "Jueves 20:00",
           "id": 372,
           "parejas": [
@@ -850,7 +863,7 @@
         },
         {
           "cancha": "2",
-          "franja_horaria": "Sábado 16:00",
+          "franja_horaria": "Sábado 09:00",
           "id": 427,
           "parejas": [
             {
@@ -867,14 +880,14 @@
             }
           ],
           "partidos": [],
-          "score": 0.0,
-          "score_compatibilidad": 0.0
+          "score": 0.5,
+          "score_compatibilidad": 0.5
         }
       ],
       "Séptima": [
         {
           "cancha": 1,
-          "franja_horaria": "Jueves 20:00",
+          "franja_horaria": "Viernes 21:00",
           "id": 2,
           "parejas": [
             {
