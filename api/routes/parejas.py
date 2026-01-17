@@ -77,9 +77,16 @@ def regenerar_calendario(resultado_data):
         # Obtener número de canchas
         num_canchas = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
         
+        # Crear mapeo de grupo_id a cancha desde resultado_data
+        canchas_por_grupo = {}
+        for categoria, grupos_list in resultado_data['grupos_por_categoria'].items():
+            for grupo_dict in grupos_list:
+                if grupo_dict.get('cancha'):
+                    canchas_por_grupo[grupo_dict['id']] = grupo_dict['cancha']
+        
         # Regenerar calendario usando CalendarioBuilder
         calendario_builder = CalendarioBuilder(num_canchas)
-        calendario = calendario_builder.organizar_partidos(resultado_obj)
+        calendario = calendario_builder.organizar_partidos(resultado_obj, canchas_por_grupo)
         
         # Actualizar calendario en resultado_data
         resultado_data['calendario'] = calendario
@@ -480,6 +487,7 @@ def serializar_resultado(resultado, num_canchas):
     """Convierte el resultado del algoritmo a formato JSON serializable."""
     grupos_dict = {}
     canchas_asignadas = {}
+    canchas_por_grupo = {}  # Nuevo: mapeo de grupo_id a cancha
     
     for categoria, grupos in resultado.grupos_por_categoria.items():
         grupos_dict[categoria] = []
@@ -494,6 +502,10 @@ def serializar_resultado(resultado, num_canchas):
             else:
                 cancha_num = None
             
+            # Guardar el mapeo de grupo_id a cancha
+            if cancha_num is not None:
+                canchas_por_grupo[grupo.id] = cancha_num
+            
             grupos_dict[categoria].append({
                 'id': grupo.id,
                 'parejas': [p.to_dict() for p in grupo.parejas],
@@ -507,7 +519,7 @@ def serializar_resultado(resultado, num_canchas):
             })
     
     calendario_builder = CalendarioBuilder(num_canchas)
-    calendario = calendario_builder.organizar_partidos(resultado)
+    calendario = calendario_builder.organizar_partidos(resultado, canchas_por_grupo)
     
     return {
         'grupos_por_categoria': grupos_dict,
@@ -1416,4 +1428,19 @@ def obtener_datos_categoria(categoria):
         'grupos': grupos,
         'parejas_no_asignadas': parejas_no_asignadas,
         'partidos': partidos_categoria
+    })
+
+
+@api_bp.route('/obtener-calendario', methods=['GET'])
+def obtener_calendario():
+    """Devuelve el calendario general actualizado."""
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    calendario = resultado_dict.get('calendario', {})
+    
+    return jsonify({
+        'success': True,
+        'calendario': calendario
     })

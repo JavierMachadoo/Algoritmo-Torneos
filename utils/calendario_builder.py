@@ -12,7 +12,13 @@ class CalendarioBuilder:
             calendario[dia] = {hora: [None] * self.num_canchas for hora in horas}
         return calendario
     
-    def organizar_partidos(self, resultado_algoritmo) -> Dict:
+    def organizar_partidos(self, resultado_algoritmo, canchas_por_grupo=None) -> Dict:
+        """Organiza los partidos en el calendario.
+        
+        Args:
+            resultado_algoritmo: Resultado del algoritmo con los grupos
+            canchas_por_grupo: Dict opcional con {grupo_id: numero_cancha}
+        """
         calendario = self.construir_calendario_vacio()
         franjas_a_horas = self._mapear_franjas_a_horas()
         
@@ -21,7 +27,12 @@ class CalendarioBuilder:
                 if not grupo.franja_horaria:
                     continue
                 
-                self._asignar_partidos_grupo(calendario, grupo, categoria, franjas_a_horas)
+                # Obtener la cancha asignada al grupo si existe
+                cancha_asignada = None
+                if canchas_por_grupo and grupo.id in canchas_por_grupo:
+                    cancha_asignada = canchas_por_grupo[grupo.id]
+                
+                self._asignar_partidos_grupo(calendario, grupo, categoria, franjas_a_horas, cancha_asignada)
         
         return calendario
     
@@ -38,7 +49,7 @@ class CalendarioBuilder:
             'Sábado 19:00': ('Sábado', ['19:00', '20:00', '21:00']),
         }
     
-    def _asignar_partidos_grupo(self, calendario, grupo, categoria, franjas_a_horas):
+    def _asignar_partidos_grupo(self, calendario, grupo, categoria, franjas_a_horas, cancha_asignada=None):
         franja_grupo = grupo.franja_horaria
         
         for franja_key, (dia, horas_disponibles) in franjas_a_horas.items():
@@ -49,9 +60,14 @@ class CalendarioBuilder:
                         break
                     
                     hora = horas_disponibles[hora_idx]
-                    cancha_idx = self._buscar_cancha_libre(calendario[dia][hora])
                     
-                    if cancha_idx is not None:
+                    # Usar la cancha asignada si existe, sino buscar una libre
+                    if cancha_asignada is not None:
+                        cancha_idx = int(cancha_asignada) - 1  # Convertir de 1-indexed a 0-indexed
+                    else:
+                        cancha_idx = self._buscar_cancha_libre(calendario[dia][hora])
+                    
+                    if cancha_idx is not None and cancha_idx < self.num_canchas:
                         partido = {
                             'categoria': categoria,
                             'grupo_id': grupo.id,

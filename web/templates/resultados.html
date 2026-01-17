@@ -972,7 +972,7 @@
                                             <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="calendario-jueves">
                                         {% if resultado.calendario.Jueves %}
                                             {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00'] %}
                                                 {% if hora in resultado.calendario.Jueves %}
@@ -1011,7 +1011,7 @@
                                             <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="calendario-viernes">
                                         {% if resultado.calendario.Viernes %}
                                             {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'] %}
                                                 {% if hora in resultado.calendario.Viernes %}
@@ -1050,7 +1050,7 @@
                                             <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="calendario-sabado">
                                         {% if resultado.calendario['Sábado'] %}
                                             {% for hora in ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'] %}
                                                 {% if hora in resultado.calendario['Sábado'] %}
@@ -1409,7 +1409,7 @@
                                         {% endif %}
                                     </h6>
                                 </div>
-                                <div class="card-body" style="background-color: {{ bg_color }};">
+                                <div class="card-body" style="background-color: {{ bg_color }};" id="partidos-grupo-{{ grupo.id }}" data-franja="{{ grupo.franja_horaria }}">
                                     <div class="mb-3 p-2 bg-white rounded border">
                                         <small class="text-muted d-block">
                                             <i class="bi bi-calendar3"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
@@ -1701,7 +1701,7 @@
                                 {% endif %}
                             </h6>
                         </div>
-                        <div class="card-body" style="background-color: {{ bg_color }};">
+                        <div class="card-body" style="background-color: {{ bg_color }};" id="partidos-grupo-{{ grupo.id }}" data-franja="{{ grupo.franja_horaria }}">
                             <div class="mb-3 p-2 bg-white rounded border">
                                 <small class="text-muted d-block">
                                     <i class="bi bi-calendar3"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
@@ -2571,57 +2571,73 @@ function abrirModalEditarGrupo(button) {
     const categoria = button.getAttribute('data-categoria');
     const franjaActual = button.getAttribute('data-franja');
     const canchaActual = button.getAttribute('data-cancha');
-    const parejas = JSON.parse(button.getAttribute('data-parejas'));
     
     document.getElementById('editarGrupoId').value = grupoId;
     document.getElementById('editarGrupoCategoria').value = categoria;
     document.getElementById('editarGrupoFranja').value = franjaActual;
     document.getElementById('editarGrupoCancha').value = canchaActual;
     
-    // Mostrar las parejas del grupo
-    const contenedorParejas = document.getElementById('parejasDelGrupo');
-    if (parejas && parejas.length > 0) {
-        let html = '<div class="table-responsive"><table class="table table-sm table-hover mb-0">';
-        html += '<thead class="table-light"><tr>';
-        html += '<th width="5%">#</th>';
-        html += '<th width="55%">Nombre</th>';
-        html += '<th width="30%">Teléfono</th>';
-        html += '<th width="10%">Acción</th>';
-        html += '</tr></thead><tbody>';
-        
-        parejas.forEach((pareja, index) => {
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td class="fw-bold">${pareja.nombre}</td>
-                <td><small><i class="bi bi-telephone"></i> ${pareja.telefono || 'N/A'}</small></td>
-                <td>
-                    <button class="btn btn-sm btn-primary me-1" 
-                            data-pareja-id="${pareja.id}"
-                            data-pareja-nombre="${pareja.nombre}"
-                            data-pareja-telefono="${pareja.telefono || ''}"
-                            data-pareja-categoria="${pareja.categoria}"
-                            data-pareja-franjas='${JSON.stringify(pareja.franjas_disponibles)}'
-                            onclick="editarParejaDesdeGrupo(this)"
-                            title="Editar">
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="eliminarParejaGrupo(${pareja.id})"
-                            title="Eliminar">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </td>
-            </tr>`;
+    // Obtener datos frescos del grupo desde el servidor
+    fetch(`/api/obtener-grupo/${categoria}/${grupoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                Toast.error(data.error);
+                return;
+            }
+            
+            const grupo = data.grupo;
+            const parejas = grupo.parejas || [];
+            
+            // Mostrar las parejas del grupo
+            const contenedorParejas = document.getElementById('parejasDelGrupo');
+            if (parejas && parejas.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-sm table-hover mb-0">';
+                html += '<thead class="table-light"><tr>';
+                html += '<th width="5%">#</th>';
+                html += '<th width="55%">Nombre</th>';
+                html += '<th width="30%">Teléfono</th>';
+                html += '<th width="10%">Acción</th>';
+                html += '</tr></thead><tbody>';
+                
+                parejas.forEach((pareja, index) => {
+                    html += `<tr>
+                        <td>${index + 1}</td>
+                        <td class="fw-bold">${pareja.nombre}</td>
+                        <td><small><i class="bi bi-telephone"></i> ${pareja.telefono || 'N/A'}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" 
+                                    data-pareja-id="${pareja.id}"
+                                    data-pareja-nombre="${pareja.nombre}"
+                                    data-pareja-telefono="${pareja.telefono || ''}"
+                                    data-pareja-categoria="${pareja.categoria}"
+                                    data-pareja-franjas='${JSON.stringify(pareja.franjas_disponibles)}'
+                                    onclick="editarParejaDesdeGrupo(this)"
+                                    title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="eliminarParejaGrupo(${pareja.id})"
+                                    title="Eliminar">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                contenedorParejas.innerHTML = html;
+            } else {
+                contenedorParejas.innerHTML = '<div class="alert alert-warning mb-0"><i class="bi bi-exclamation-triangle"></i> No hay parejas en este grupo</div>';
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarGrupo'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al obtener datos del grupo:', error);
+            Toast.error('Error al cargar los datos del grupo');
         });
-        
-        html += '</tbody></table></div>';
-        contenedorParejas.innerHTML = html;
-    } else {
-        contenedorParejas.innerHTML = '<div class="alert alert-warning mb-0"><i class="bi bi-exclamation-triangle"></i> No hay parejas en este grupo</div>';
-    }
-    
-    const modal = new bootstrap.Modal(document.getElementById('modalEditarGrupo'));
-    modal.show();
 }
 
 // Nueva función para editar pareja desde el modal de grupo
@@ -3308,8 +3324,16 @@ function obtenerCategoriaActual() {
     const tabCategoria = sessionStorage.getItem('tabCategoria') || 'series-cuarta';
     // Extraer solo la categoría (sin el prefijo 'series-')
     const categoria = tabCategoria.replace('series-', '');
-    // Capitalizar primera letra
-    return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+    
+    // Mapeo correcto de nombres (considerando acentos)
+    const mapeoNombres = {
+        'cuarta': 'Cuarta',
+        'quinta': 'Quinta',
+        'sexta': 'Sexta',
+        'septima': 'Séptima'  // Importante: con acento
+    };
+    
+    return mapeoNombres[categoria] || categoria.charAt(0).toUpperCase() + categoria.slice(1);
 }
 
 // Detectar cambios de tab
@@ -3393,10 +3417,13 @@ function actualizarCategoria(categoria) {
             // 2. Actualizar grupos (parejas dentro de cada grupo)
             actualizarGrupos(categoriaNormalizada, data.grupos);
             
-            // 3. Actualizar partidos
-            actualizarPartidos(categoriaNormalizada, data.partidos);
+            // 3. Actualizar partidos (pasando los grupos completos)
+            actualizarPartidos(categoriaNormalizada, data.grupos);
             
-            // 4. Reinicializar drag and drop
+            // 4. Actualizar calendario general
+            actualizarCalendarioGeneral();
+            
+            // 5. Reinicializar drag and drop
             inicializarDragAndDrop();
         } else {
             console.error('Error al actualizar');
@@ -3421,6 +3448,16 @@ function actualizarGrupos(categoria, grupos) {
         
         const cardBody = grupoCard.querySelector('.card-body');
         if (!cardBody) return;
+        
+        // Actualizar el botón de editar con los datos frescos del grupo
+        const editButton = grupoCard.querySelector('.card-header button[onclick*="abrirModalEditarGrupo"]');
+        if (editButton) {
+            editButton.setAttribute('data-grupo-id', grupo.id);
+            editButton.setAttribute('data-categoria', categoria);
+            editButton.setAttribute('data-franja', grupo.franja_horaria || '');
+            editButton.setAttribute('data-cancha', grupo.cancha || '');
+            // Ya no necesitamos data-parejas porque ahora se obtienen del servidor
+        }
         
         // Actualizar info de franja y cancha
         const alertInfo = cardBody.querySelector('.alert-light');
@@ -3552,28 +3589,217 @@ function actualizarGrupos(categoria, grupos) {
 }
 
 // Función auxiliar para actualizar partidos
-function actualizarPartidos(categoria, partidos) {
-    Object.keys(partidos).forEach(grupoId => {
-        const container = document.querySelector(`#partidos-grupo-${grupoId}`);
+function actualizarPartidos(categoria, grupos) {
+    grupos.forEach(grupo => {
+        const container = document.querySelector(`#partidos-grupo-${grupo.id}`);
         if (!container) return;
         
-        const partidosGrupo = partidos[grupoId];
-        if (!partidosGrupo || partidosGrupo.length === 0) {
-            container.innerHTML = '<p class="text-muted">No hay partidos generados aún</p>';
-            return;
+        const franjaHoraria = grupo.franja_horaria || 'Por coordinar';
+        const cancha = grupo.cancha || 'Por asignar';
+        const partidos = grupo.partidos || [];
+        
+        // Extraer hora base para los partidos
+        let horaInicio = 20;
+        if (franjaHoraria && franjaHoraria.includes(' ')) {
+            const partes = franjaHoraria.split(' ')[1].split(':');
+            horaInicio = parseInt(partes[0]);
         }
         
-        const html = `
-            <ul class="list-group list-group-flush">
-                ${partidosGrupo.map(p => `
-                    <li class="list-group-item">
-                        <strong>${p.pareja1}</strong> vs <strong>${p.pareja2}</strong>
-                    </li>
-                `).join('')}
-            </ul>
+        let html = `
+            <div class="mb-3 p-2 bg-white rounded border">
+                <small class="text-muted d-block">
+                    <i class="bi bi-calendar3"></i> <strong>${franjaHoraria}</strong>
+                </small>
+                <small class="text-muted d-block">
+                    <i class="bi bi-geo-alt-fill"></i> <strong>Cancha ${cancha}</strong>
+                </small>
+            </div>
         `;
+        
+        if (partidos.length > 0) {
+            partidos.forEach((partido, idx) => {
+                const horaPartido = (horaInicio + idx) % 24;
+                const horaStr = String(horaPartido).padStart(2, '0') + ':00';
+                
+                html += `
+                    <div class="partido-card mb-3 p-3 bg-white rounded border shadow-sm">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-clock-fill"></i> ${horaStr}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <small class="text-muted">Partido ${idx + 1}</small>
+                            </div>
+                        </div>
+                        <div class="row g-0 align-items-center">
+                            <div class="col-5">
+                                <div class="text-end pe-2">
+                                    <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="${partido.pareja1}">
+                                        ${partido.pareja1}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <div class="text-center">
+                                    <span class="badge bg-secondary">VS</span>
+                                </div>
+                            </div>
+                            <div class="col-5">
+                                <div class="ps-2">
+                                    <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="${partido.pareja2}">
+                                        ${partido.pareja2}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += `
+                <div class="alert alert-light mb-0">
+                    <i class="bi bi-info-circle"></i> No hay partidos generados aún
+                </div>
+            `;
+        }
+        
         container.innerHTML = html;
+        container.setAttribute('data-franja', franjaHoraria);
     });
+}
+
+// Función para actualizar el calendario general
+function actualizarCalendarioGeneral() {
+    fetch('/api/obtener-calendario')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.calendario) {
+            renderizarCalendario(data.calendario);
+        }
+    })
+    .catch(error => {
+        console.error('Error al actualizar calendario:', error);
+    });
+}
+
+// Función para renderizar el calendario completo
+function renderizarCalendario(calendario) {
+    // Mapeo de categorías a clases CSS y emojis
+    const clasesCategoria = {
+        'Cuarta': 'partido-cuarta',
+        'Quinta': 'partido-quinta',
+        'Sexta': 'partido-sexta',
+        'Séptima': 'partido-septima'
+    };
+    
+    const emojisCategoria = {
+        'Cuarta': '🟢',
+        'Quinta': '🟡',
+        'Sexta': '🔵',
+        'Séptima': '🟣'
+    };
+    
+    // Función auxiliar para renderizar un partido
+    function renderPartido(partido) {
+        if (!partido) return '';
+        
+        const claseCategoria = clasesCategoria[partido.categoria] || '';
+        const emoji = emojisCategoria[partido.categoria] || '';
+        
+        return `
+            <div class="partido-bloque-simple ${claseCategoria}">
+                <div class="mb-2 text-center">
+                    <span class="badge-categoria">${emoji} ${partido.categoria}</span>
+                    <span class="badge-grupo">Grupo ${partido.grupo_id}</span>
+                </div>
+                <div class="row align-items-center g-0">
+                    <div class="col-5 text-end pe-2">
+                        <div class="fw-bold">${partido.pareja1}</div>
+                    </div>
+                    <div class="col-2 text-center">
+                        <strong class="text-muted">VS</strong>
+                    </div>
+                    <div class="col-5 text-start ps-2">
+                        <div class="fw-bold">${partido.pareja2}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Actualizar Jueves
+    const juevesBody = document.getElementById('calendario-jueves');
+    if (juevesBody && calendario.Jueves) {
+        const horasJueves = ['18:00', '19:00', '20:00', '21:00', '22:00'];
+        let htmlJueves = '';
+        
+        horasJueves.forEach(hora => {
+            if (calendario.Jueves[hora]) {
+                const cancha1 = calendario.Jueves[hora][0];
+                const cancha2 = calendario.Jueves[hora][1];
+                
+                htmlJueves += `
+                    <tr>
+                        <td class="text-center align-middle bg-light fw-bold">${hora}</td>
+                        <td class="calendario-celda">${renderPartido(cancha1)}</td>
+                        <td class="calendario-celda">${renderPartido(cancha2)}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        juevesBody.innerHTML = htmlJueves;
+    }
+    
+    // Actualizar Viernes
+    const viernesBody = document.getElementById('calendario-viernes');
+    if (viernesBody && calendario.Viernes) {
+        const horasViernes = ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+        let htmlViernes = '';
+        
+        horasViernes.forEach(hora => {
+            if (calendario.Viernes[hora]) {
+                const cancha1 = calendario.Viernes[hora][0];
+                const cancha2 = calendario.Viernes[hora][1];
+                
+                htmlViernes += `
+                    <tr>
+                        <td class="text-center align-middle bg-light fw-bold">${hora}</td>
+                        <td class="calendario-celda">${renderPartido(cancha1)}</td>
+                        <td class="calendario-celda">${renderPartido(cancha2)}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        viernesBody.innerHTML = htmlViernes;
+    }
+    
+    // Actualizar Sábado
+    const sabadoBody = document.getElementById('calendario-sabado');
+    if (sabadoBody && calendario['Sábado']) {
+        const horasSabado = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
+        let htmlSabado = '';
+        
+        horasSabado.forEach(hora => {
+            if (calendario['Sábado'][hora]) {
+                const cancha1 = calendario['Sábado'][hora][0];
+                const cancha2 = calendario['Sábado'][hora][1];
+                
+                htmlSabado += `
+                    <tr>
+                        <td class="text-center align-middle bg-light fw-bold">${hora}</td>
+                        <td class="calendario-celda">${renderPartido(cancha1)}</td>
+                        <td class="calendario-celda">${renderPartido(cancha2)}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        sabadoBody.innerHTML = htmlSabado;
+    }
 }
 
 // Función para actualizar todas las categorías (más rápido que reload completo)
