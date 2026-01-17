@@ -17,6 +17,95 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # ==================== HELPERS ====================
 
+def recalcular_score_grupo(grupo_dict):
+    """Recalcula el score de compatibilidad de un grupo según sus parejas actuales."""
+    parejas = grupo_dict.get('parejas', [])
+    franja_asignada = grupo_dict.get('franja_horaria')
+    
+    # Si no hay parejas, score es 0
+    if len(parejas) == 0:
+        grupo_dict['score'] = 0.0
+        grupo_dict['score_compatibilidad'] = 0.0
+        return
+    
+    if not franja_asignada:
+        # Si no hay franja asignada, usar algoritmo original
+        parejas_obj = [Pareja.from_dict(p) for p in parejas]
+        
+        if len(parejas_obj) < 2:
+            # Con 1 pareja, no se puede calcular compatibilidad sin franja
+            score = 0.0
+        elif len(parejas_obj) < 3:
+            # Grupo incompleto con 2 parejas: calcular compatibilidad parcial
+            franjas_p1 = set(parejas_obj[0].franjas_disponibles)
+            franjas_p2 = set(parejas_obj[1].franjas_disponibles)
+            franjas_comunes = franjas_p1 & franjas_p2
+            score = 2.0 if franjas_comunes else 0.0
+        else:
+            # Usar lógica del algoritmo
+            algoritmo = AlgoritmoGrupos(parejas_obj)
+            score, _ = algoritmo._calcular_compatibilidad(parejas_obj)
+    else:
+        # Si hay franja asignada, calcular score acumulativo por pareja
+        dia_asignado = franja_asignada.split(' ')[0] if ' ' in franja_asignada else ''
+        score = 0.0
+        
+        for pareja in parejas:
+            franjas_pareja = pareja.get('franjas_disponibles', [])
+            
+            if franja_asignada in franjas_pareja:
+                # Horario exacto: suma 1.0
+                score += 1.0
+            elif dia_asignado:
+                # Verificar si al menos tiene el mismo día
+                dias_pareja = set(f.split(' ')[0] for f in franjas_pareja if ' ' in f)
+                if dia_asignado in dias_pareja:
+                    # Mismo día, hora diferente: suma 0.5
+                    score += 0.5
+                # Si no tiene el día: suma 0.0 (no suma nada)
+    
+    grupo_dict['score'] = score
+    grupo_dict['score_compatibilidad'] = score
+
+
+def regenerar_calendario(resultado_data):
+    """Regenera el calendario completo y los partidos de cada grupo basándose en las parejas actuales."""
+    try:
+        # Deserializar resultado (esto regenera los partidos de cada grupo automáticamente)
+        resultado_obj = deserializar_resultado(resultado_data)
+        
+        # Obtener número de canchas
+        num_canchas = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
+        
+        # Regenerar calendario usando CalendarioBuilder
+        calendario_builder = CalendarioBuilder(num_canchas)
+        calendario = calendario_builder.organizar_partidos(resultado_obj)
+        
+        # Actualizar calendario en resultado_data
+        resultado_data['calendario'] = calendario
+        
+        # Actualizar partidos de cada grupo en resultado_data
+        for categoria, grupos_obj in resultado_obj.grupos_por_categoria.items():
+            grupos_list = resultado_data['grupos_por_categoria'].get(categoria, [])
+            for grupo_obj in grupos_obj:
+                # Buscar el grupo correspondiente en resultado_data por ID
+                for grupo_dict in grupos_list:
+                    if grupo_dict['id'] == grupo_obj.id:
+                        # Actualizar partidos
+                        grupo_dict['partidos'] = [
+                            {'pareja1': p1.nombre, 'pareja2': p2.nombre}
+                            for p1, p2 in grupo_obj.partidos
+                        ]
+                        break
+        
+        return calendario
+    except Exception as e:
+        print(f"Error al regenerar calendario: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return resultado_data.get('calendario', {})
+
+
 def guardar_estado_torneo():
     """Guarda el estado actual del torneo en el almacenamiento JSON."""
     torneo = storage.cargar()
@@ -77,6 +166,7 @@ def agregar_pareja():
     telefono = data.get('telefono', '').strip()
     categoria = data.get('categoria', 'Cuarta')
     franjas = data.get('franjas', [])
+    desde_resultados = data.get('desde_resultados', False)
     
     if not nombre:
         return jsonify({'error': 'El nombre es obligatorio'}), 400
@@ -86,8 +176,10 @@ def agregar_pareja():
     
     parejas = session.get('parejas', [])
     
+    # Generar nuevo ID único
+    max_id = max([p['id'] for p in parejas], default=0)
     nueva_pareja = {
-        'id': len(parejas) + 1,
+        'id': max_id + 1,
         'nombre': nombre,
         'telefono': telefono or 'Sin teléfono',
         'categoria': categoria,
@@ -96,13 +188,30 @@ def agregar_pareja():
     
     parejas.append(nueva_pareja)
     session['parejas'] = parejas
+    
+    # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
+    if desde_resultados:
+        resultado_data = session.get('resultado_algoritmo')
+        if resultado_data:
+            # Agregar a parejas no asignadas
+            parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+            parejas_sin_asignar.append(nueva_pareja)
+            resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
+            
+            # Actualizar estadísticas
+            if 'estadisticas' in resultado_data:
+                resultado_data['estadisticas']['total_parejas'] = len(parejas)
+            
+            session['resultado_algoritmo'] = resultado_data
+    
     session.modified = True
     guardar_estado_torneo()
     
     return jsonify({
         'success': True,
         'mensaje': f'Pareja "{nombre}" agregada correctamente',
-        'pareja': nueva_pareja
+        'pareja': nueva_pareja,
+        'desde_resultados': desde_resultados
     })
 
 
@@ -125,6 +234,64 @@ def eliminar_pareja():
     })
 
 
+@api_bp.route('/remover-pareja-de-grupo', methods=['POST'])
+def remover_pareja_de_grupo():
+    """Remueve una pareja de un grupo y la devuelve a parejas no asignadas."""
+    data = request.json
+    pareja_id = data.get('pareja_id')
+    
+    if not pareja_id:
+        return jsonify({'error': 'Falta pareja_id'}), 400
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Buscar la pareja en los grupos
+    pareja_encontrada = None
+    grupo_contenedor = None
+    
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            for idx, pareja in enumerate(grupo.get('parejas', [])):
+                if pareja.get('id') == pareja_id:
+                    pareja_encontrada = grupo['parejas'].pop(idx)
+                    grupo_contenedor = grupo
+                    break
+            if pareja_encontrada:
+                break
+        if pareja_encontrada:
+            break
+    
+    if not pareja_encontrada:
+        return jsonify({'error': 'Pareja no encontrada en ningún grupo'}), 404
+    
+    # Limpiar la posición de grupo antes de agregar a no asignadas
+    pareja_encontrada['posicion_grupo'] = None
+    
+    # Agregar a parejas no asignadas
+    parejas_sin_asignar.append(pareja_encontrada)
+    
+    # Recalcular score del grupo afectado
+    recalcular_score_grupo(grupo_contenedor)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
+    
+    # Actualizar session
+    session['resultado_algoritmo'] = resultado_data
+    session.modified = True
+    guardar_estado_torneo()
+    
+    return jsonify({
+        'success': True,
+        'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas'
+    })
+
+
 @api_bp.route('/limpiar-datos', methods=['POST'])
 def limpiar_datos():
     """Limpia todos los datos del torneo actual."""
@@ -143,8 +310,43 @@ def limpiar_datos():
 
 @api_bp.route('/obtener-parejas', methods=['GET'])
 def obtener_parejas():
-    """Obtiene la lista actualizada de parejas con estadísticas."""
+    """Obtiene la lista actualizada de parejas con estadísticas y estado de asignación."""
     parejas = session.get('parejas', [])
+    resultado = session.get('resultado_algoritmo')
+    
+    # Enriquecer parejas con información de asignación
+    parejas_enriquecidas = []
+    for pareja in parejas:
+        pareja_info = pareja.copy()
+        pareja_info['grupo_asignado'] = None
+        pareja_info['franja_asignada'] = None
+        pareja_info['esta_asignada'] = False
+        pareja_info['fuera_de_horario'] = False
+        
+        # Si hay resultado del algoritmo, buscar asignación
+        if resultado:
+            # Buscar en grupos
+            for categoria, grupos in resultado.get('grupos_por_categoria', {}).items():
+                for grupo in grupos:
+                    for p in grupo.get('parejas', []):
+                        if p['id'] == pareja['id']:
+                            pareja_info['grupo_asignado'] = grupo['id']
+                            pareja_info['franja_asignada'] = grupo.get('franja_horaria')
+                            pareja_info['esta_asignada'] = True
+                            
+                            # Verificar si está fuera de horario
+                            franja_asignada = grupo.get('franja_horaria')
+                            if franja_asignada:
+                                franjas_disponibles = pareja.get('franjas_disponibles', [])
+                                if franja_asignada not in franjas_disponibles:
+                                    pareja_info['fuera_de_horario'] = True
+                            break
+                    if pareja_info['esta_asignada']:
+                        break
+                if pareja_info['esta_asignada']:
+                    break
+        
+        parejas_enriquecidas.append(pareja_info)
     
     # Calcular estadísticas
     stats = {
@@ -159,7 +361,7 @@ def obtener_parejas():
     
     return jsonify({
         'success': True,
-        'parejas': parejas,
+        'parejas': parejas_enriquecidas,
         'stats': stats
     })
 
@@ -219,6 +421,13 @@ def intercambiar_pareja():
             else:
                 grupo_destino_obj['parejas'].append(pareja_movida)
             mensaje = f"Pareja {pareja_movida['nombre']} movida al slot {slot_destino + 1}"
+        
+        # Recalcular scores de ambos grupos
+        recalcular_score_grupo(grupo_origen_obj)
+        recalcular_score_grupo(grupo_destino_obj)
+        
+        # Regenerar calendario completo
+        regenerar_calendario(resultado)
         
         session['resultado_algoritmo'] = resultado
         session.modified = True
@@ -399,6 +608,12 @@ def asignar_pareja_a_grupo():
     else:
         grupo_encontrado['parejas'].append(pareja_a_asignar)
     
+    # Recalcular score del grupo
+    recalcular_score_grupo(grupo_encontrado)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
+    
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
@@ -407,6 +622,81 @@ def asignar_pareja_a_grupo():
     return jsonify({
         'success': True,
         'mensaje': f'✓ Pareja asignada al grupo correctamente'
+    })
+
+
+@api_bp.route('/franjas-disponibles', methods=['GET'])
+def obtener_franjas_disponibles():
+    """Obtiene las franjas disponibles para cada cancha."""
+    from config.settings import FRANJAS_HORARIAS
+    
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    grupos_dict = resultado_data['grupos_por_categoria']
+    num_canchas = session.get('num_canchas', 2)
+    
+    # Mapeo de franjas a horas que ocupan
+    franjas_a_horas_mapa = {
+        'Jueves 18:00': ['18:00', '19:00', '20:00'],
+        'Jueves 20:00': ['20:00', '21:00', '22:00'],
+        'Viernes 18:00': ['18:00', '19:00', '20:00'],
+        'Viernes 21:00': ['21:00', '22:00', '23:00'],
+        'Sábado 09:00': ['09:00', '10:00', '11:00'],
+        'Sábado 12:00': ['12:00', '13:00', '14:00'],
+        'Sábado 16:00': ['16:00', '17:00', '18:00'],
+        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+    }
+    
+    # Crear un diccionario de franjas ocupadas por cancha con info detallada
+    franjas_ocupadas = {}
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            franja = grupo.get('franja_horaria')
+            cancha = str(grupo.get('cancha'))
+            if franja and cancha:
+                if franja not in franjas_ocupadas:
+                    franjas_ocupadas[franja] = {}
+                franjas_ocupadas[franja][cancha] = cat
+    
+    # Construir la respuesta con disponibilidad por franja y cancha
+    disponibilidad = {}
+    for franja in FRANJAS_HORARIAS:
+        disponibilidad[franja] = {}
+        for cancha_num in range(1, num_canchas + 1):
+            cancha_str = str(cancha_num)
+            
+            # Verificar si está ocupada directamente
+            ocupada_directa = franja in franjas_ocupadas and cancha_str in franjas_ocupadas[franja]
+            categoria_ocupante = franjas_ocupadas.get(franja, {}).get(cancha_str)
+            
+            # Verificar solapamientos (especialmente Jueves 18:00 y 20:00)
+            solapamiento = None
+            horas_franja = franjas_a_horas_mapa.get(franja, [])
+            
+            for otra_franja, cat_por_cancha in franjas_ocupadas.items():
+                if otra_franja != franja and cancha_str in cat_por_cancha:
+                    horas_otra = franjas_a_horas_mapa.get(otra_franja, [])
+                    horas_comunes = set(horas_franja) & set(horas_otra)
+                    if horas_comunes:
+                        solapamiento = {
+                            'franja': otra_franja,
+                            'categoria': cat_por_cancha[cancha_str],
+                            'horas_conflicto': sorted(list(horas_comunes))
+                        }
+                        break
+            
+            disponibilidad[franja][cancha_str] = {
+                'disponible': not ocupada_directa,
+                'ocupada_por': categoria_ocupante,
+                'solapamiento': solapamiento
+            }
+    
+    return jsonify({
+        'success': True,
+        'disponibilidad': disponibilidad,
+        'num_canchas': num_canchas
     })
 
 
@@ -427,13 +717,39 @@ def crear_grupo_manual():
     
     grupos_dict = resultado_data['grupos_por_categoria']
     
-    # Validar que la cancha no esté ocupada en ese horario
+    # Mapeo de franjas a horas
+    franjas_a_horas_mapa = {
+        'Jueves 18:00': ['18:00', '19:00', '20:00'],
+        'Jueves 20:00': ['20:00', '21:00', '22:00'],
+        'Viernes 18:00': ['18:00', '19:00', '20:00'],
+        'Viernes 21:00': ['21:00', '22:00', '23:00'],
+        'Sábado 09:00': ['09:00', '10:00', '11:00'],
+        'Sábado 12:00': ['12:00', '13:00', '14:00'],
+        'Sábado 16:00': ['16:00', '17:00', '18:00'],
+        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+    }
+    
+    # Validar que la cancha no esté ocupada directamente
     for cat, grupos in grupos_dict.items():
         for grupo in grupos:
             if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
                 return jsonify({
                     'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por un grupo de {cat}'
                 }), 400
+    
+    # Validar solapamientos horarios
+    horas_nueva_franja = franjas_a_horas_mapa.get(franja_horaria, [])
+    for cat, grupos in grupos_dict.items():
+        for grupo in grupos:
+            if str(grupo.get('cancha')) == str(cancha):
+                franja_existente = grupo.get('franja_horaria')
+                horas_existente = franjas_a_horas_mapa.get(franja_existente, [])
+                horas_conflicto = set(horas_nueva_franja) & set(horas_existente)
+                
+                if horas_conflicto:
+                    return jsonify({
+                        'error': f'Conflicto: La Cancha {cancha} tiene un solapamiento horario con {franja_existente} (grupo de {cat}) en las horas: {", ".join(sorted(horas_conflicto))}'
+                    }), 400
     
     # Asegurar que existe la categoría
     if categoria not in grupos_dict:
@@ -460,6 +776,9 @@ def crear_grupo_manual():
     }
     
     grupos_dict[categoria].append(nuevo_grupo)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
@@ -518,6 +837,12 @@ def editar_grupo():
     # Actualizar datos del grupo
     grupo_encontrado['franja_horaria'] = franja_horaria
     grupo_encontrado['cancha'] = cancha
+    
+    # Recalcular score de compatibilidad del grupo
+    recalcular_score_grupo(grupo_encontrado)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
@@ -591,6 +916,8 @@ def editar_pareja():
     if cambio_categoria and grupo_contenedor:
         # Remover del grupo actual
         grupo_contenedor['parejas'].remove(pareja_encontrada)
+        # Recalcular score del grupo afectado
+        recalcular_score_grupo(grupo_contenedor)
         # Actualizar categoría
         pareja_encontrada['categoria'] = categoria
         # Agregar a no asignadas
@@ -601,6 +928,24 @@ def editar_pareja():
     pareja_encontrada['telefono'] = telefono
     pareja_encontrada['categoria'] = categoria
     pareja_encontrada['franjas_disponibles'] = franjas
+    
+    # IMPORTANTE: También actualizar en la lista base de parejas
+    parejas_base = session.get('parejas', [])
+    for pareja_base in parejas_base:
+        if pareja_base['id'] == pareja_id:
+            pareja_base['nombre'] = nombre
+            pareja_base['telefono'] = telefono
+            pareja_base['categoria'] = categoria
+            pareja_base['franjas_disponibles'] = franjas
+            break
+    session['parejas'] = parejas_base
+    
+    # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
+    if grupo_contenedor and not cambio_categoria:
+        recalcular_score_grupo(grupo_contenedor)
+    
+    # Regenerar calendario completo
+    regenerar_calendario(resultado_data)
     
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
@@ -988,32 +1333,30 @@ def obtener_categoria(categoria):
     """Devuelve solo el HTML de una categoría específica para actualización parcial."""
     from flask import render_template_string
     
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
-    
-    resultado_dict = session['resultado']
     
     # Verificar que la categoría existe
     if categoria not in resultado_dict.get('grupos_por_categoria', {}):
         return jsonify({'error': f'Categoría {categoria} no encontrada'}), 404
     
-    # Aquí deberías renderizar solo la sección de la categoría
-    # Por ahora devolvemos un JSON simple, luego lo mejoramos
+    # Devolver datos de la categoría
     return jsonify({
         'success': True,
         'categoria': categoria,
         'grupos': resultado_dict['grupos_por_categoria'][categoria],
-        'no_asignadas': resultado_dict['parejas_no_asignadas'].get(categoria, [])
+        'parejas_sin_asignar': [p for p in resultado_dict.get('parejas_sin_asignar', []) if p.get('categoria') == categoria]
     })
 
 
 @api_bp.route('/obtener-grupo/<categoria>/<int:grupo_id>', methods=['GET'])
 def obtener_grupo(categoria, grupo_id):
     """Devuelve el HTML de un grupo específico."""
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
-    resultado_dict = session['resultado']
     grupos = resultado_dict.get('grupos_por_categoria', {}).get(categoria, [])
     
     # Buscar el grupo
@@ -1031,14 +1374,46 @@ def obtener_grupo(categoria, grupo_id):
 @api_bp.route('/obtener-no-asignadas/<categoria>', methods=['GET'])
 def obtener_no_asignadas(categoria):
     """Devuelve las parejas no asignadas de una categoría."""
-    if 'resultado' not in session:
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
-    resultado_dict = session['resultado']
-    no_asignadas = resultado_dict.get('parejas_no_asignadas', {}).get(categoria, [])
+    parejas_sin_asignar = resultado_dict.get('parejas_sin_asignar', [])
+    parejas_categoria = [p for p in parejas_sin_asignar if p.get('categoria') == categoria]
     
     return jsonify({
         'success': True,
         'categoria': categoria,
-        'parejas': no_asignadas
+        'parejas': parejas_categoria
+    })
+
+
+@api_bp.route('/obtener-datos-categoria/<categoria>', methods=['GET'])
+def obtener_datos_categoria(categoria):
+    """Devuelve todos los datos actualizados de una categoría para actualización dinámica."""
+    resultado_dict = session.get('resultado_algoritmo')
+    if not resultado_dict:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    # Obtener grupos de la categoría
+    grupos = resultado_dict.get('grupos_por_categoria', {}).get(categoria, [])
+    
+    # Obtener parejas no asignadas
+    parejas_sin_asignar = resultado_dict.get('parejas_sin_asignar', [])
+    parejas_no_asignadas = [p for p in parejas_sin_asignar if p.get('categoria') == categoria]
+    
+    # Obtener partidos de esta categoría
+    partidos_por_grupo = resultado_dict.get('partidos_por_grupo', {})
+    partidos_categoria = {}
+    for grupo in grupos:
+        grupo_id = str(grupo.get('id'))
+        if grupo_id in partidos_por_grupo:
+            partidos_categoria[grupo_id] = partidos_por_grupo[grupo_id]
+    
+    return jsonify({
+        'success': True,
+        'categoria': categoria,
+        'grupos': grupos,
+        'parejas_no_asignadas': parejas_no_asignadas,
+        'partidos': partidos_categoria
     })

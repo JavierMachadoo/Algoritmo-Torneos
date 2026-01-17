@@ -43,6 +43,17 @@ class AlgoritmoGrupos:
         if len(parejas) < 3:
             return [], list(parejas)
         
+        # Intentar optimización global si hay suficientes parejas pero no demasiadas
+        num_grupos_posibles = len(parejas) // 3
+        
+        # Solo optimizar si podemos formar entre 2 y 6 grupos (para mantener eficiencia)
+        if 2 <= num_grupos_posibles <= 6:
+            mejor_distribucion = self._buscar_distribucion_optima(list(parejas), categoria)
+            if mejor_distribucion:
+                grupos_formados, parejas_sin_asignar = mejor_distribucion
+                return grupos_formados, parejas_sin_asignar
+        
+        # Si hay muy pocas o demasiadas parejas, usar algoritmo greedy original
         grupos_formados = []
         parejas_disponibles = set(parejas)
         
@@ -71,6 +82,90 @@ class AlgoritmoGrupos:
         parejas_sin_asignar = list(parejas_disponibles)
         return grupos_formados, parejas_sin_asignar
     
+    def _buscar_distribucion_optima(self, parejas: List[Pareja], categoria: str) -> Optional[Tuple[List[Grupo], List[Pareja]]]:
+        """
+        Busca la distribución óptima de grupos que maximiza el score total.
+        Usa backtracking con poda para explorar combinaciones eficientemente.
+        """
+        mejor_score_total = -1
+        mejor_grupos = None
+        mejor_sin_asignar = None
+        
+        num_parejas = len(parejas)
+        num_grupos_max = num_parejas // 3
+        
+        def backtrack(parejas_restantes: List[Pareja], grupos_actuales: List[Grupo], 
+                     score_acumulado: float, grupos_formados: int):
+            nonlocal mejor_score_total, mejor_grupos, mejor_sin_asignar
+            
+            # Si ya no podemos formar más grupos de 3
+            if len(parejas_restantes) < 3:
+                # Evaluar si esta solución es mejor
+                if score_acumulado > mejor_score_total:
+                    mejor_score_total = score_acumulado
+                    mejor_grupos = grupos_actuales.copy()
+                    mejor_sin_asignar = parejas_restantes.copy()
+                return
+            
+            # Si ya formamos el máximo de grupos posibles
+            if grupos_formados >= num_grupos_max:
+                if score_acumulado > mejor_score_total:
+                    mejor_score_total = score_acumulado
+                    mejor_grupos = grupos_actuales.copy()
+                    mejor_sin_asignar = parejas_restantes.copy()
+                return
+            
+            # Poda: si incluso con score perfecto no superamos el mejor, no continuar
+            parejas_por_asignar = len(parejas_restantes)
+            grupos_restantes = parejas_por_asignar // 3
+            score_maximo_posible = score_acumulado + (grupos_restantes * 3.0)
+            
+            if score_maximo_posible <= mejor_score_total:
+                return
+            
+            # Probar combinaciones de 3 parejas
+            combinaciones_scores = []
+            for combo in itertools.combinations(parejas_restantes, 3):
+                score, franja = self._calcular_compatibilidad(list(combo))
+                if score > 0:  # Solo considerar grupos con alguna compatibilidad
+                    combinaciones_scores.append((score, franja, combo))
+            
+            # Ordenar por score descendente
+            combinaciones_scores.sort(reverse=True, key=lambda x: x[0])
+            
+            # Limitar basado en el número de parejas restantes para balance eficiencia/precisión
+            # - Pocas parejas (≤9): explorar todas las combinaciones válidas
+            # - Más parejas: limitar progresivamente para evitar explosión combinatoria
+            if len(parejas_restantes) <= 9:
+                # Con 9 parejas o menos (≤3 grupos), explorar todo
+                max_combos = len(combinaciones_scores)
+            elif len(parejas_restantes) <= 12:
+                # Con 12 parejas (4 grupos), explorar las mejores 20
+                max_combos = min(20, len(combinaciones_scores))
+            else:
+                # Con más parejas, limitar a 15
+                max_combos = min(15, len(combinaciones_scores))
+            
+            for score, franja, combo in combinaciones_scores[:max_combos]:
+                # Crear grupo temporal
+                grupo = self._crear_grupo(list(combo), categoria, franja, score)
+                
+                # Quitar parejas de la lista restante
+                nuevas_restantes = [p for p in parejas_restantes if p not in combo]
+                
+                # Continuar backtracking
+                grupos_actuales.append(grupo)
+                backtrack(nuevas_restantes, grupos_actuales, score_acumulado + score, grupos_formados + 1)
+                grupos_actuales.pop()
+        
+        # Iniciar búsqueda
+        backtrack(parejas, [], 0.0, 0)
+        
+        if mejor_grupos is not None:
+            return mejor_grupos, mejor_sin_asignar
+        
+        return None
+    
     def _calcular_compatibilidad(self, parejas: List[Pareja]) -> Tuple[float, Optional[str]]:
         if len(parejas) != 3:
             return 0.0, None
@@ -79,23 +174,41 @@ class AlgoritmoGrupos:
         franjas_p2 = set(parejas[1].franjas_disponibles)
         franjas_p3 = set(parejas[2].franjas_disponibles)
         
+        # Primero intentar encontrar una franja común a las 3 parejas
         franjas_comunes_todas = franjas_p1 & franjas_p2 & franjas_p3
         
         if franjas_comunes_todas:
             return 3.0, list(franjas_comunes_todas)[0]
         
-        franjas_p1_p2 = franjas_p1 & franjas_p2
-        franjas_p1_p3 = franjas_p1 & franjas_p3
-        franjas_p2_p3 = franjas_p2 & franjas_p3
+        # Buscar la mejor franja evaluando todas las posibilidades
+        mejor_franja = None
+        mejor_score = 0.0
         
-        if franjas_p1_p2:
-            return 2.0, list(franjas_p1_p2)[0]
-        if franjas_p1_p3:
-            return 2.0, list(franjas_p1_p3)[0]
-        if franjas_p2_p3:
-            return 2.0, list(franjas_p2_p3)[0]
+        # Obtener todas las franjas únicas de las 3 parejas
+        todas_franjas = franjas_p1 | franjas_p2 | franjas_p3
         
-        return 0.0, None
+        for franja_candidata in todas_franjas:
+            dia_candidato = franja_candidata.split(' ')[0] if ' ' in franja_candidata else ''
+            score = 0.0
+            
+            # Calcular score para cada pareja con esta franja
+            for franjas_pareja in [franjas_p1, franjas_p2, franjas_p3]:
+                if franja_candidata in franjas_pareja:
+                    # Horario exacto: 1.0 punto
+                    score += 1.0
+                else:
+                    # Verificar si al menos tiene el mismo día
+                    dias_pareja = set(f.split(' ')[0] for f in franjas_pareja if ' ' in f)
+                    if dia_candidato and dia_candidato in dias_pareja:
+                        # Mismo día, hora diferente: 0.5 puntos
+                        score += 0.5
+                    # Si no tiene el día, suma 0.0 (no suma nada)
+            
+            if score > mejor_score:
+                mejor_score = score
+                mejor_franja = franja_candidata
+        
+        return mejor_score, mejor_franja
     
     def _crear_grupo(self, parejas: List[Pareja], categoria: str, 
                      franja: Optional[str], score: float) -> Grupo:

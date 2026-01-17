@@ -185,6 +185,102 @@
         margin: 0;
     }
     
+    /* Tabs Principales */
+    #mainTabs .nav-link {
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        color: #4a5568;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin: 0 0.5rem;
+    }
+    
+    #mainTabs .nav-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        color: #2d3748;
+    }
+    
+    #mainTabs .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: 2px solid #667eea;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    #mainTabs .nav-link small {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+    
+    /* Tabs de Categorías */
+    .nav-tabs .nav-link {
+        border-radius: 12px 12px 0 0;
+        padding: 0.875rem 2rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #4a5568;
+        border: none;
+        border-bottom: 4px solid transparent;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+        margin: 0 0.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .nav-tabs .nav-link::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0;
+        transition: height 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        background: #e9ecef;
+        color: #2d3748;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: white;
+        background: white;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Colores específicos por categoría */
+    #series-cuarta-tab.active,
+    #finales-cuarta-tab.active {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border-bottom-color: #28a745;
+    }
+    
+    #series-quinta-tab.active,
+    #finales-quinta-tab.active {
+        background: linear-gradient(135deg, #ffc107, #ffb700);
+        border-bottom-color: #ffc107;
+        color: #2d3748 !important;
+    }
+    
+    #series-sexta-tab.active,
+    #finales-sexta-tab.active {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border-bottom-color: #17a2b8;
+    }
+    
+    #series-septima-tab.active,
+    #finales-septima-tab.active {
+        background: linear-gradient(135deg, #9b7fed, #7c3aed);
+        border-bottom-color: #9b7fed;
+    }
+    
     /* Sección de Calendario */
     .calendario-section {
         background: white;
@@ -421,6 +517,59 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+    
+    /* Estilos para disponibilidad de canchas */
+    #disponibilidadCard {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    #disponibilidadCard .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+    
+    #disponibilidadInfo .alert {
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    #disponibilidadInfo .alert:hover {
+        transform: translateX(3px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #disponibilidadInfo .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #28a745;
+        color: #155724;
+    }
+    
+    #disponibilidadInfo .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        border-color: #ffc107;
+        color: #856404;
+    }
+    
+    #disponibilidadInfo .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-color: #dc3545;
+        color: #721c24;
+    }
+    
+    #disponibilidadInfo .alert-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-color: #17a2b8;
+        color: #0c5460;
+    }
+    
+    #disponibilidadInfo .alert-secondary {
+        opacity: 0.6;
+    }
 </style>
 {% endblock %}
 
@@ -429,6 +578,12 @@
     <!-- Estadísticas del Torneo -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">📊 Estadísticas del Torneo</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarPareja">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Pareja Manual
+                </button>
+            </div>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-success">
@@ -476,71 +631,36 @@
     <!-- Cards de Categorías -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-10">
-            <div class="categorias-grid">
-                <!-- Cuarta -->
-                <div class="categoria-card categoria-cuarta" onclick="mostrarCategoria('cuarta')">
-                    <div class="categoria-icon">
-                        <i class="bi bi-trophy-fill"></i>
-                    </div>
-                    <div class="categoria-info">
-                        <h3 class="categoria-nombre">Cuarta</h3>
-                        <p class="categoria-stats">
-                            {{ resultado.grupos_por_categoria.Cuarta|length }} grupos
-                        </p>
-                    </div>
-                    <div class="categoria-arrow">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-
-                <!-- Quinta -->
-                <div class="categoria-card categoria-quinta" onclick="mostrarCategoria('quinta')">
-                    <div class="categoria-icon">
-                        <i class="bi bi-trophy-fill"></i>
-                    </div>
-                    <div class="categoria-info">
-                        <h3 class="categoria-nombre">Quinta</h3>
-                        <p class="categoria-stats">
-                            {{ resultado.grupos_por_categoria.Quinta|length }} grupos
-                        </p>
-                    </div>
-                    <div class="categoria-arrow">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-
-                <!-- Sexta -->
-                <div class="categoria-card categoria-sexta" onclick="mostrarCategoria('sexta')">
-                    <div class="categoria-icon">
-                        <i class="bi bi-trophy-fill"></i>
-                    </div>
-                    <div class="categoria-info">
-                        <h3 class="categoria-nombre">Sexta</h3>
-                        <p class="categoria-stats">
-                            {{ resultado.grupos_por_categoria.Sexta|length }} grupos
-                        </p>
-                    </div>
-                    <div class="categoria-arrow">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-
-                <!-- Séptima -->
-                <div class="categoria-card categoria-septima" onclick="mostrarCategoria('septima')">
-                    <div class="categoria-icon">
-                        <i class="bi bi-trophy-fill"></i>
-                    </div>
-                    <div class="categoria-info">
-                        <h3 class="categoria-nombre">Séptima</h3>
-                        <p class="categoria-stats">
-                            {{ resultado.grupos_por_categoria['Séptima']|length }} grupos
-                        </p>
-                    </div>
-                    <div class="categoria-arrow">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-            </div>
+            <!-- Tabs principales: Fixture, Series, Finales -->
+            <ul class="nav nav-pills nav-fill mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="fixture-tab" data-bs-toggle="pill" 
+                            data-bs-target="#fixture-main" type="button" role="tab" 
+                            aria-controls="fixture-main" aria-selected="true">
+                        <i class="bi bi-calendar-week me-2"></i>
+                        <strong>FIXTURE</strong>
+                        <small class="d-block">Calendario General</small>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="series-tab" data-bs-toggle="pill" 
+                            data-bs-target="#series-main" type="button" role="tab" 
+                            aria-controls="series-main" aria-selected="false">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+                        <strong>SERIES</strong>
+                        <small class="d-block">Grupos por Categoría</small>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="finales-tab" data-bs-toggle="pill" 
+                            data-bs-target="#finales-main" type="button" role="tab" 
+                            aria-controls="finales-main" aria-selected="false">
+                        <i class="bi bi-trophy-fill me-2"></i>
+                        <strong>FINALES</strong>
+                        <small class="d-block">Llaves por Categoría</small>
+                    </button>
+                </li>
+            </ul>
         </div>
     </div>
 
@@ -662,6 +782,20 @@
                             </select>
                         </div>
                     </form>
+
+                    <!-- Visualización de Disponibilidad -->
+                    <div class="card bg-light mt-3" id="disponibilidadCard" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-calendar-check"></i> Disponibilidad de Canchas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="disponibilidadInfo" class="row g-2">
+                                <!-- Se llenará dinámicamente con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -810,10 +944,10 @@
         </div>
     </div>
 
-    <!-- Tabs de Resultados (Ocultos, controlados por JS) -->
-    <div class="tab-content" id="resultadosTabsContent">
-        <!-- Vista de Calendario General (Inicio) -->
-        <div class="tab-pane fade show active" id="calendario-general" role="tabpanel">
+    <!-- Tabs de Resultados -->
+    <div class="tab-content" id="mainTabsContent">
+        <!-- TAB 1: FIXTURE (Calendario General) - ACTIVO POR DEFECTO -->
+        <div class="tab-pane fade show active" id="fixture-main" role="tabpanel">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="calendario-section">
@@ -834,8 +968,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -873,8 +1007,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -912,8 +1046,8 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="10%" class="text-center">HORA</th>
-                                            <th width="45%">🎾 CANCHA 1</th>
-                                            <th width="45%">🎾 CANCHA 2</th>
+                                            <th width="45%"> CANCHA 1</th>
+                                            <th width="45%"> CANCHA 2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -947,72 +1081,106 @@
             </div>
         </div>
         
-        <!-- Cuarta -->
-        <div class="tab-pane fade" id="cuarta" role="tabpanel">
-            <div class="row justify-content-center mb-4">
+        <!-- TAB 2: SERIES (Grupos por Categoría) -->
+        <div class="tab-pane fade" id="series-main" role="tabpanel">
+            <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <button class="btn-back-categoria" onclick="volverGeneral()">
-                        <i class="bi bi-arrow-left"></i>Volver
-                    </button>
-                </div>
-            </div>
-            {{ mostrar_grupos_categoria('Cuarta', resultado.grupos_por_categoria.Cuarta, '#90EE90', '#f0fff0') }}
-        </div>
+                    <!-- Sub-tabs para las 4 categorías -->
+                    <ul class="nav nav-tabs mb-4" id="seriesCategoriasTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="series-cuarta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#series-cuarta" type="button" role="tab">
+                                🟢 Cuarta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="series-quinta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#series-quinta" type="button" role="tab">
+                                🟡 Quinta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="series-sexta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#series-sexta" type="button" role="tab">
+                                🔵 Sexta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="series-septima-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#series-septima" type="button" role="tab">
+                                🟣 Séptima
+                            </button>
+                        </li>
+                    </ul>
 
-        <!-- Quinta -->
-        <div class="tab-pane fade" id="quinta" role="tabpanel">
-            <div class="row justify-content-center mb-4">
-                <div class="col-lg-10">
-                    <button class="btn-back-categoria" onclick="volverGeneral()">
-                        <i class="bi bi-arrow-left"></i>Volver
-                    </button>
-                </div>
-            </div>
-            {{ mostrar_grupos_categoria('Quinta', resultado.grupos_por_categoria.Quinta, '#FFD700', '#fffef0') }}
-        </div>
-
-        <!-- Sexta -->
-        <div class="tab-pane fade" id="sexta" role="tabpanel">
-            <div class="row justify-content-center mb-4">
-                <div class="col-lg-10">
-                    <button class="btn-back-categoria" onclick="volverGeneral()">
-                        <i class="bi bi-arrow-left"></i>Volver
-                    </button>
-                </div>
-            </div>
-            {{ mostrar_grupos_categoria('Sexta', resultado.grupos_por_categoria.Sexta, '#87CEEB', '#f0f8ff') }}
-        </div>
-
-        <!-- Séptima -->
-        <div class="tab-pane fade" id="septima" role="tabpanel">
-            <div class="row justify-content-center mb-4">
-                <div class="col-lg-10">
-                    <button class="btn-back-categoria" onclick="volverGeneral()">
-                        <i class="bi bi-arrow-left"></i>Volver
-                    </button>
-                </div>
-            </div>
-            {{ mostrar_grupos_categoria('Séptima', resultado.grupos_por_categoria['Séptima'], '#DDA0DD', '#fff0ff') }}
-        </div>
-
-        <!-- Finales Domingo -->
-        <div class="tab-pane fade" id="finales-domingo" role="tabpanel">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-0">
-                            <i class="bi bi-trophy-fill"></i> Calendario de Finales - Domingo
-                        </h4>
-                        <small>Horarios fijos predefinidos para todas las fases finales</small>
+                    <!-- Contenido de sub-tabs de Series -->
+                    <div class="tab-content" id="seriesCategoriasContent">
+                        <div class="tab-pane fade show active" id="series-cuarta" role="tabpanel">
+                            {{ mostrar_grupos_categoria_solo_series('Cuarta', resultado.grupos_por_categoria.Cuarta, '#90EE90', '#f0fff0') }}
+                        </div>
+                        <div class="tab-pane fade" id="series-quinta" role="tabpanel">
+                            {{ mostrar_grupos_categoria_solo_series('Quinta', resultado.grupos_por_categoria.Quinta, '#FFD700', '#fffef0') }}
+                        </div>
+                        <div class="tab-pane fade" id="series-sexta" role="tabpanel">
+                            {{ mostrar_grupos_categoria_solo_series('Sexta', resultado.grupos_por_categoria.Sexta, '#87CEEB', '#f0f8ff') }}
+                        </div>
+                        <div class="tab-pane fade" id="series-septima" role="tabpanel">
+                            {{ mostrar_grupos_categoria_solo_series('Séptima', resultado.grupos_por_categoria['Séptima'], '#DDA0DD', '#fff0ff') }}
+                        </div>
                     </div>
                 </div>
-                <div class="card-body p-4">
-                    <div id="calendario-finales-container">
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-warning" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-3 text-muted">Cargando calendario de finales...</p>
+            </div>
+        </div>
+
+        <!-- TAB 3: FINALES (Llaves por Categoría) -->
+        <div class="tab-pane fade" id="finales-main" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <!-- Sub-tabs para las 4 categorías -->
+                    <ul class="nav nav-tabs mb-4" id="finalesCategoriasTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="finales-cuarta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#finales-cuarta" type="button" role="tab"
+                                    onclick="cargarFixture('Cuarta')">
+                                🟢 Cuarta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="finales-quinta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#finales-quinta" type="button" role="tab"
+                                    onclick="cargarFixture('Quinta')">
+                                🟡 Quinta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="finales-sexta-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#finales-sexta" type="button" role="tab"
+                                    onclick="cargarFixture('Sexta')">
+                                🔵 Sexta
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="finales-septima-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#finales-septima" type="button" role="tab"
+                                    onclick="cargarFixture('Séptima')">
+                                🟣 Séptima
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenido de sub-tabs de Finales -->
+                    <div class="tab-content" id="finalesCategoriasContent">
+                        <div class="tab-pane fade show active" id="finales-cuarta" role="tabpanel">
+                            {{ mostrar_finales_categoria('Cuarta') }}
+                        </div>
+                        <div class="tab-pane fade" id="finales-quinta" role="tabpanel">
+                            {{ mostrar_finales_categoria('Quinta') }}
+                        </div>
+                        <div class="tab-pane fade" id="finales-sexta" role="tabpanel">
+                            {{ mostrar_finales_categoria('Sexta') }}
+                        </div>
+                        <div class="tab-pane fade" id="finales-septima" role="tabpanel">
+                            {{ mostrar_finales_categoria('Séptima') }}
                         </div>
                     </div>
                 </div>
@@ -1053,14 +1221,6 @@
                     </button>
                 </div>
                 
-                <!-- Leyenda de compatibilidad horaria -->
-                <div class="alert alert-info mb-3">
-                    <strong>📌 Compatibilidad Horaria:</strong>
-                    <span class="ms-2">⚪ Normal = Horario exacto elegido</span>
-                    <span class="ms-2">🟡 Amarillo = Mismo día, horario diferente</span>
-                    <span class="ms-2">🔴 Rojo = Día no elegido</span>
-                </div>
-
                 <!-- Parejas No Asignadas -->
                 <div id="parejas-no-asignadas-{{ categoria }}" class="mb-4">
                     <!-- Se carga dinámicamente -->
@@ -1213,9 +1373,15 @@
                             
                             <div class="card-footer text-center" style="background-color: {{ bg_color }};">
                                 {% set score = grupo.score | default(0.0) %}
-                                {% if score >= 3.0 %}
+                                {% if score == 3.0 %}
+                                    <span class="badge bg-success">✅ Perfecto: {{ "%.1f"|format(score) }}/3.0</span>
+                                {% elif score >= 2.5 %}
                                     <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
                                 {% elif score >= 2.0 %}
+                                    <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                                {% elif score >= 1.0 %}
+                                    <span class="badge bg-info text-white">📅 Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                                {% elif score > 0.0 %}
                                     <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
                                 {% else %}
                                     <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
@@ -1337,6 +1503,296 @@
     {% endif %}
 {% endmacro %}
 
+<!-- Macro para mostrar solo los grupos/series de una categoría -->
+{% macro mostrar_grupos_categoria_solo_series(categoria, grupos, border_color, bg_color) %}
+    {% if grupos %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Grupos de {{ categoria }}</h4>
+            <button class="btn btn-success" onclick="abrirModalCrearGrupo('{{ categoria }}')">
+                <i class="bi bi-plus-circle-fill"></i> Nuevo Grupo
+            </button>
+        </div>
+        
+        <!-- Parejas No Asignadas -->
+        <div id="parejas-no-asignadas-{{ categoria }}" class="mb-4">
+            <!-- Se carga dinámicamente -->
+        </div>
+        
+        <!-- Grid de 4 columnas para Grupos A, B, C, D -->
+        <div class="row g-3">
+            {% for grupo in grupos %}
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm grupo-card" 
+                     style="border-top: 4px solid {{ border_color }};"
+                     data-grupo-id="{{ grupo.id }}"
+                     data-categoria="{{ categoria }}">
+                    <div class="card-header text-white text-center position-relative" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                        <h5 class="mb-0 fw-bold">
+                            {% if loop.index == 1 %}GRUPO A
+                            {% elif loop.index == 2 %}GRUPO B
+                            {% elif loop.index == 3 %}GRUPO C
+                            {% elif loop.index == 4 %}GRUPO D
+                            {% else %}GRUPO {{ loop.index }}
+                            {% endif %}
+                        </h5>
+                        <button class="btn btn-sm btn-light position-absolute top-50 end-0 translate-middle-y me-2" 
+                                data-grupo-id="{{ grupo.id }}"
+                                data-categoria="{{ categoria }}"
+                                data-franja="{{ grupo.franja_horaria }}"
+                                data-cancha="{{ grupo.cancha }}"
+                                data-parejas='{{ grupo.parejas|tojson }}'
+                                onclick="abrirModalEditarGrupo(this)"
+                                title="Editar horario y cancha">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="card-body" style="background-color: {{ bg_color }};">
+                        <!-- Info de Franja y Cancha -->
+                        <div class="alert alert-light alert-permanent border mb-3 py-2">
+                            <small class="d-block">
+                                <i class="bi bi-clock-fill"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
+                            </small>
+                            <small class="d-block">
+                                <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
+                            </small>
+                        </div>
+
+                        <!-- Parejas del Grupo con 3 slots fijos -->
+                        <h6 class="fw-bold mb-2">Parejas:</h6>
+                        
+                        {% for slot_num in range(3) %}
+                        {% set pareja = grupo.parejas[slot_num] if slot_num < grupo.parejas|length else none %}
+                        
+                        {% if pareja %}
+                            {# Hay pareja en este slot #}
+                            {% set franja_asignada = grupo.franja_horaria %}
+                            {% set franjas_pareja = pareja.franjas_disponibles if pareja.franjas_disponibles else [] %}
+                            
+                            {# Verificar compatibilidad exacta #}
+                            {% set compatible_exacto = franja_asignada in franjas_pareja if franja_asignada and franjas_pareja else true %}
+                            
+                            {# Verificar compatibilidad parcial (mismo día) #}
+                            {% set compatible_parcial = namespace(value=false) %}
+                            {% if franja_asignada and not compatible_exacto and franjas_pareja %}
+                                {% set dia_asignado = franja_asignada.split(' ')[0] %}
+                                {% for franja in franjas_pareja %}
+                                    {% set dia_franja = franja.split(' ')[0] %}
+                                    {% if dia_franja == dia_asignado %}
+                                        {% set compatible_parcial.value = true %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            
+                            {# Determinar clase CSS y tooltip #}
+                            {% if compatible_exacto %}
+                                {% set border_class = '' %}
+                                {% set text_class = '' %}
+                                {% set tooltip = '' %}
+                            {% elif compatible_parcial.value %}
+                                {% set border_class = 'border-warning border-2' %}
+                                {% set text_class = 'text-warning' %}
+                                {% set tooltip = 'Esta pareja eligió este día pero en otro horario' %}
+                            {% else %}
+                                {% set border_class = 'border-danger border-2' %}
+                                {% set text_class = 'text-danger' %}
+                                {% set tooltip = 'Esta pareja no eligió este día' %}
+                            {% endif %}
+                            
+                            <div class="pareja-slot mb-2 p-2 bg-white rounded border {{ border_class }}" 
+                                 draggable="true"
+                                 data-pareja-id="{{ pareja.id }}"
+                                 data-pareja-nombre="{{ pareja.nombre }}"
+                                 data-grupo-origen="{{ grupo.id }}"
+                                 data-grupo-id="{{ grupo.id }}"
+                                 data-slot="{{ slot_num }}"
+                                 data-posicion="{{ pareja.posicion_grupo or '' }}"
+                                 ondragstart="dragStart(event)"
+                                 ondrop="dropEnSlot(event)"
+                                 ondragover="allowDropSlot(event)"
+                                 ondragleave="removeDragOverSlot(event)"
+                                 {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-truncate {{ text_class }}" title="{{ pareja.nombre }}">
+                                            {{ slot_num + 1 }}. {{ pareja.nombre }}
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            <i class="bi bi-clock"></i> {{ pareja.franjas_disponibles|join(', ') if pareja.franjas_disponibles else 'Sin horarios' }}
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-telephone"></i> {{ pareja.telefono }}
+                                        </small>
+                                    </div>
+                                    <div class="ms-2 d-flex gap-1">
+                                        <!-- Botones para asignar posición -->
+                                        <span class="posicion-badge {{ 'posicion-primero' if pareja.posicion_grupo == 1 else '' }}" 
+                                              onclick="asignarPosicion({{ pareja.id }}, 1, '{{ categoria }}', {{ grupo.id }})"
+                                              title="1° Puesto">
+                                            🥇
+                                        </span>
+                                        <span class="posicion-badge {{ 'posicion-segundo' if pareja.posicion_grupo == 2 else '' }}"
+                                              onclick="asignarPosicion({{ pareja.id }}, 2, '{{ categoria }}', {{ grupo.id }})"
+                                              title="2° Puesto">
+                                            🥈
+                                        </span>
+                                        <span class="posicion-badge {{ 'posicion-tercero' if pareja.posicion_grupo == 3 else '' }}"
+                                              onclick="asignarPosicion({{ pareja.id }}, 3, '{{ categoria }}', {{ grupo.id }})"
+                                              title="3° Puesto">
+                                            🥉
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            {# Slot vacío #}
+                            <div class="pareja-slot pareja-slot-vacio mb-2 p-2 bg-light rounded border border-dashed" 
+                                 data-grupo-id="{{ grupo.id }}"
+                                 data-slot="{{ slot_num }}"
+                                 ondrop="dropEnSlot(event)"
+                                 ondragover="allowDropSlot(event)"
+                                 ondragleave="removeDragOverSlot(event)"
+                                 style="min-height: 80px; display: flex; align-items: center; justify-content: center; border-style: dashed !important;">
+                                <div class="text-muted text-center">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <small class="d-block">Slot {{ slot_num + 1 }} vacío</small>
+                                    <small class="d-block" style="font-size: 0.7rem;">Arrastra una pareja aquí</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="card-footer text-center" style="background-color: {{ bg_color }};">
+                        {% set score = grupo.score | default(0.0) %}
+                        {% if score == 3.0 %}
+                            <span class="badge bg-success">✅ Perfecto: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% elif score >= 2.5 %}
+                            <span class="badge bg-success">✅ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% elif score >= 2.0 %}
+                            <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% elif score >= 1.0 %}
+                            <span class="badge bg-info text-white">📅 Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% elif score > 0.0 %}
+                            <span class="badge bg-warning text-dark">⚠️ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% else %}
+                            <span class="badge bg-danger">❌ Calidad: {{ "%.1f"|format(score) }}/3.0</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Listado de Partidos debajo de las cards -->
+        <div class="mt-4">
+            <h5 class="fw-bold mb-3">🏆 Partidos de la Fase de Grupos</h5>
+            <div class="row">
+                {% for grupo in grupos %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, {{ border_color }} 0%, {{ border_color }}dd 100%);">
+                            <h6 class="mb-0 text-white fw-bold">
+                                {% if loop.index == 1 %}GRUPO A
+                                {% elif loop.index == 2 %}GRUPO B
+                                {% elif loop.index == 3 %}GRUPO C
+                                {% elif loop.index == 4 %}GRUPO D
+                                {% else %}GRUPO {{ loop.index }}
+                                {% endif %}
+                            </h6>
+                        </div>
+                        <div class="card-body" style="background-color: {{ bg_color }};">
+                            <div class="mb-3 p-2 bg-white rounded border">
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-calendar3"></i> <strong>{{ grupo.franja_horaria or 'Por coordinar' }}</strong>
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-geo-alt-fill"></i> <strong>Cancha {{ grupo.cancha or 'Por asignar' }}</strong>
+                                </small>
+                            </div>
+                            
+                            {% if grupo.partidos %}
+                                {% set hora_base = grupo.franja_horaria.split(' ')[1] if grupo.franja_horaria and ' ' in grupo.franja_horaria else '20:00' %}
+                                {% set hora_partes = hora_base.split(':') %}
+                                {% set hora_inicio = hora_partes[0]|int %}
+                                
+                                {% for partido in grupo.partidos %}
+                                    {% set hora_partido = (hora_inicio + loop.index0) % 24 %}
+                                    {% set hora_str = '%02d:00'|format(hora_partido) %}
+                                    
+                                    <div class="partido-card mb-3 p-3 bg-white rounded border shadow-sm">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-clock-fill"></i> {{ hora_str }}
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted">Partido {{ loop.index }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row g-0 align-items-center">
+                                            <div class="col-5">
+                                                <div class="text-end pe-2">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="{{ partido.pareja1 }}">
+                                                        {{ partido.pareja1 }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div class="text-center">
+                                                    <span class="badge bg-secondary">VS</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="ps-2">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.95rem;" title="{{ partido.pareja2 }}">
+                                                        {{ partido.pareja2 }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-light mb-0">
+                                    <i class="bi bi-info-circle"></i> No hay partidos generados aún
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay grupos formados en la categoría {{ categoria }}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+<!-- Macro para mostrar solo la sección de finales de una categoría -->
+{% macro mostrar_finales_categoria(categoria) %}
+    <!-- Botón para generar finales -->
+    <div class="mb-4 text-center">
+        <button class="btn btn-primary btn-lg" onclick="generarFinales('{{ categoria }}')">
+            <i class="bi bi-trophy"></i> Generar Finales
+        </button>
+        <p class="text-muted mt-2">Asigna las posiciones de todas las parejas en el tab SERIES antes de generar las finales</p>
+    </div>
+    
+    <div id="fixture-container-{{ categoria }}">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando fixture de finales...</p>
+        </div>
+    </div>
+{% endmacro %}
+
 <!-- Macro para mostrar un partido en el calendario -->
 {% macro mostrar_partido_simple(partido) %}
     {% set clase_categoria = {
@@ -1376,45 +1832,7 @@
 {% block extra_js %}
 <script>
 // ==================== NAVEGACIÓN ENTRE VISTAS ====================
-function mostrarCategoria(categoria) {
-    // Ocultar vista general
-    document.getElementById('calendario-general').classList.remove('show', 'active');
-    
-    // Ocultar todas las categorías primero
-    const categorias = ['cuarta', 'quinta', 'sexta', 'septima'];
-    categorias.forEach(cat => {
-        const tab = document.getElementById(cat);
-        if (tab) {
-            tab.classList.remove('show', 'active');
-        }
-    });
-    
-    // Mostrar vista de categoría específica
-    const categoriaTab = document.getElementById(categoria);
-    if (categoriaTab) {
-        categoriaTab.classList.add('show', 'active');
-    }
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function volverGeneral() {
-    // Ocultar todas las categorías
-    const categorias = ['cuarta', 'quinta', 'sexta', 'septima'];
-    categorias.forEach(cat => {
-        const tab = document.getElementById(cat);
-        if (tab) {
-            tab.classList.remove('show', 'active');
-        }
-    });
-    
-    // Mostrar vista general
-    document.getElementById('calendario-general').classList.add('show', 'active');
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+// Las funciones de navegación ahora se manejan con los tabs de Bootstrap
 
 // ==================== DRAG AND DROP ====================
 let draggedPareja = null;
@@ -1499,16 +1917,14 @@ function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
             // Actualizar manteniendo el tab activo
             actualizarCategoria(categoria);
         } else {
-            Toast.error('Error: ' + (data.error || 'Error desconocido'));
+            console.error('Error:', data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Toast.error('Error al asignar pareja');
     });
 }
 
@@ -1528,17 +1944,15 @@ function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDesti
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
             // Actualizar manteniendo el tab activo
             const categoriaActual = obtenerCategoriaActual();
             actualizarCategoria(categoriaActual);
         } else {
-            Toast.error('Error: ' + data.error);
+            console.error('Error:', data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Toast.error('Error al intercambiar parejas');
     });
 }
 
@@ -1770,7 +2184,8 @@ function cargarGruposDisponibles(categoria) {
     gruposCards.forEach((card, index) => {
         const grupoId = card.dataset.grupoId;
         const letra = ['A', 'B', 'C', 'D'][index] || index + 1;
-        const parejas = card.querySelectorAll('.pareja-item');
+        // Contar solo slots que tienen parejas (tienen data-pareja-id válido)
+        const parejas = card.querySelectorAll('.pareja-slot[data-pareja-id]');
         const numParejas = parejas.length;
         
         const option = document.createElement('option');
@@ -1794,9 +2209,9 @@ function cargarGruposDisponibles(categoria) {
             container.style.display = 'block';
             selectPareja.innerHTML = '<option value="">-- Selecciona pareja a reemplazar --</option>';
             
-            // Buscar parejas del grupo
+            // Buscar parejas del grupo (solo las que tienen data-pareja-id)
             const grupoCard = document.querySelector(`[data-grupo-id="${grupoId}"]`);
-            const parejas = grupoCard.querySelectorAll('.pareja-item');
+            const parejas = grupoCard.querySelectorAll('.pareja-slot[data-pareja-id]');
             
             parejas.forEach(pareja => {
                 const option = document.createElement('option');
@@ -1911,13 +2326,14 @@ function agregarParejaDesdeModal() {
             nombre: nombre,
             telefono: telefono || 'Sin teléfono',
             categoria: categoria,
-            franjas: franjasChecked
+            franjas: franjasChecked,
+            desde_resultados: true
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Toast.success(data.mensaje);
+            Toast.success(data.mensaje + ' - Agregada a parejas no asignadas');
             
             // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarPareja'));
@@ -1926,11 +2342,16 @@ function agregarParejaDesdeModal() {
             // Limpiar formulario
             form.reset();
             
-            // Volver a datos para re-ejecutar algoritmo (esto sí necesita redirect)
-            Toast.info('Redirigiendo para re-ejecutar el algoritmo...');
-            setTimeout(() => {
-                window.location.href = '/datos';
-            }, 1000);
+            // Actualizar la categoría correspondiente para reflejar la nueva pareja
+            if (data.desde_resultados) {
+                actualizarCategoria(categoria);
+            } else {
+                // Si no hay resultados, redirigir a datos
+                Toast.info('Redirigiendo para re-ejecutar el algoritmo...');
+                setTimeout(() => {
+                    window.location.href = '/datos';
+                }, 1000);
+            }
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -1943,13 +2364,157 @@ function agregarParejaDesdeModal() {
 
 // ==================== CREAR Y EDITAR GRUPOS ====================
 
+// Variable global para almacenar disponibilidad
+let disponibilidadGlobal = null;
+
 function abrirModalCrearGrupo(categoria) {
     document.getElementById('crearGrupoCategoria').value = categoria;
     document.getElementById('crearGrupoFranja').value = '';
     document.getElementById('crearGrupoCancha').value = '';
     
+    // Ocultar el card de disponibilidad inicialmente
+    document.getElementById('disponibilidadCard').style.display = 'none';
+    
+    // Cargar disponibilidad
+    cargarDisponibilidad();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCrearGrupo'));
     modal.show();
+}
+
+function cargarDisponibilidad() {
+    fetch('/api/franjas-disponibles')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                disponibilidadGlobal = data.disponibilidad;
+                // Agregar event listeners a los selects
+                document.getElementById('crearGrupoFranja').addEventListener('change', actualizarDisponibilidad);
+                document.getElementById('crearGrupoCancha').addEventListener('change', actualizarDisponibilidad);
+            }
+        })
+        .catch(error => console.error('Error al cargar disponibilidad:', error));
+}
+
+function actualizarDisponibilidad() {
+    const franja = document.getElementById('crearGrupoFranja').value;
+    const canchaSeleccionada = document.getElementById('crearGrupoCancha').value;
+    const disponibilidadCard = document.getElementById('disponibilidadCard');
+    const disponibilidadInfo = document.getElementById('disponibilidadInfo');
+    
+    if (!franja && !canchaSeleccionada) {
+        disponibilidadCard.style.display = 'none';
+        return;
+    }
+    
+    disponibilidadCard.style.display = 'block';
+    disponibilidadInfo.innerHTML = '';
+    
+    if (!disponibilidadGlobal) {
+        disponibilidadInfo.innerHTML = '<div class="col-12 text-center">Cargando...</div>';
+        return;
+    }
+    
+    // Si hay franja seleccionada, mostrar disponibilidad de canchas para esa franja
+    if (franja && disponibilidadGlobal[franja]) {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Canchas para ' + franja + ':</h6></div>';
+        
+        Object.keys(disponibilidadGlobal[franja]).forEach(cancha => {
+            const info = disponibilidadGlobal[franja][cancha];
+            const disponible = info.disponible;
+            const solapamiento = info.solapamiento;
+            
+            let colorClass, icono, texto;
+            
+            if (disponible && !solapamiento) {
+                // Completamente disponible
+                colorClass = 'success';
+                icono = '✓';
+                texto = 'Disponible';
+            } else if (disponible && solapamiento) {
+                // Disponible pero con solapamiento
+                colorClass = 'warning';
+                icono = '⚠';
+                const horas = solapamiento.horas_conflicto.join(', ');
+                texto = `Parcialmente ocupada: ${solapamiento.franja} (${solapamiento.categoria}) solapa en ${horas}`;
+            } else {
+                // Ocupada
+                colorClass = 'danger';
+                icono = '✗';
+                texto = `Ocupada (${info.ocupada_por})`;
+            }
+            
+            disponibilidadInfo.innerHTML += `
+                <div class="col-12">
+                    <div class="alert alert-${colorClass} mb-2 py-2 px-3">
+                        <strong>${icono} Cancha ${cancha}:</strong> ${texto}
+                    </div>
+                </div>
+            `;
+        });
+    }
+    // Si hay cancha seleccionada, mostrar franjas disponibles para esa cancha
+    else if (canchaSeleccionada) {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Franjas para Cancha ' + canchaSeleccionada + ':</h6></div>';
+        
+        Object.keys(disponibilidadGlobal).forEach(franja => {
+            const info = disponibilidadGlobal[franja][canchaSeleccionada];
+            if (info) {
+                const disponible = info.disponible;
+                const solapamiento = info.solapamiento;
+                
+                let colorClass, icono, texto;
+                
+                if (disponible && !solapamiento) {
+                    colorClass = 'success';
+                    icono = '✓';
+                    texto = franja;
+                } else if (disponible && solapamiento) {
+                    colorClass = 'warning';
+                    icono = '⚠';
+                    const horas = solapamiento.horas_conflicto.join(', ');
+                    texto = `${franja} - Solapamiento con ${solapamiento.franja} en ${horas}`;
+                } else {
+                    // No mostrar las ocupadas en esta vista
+                    return;
+                }
+                
+                disponibilidadInfo.innerHTML += `
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-${colorClass} mb-2 py-2 px-3">
+                            ${icono} <strong>${texto}</strong>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
+    // Si no hay nada seleccionado, mostrar resumen general
+    else {
+        disponibilidadInfo.innerHTML = '<div class="col-12"><h6 class="mb-2">Resumen General:</h6></div>';
+        
+        Object.keys(disponibilidadGlobal).forEach(franja => {
+            const canchas = disponibilidadGlobal[franja];
+            const disponibles = Object.values(canchas).filter(c => c.disponible && !c.solapamiento).length;
+            const conSolapamiento = Object.values(canchas).filter(c => c.disponible && c.solapamiento).length;
+            const total = Object.keys(canchas).length;
+            
+            if (disponibles > 0 || conSolapamiento > 0) {
+                let texto = `${disponibles}/${total} canchas libres`;
+                if (conSolapamiento > 0) {
+                    texto += ` (${conSolapamiento} con solapamiento)`;
+                }
+                
+                disponibilidadInfo.innerHTML += `
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-info mb-2 py-2 px-3">
+                            <strong>${franja}:</strong> ${texto}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
 }
 
 function confirmarCrearGrupo() {
@@ -1978,11 +2543,19 @@ function confirmarCrearGrupo() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal y actualizar
+            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalCrearGrupo'));
             modal.hide();
             
-            actualizarCategoria(categoria);
+            // Para crear grupo necesitamos reload porque es un elemento nuevo en el DOM
+            sessionStorage.setItem('tabPrincipal', 'series-main');
+            sessionStorage.setItem('tabCategoria', `series-${categoria.toLowerCase()}`);
+            const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+            sessionStorage.setItem('scrollPos', scrollPos);
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 300); // Pequeño delay para que se cierre el modal
         } else {
             Toast.error('Error: ' + data.error);
         }
@@ -2088,7 +2661,7 @@ function eliminarParejaGrupo(parejaId) {
         return;
     }
     
-    fetch('/api/eliminar-pareja', {
+    fetch('/api/remover-pareja-de-grupo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pareja_id: parejaId })
@@ -2729,50 +3302,278 @@ function renderizarCalendarioFinales(calendario, tieneDatos) {
 // SISTEMA DE ACTUALIZACIÓN SELECTIVA SIN RECARGAR
 // ==========================================
 
-// Variable global para mantener el tab activo
-let tabActivo = 'cuarta';
-
 // Función para obtener la categoría del tab actual
 function obtenerCategoriaActual() {
+    // Obtener del sessionStorage la categoría activa
+    const tabCategoria = sessionStorage.getItem('tabCategoria') || 'series-cuarta';
+    // Extraer solo la categoría (sin el prefijo 'series-')
+    const categoria = tabCategoria.replace('series-', '');
     // Capitalizar primera letra
-    return tabActivo.charAt(0).toUpperCase() + tabActivo.slice(1);
+    return categoria.charAt(0).toUpperCase() + categoria.slice(1);
 }
 
 // Detectar cambios de tab
 document.addEventListener('DOMContentLoaded', function() {
+    // PRIMERO: Restaurar tabs INMEDIATAMENTE (sin esperas)
+    const tabPrincipalGuardado = sessionStorage.getItem('tabPrincipal');
+    const tabCategoriaGuardado = sessionStorage.getItem('tabCategoria');
+    
+    // 1. Restaurar tab principal (SERIES) - INMEDIATO
+    if (tabPrincipalGuardado === 'series-main') {
+        const mainTabButton = document.querySelector('[data-bs-target="#series-main"]');
+        if (mainTabButton) {
+            const tab = new bootstrap.Tab(mainTabButton);
+            tab.show();
+        }
+    }
+    
+    // 2. Restaurar tab de categoría (ej: series-quinta) - INMEDIATO SIN TIMEOUT
+    if (tabCategoriaGuardado) {
+        const tabButton = document.querySelector(`[data-bs-target="#${tabCategoriaGuardado}"]`);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+            
+            // 3. Extraer la categoría para restaurar sub-tab de SERIE
+            const categoria = tabCategoriaGuardado.replace('series-', '');
+            const serieButton = document.querySelector(`#serie-${categoria}-tab`);
+            if (serieButton && !serieButton.classList.contains('active')) {
+                const serieTab = new bootstrap.Tab(serieButton);
+                serieTab.show();
+            }
+        }
+    }
+    
+    // DESPUÉS: Configurar listeners para futuros cambios
     const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
     tabs.forEach(tab => {
         tab.addEventListener('shown.bs.tab', function(e) {
             // Extraer el ID del tab desde data-bs-target
             const target = e.target.getAttribute('data-bs-target');
             if (target) {
-                tabActivo = target.replace('#', '');
-                sessionStorage.setItem('tabActivo', tabActivo);
+                const targetId = target.replace('#', '');
+                
+                // Guardar tabs principales (fixture-main, series-main, finales-main)
+                if (['fixture-main', 'series-main', 'finales-main'].includes(targetId)) {
+                    sessionStorage.setItem('tabPrincipal', targetId);
+                }
+                
+                // Guardar tabs de categoría en SERIES (series-cuarta, series-quinta, etc.)
+                if (targetId.startsWith('series-')) {
+                    sessionStorage.setItem('tabCategoria', targetId);
+                }
             }
         });
     });
     
-    // Restaurar tab activo si existe
-    const tabGuardado = sessionStorage.getItem('tabActivo');
-    if (tabGuardado && tabGuardado !== 'cuarta') {
-        const tabButton = document.querySelector(`[data-bs-target="#${tabGuardado}"]`);
-        if (tabButton) {
-            const tab = new bootstrap.Tab(tabButton);
-            tab.show();
-            tabActivo = tabGuardado;
-        }
+    // Restaurar posición del scroll
+    const scrollPos = sessionStorage.getItem('scrollPos');
+    if (scrollPos) {
+        // Usar setTimeout para asegurar que el DOM esté completamente renderizado
+        setTimeout(() => {
+            window.scrollTo(0, parseInt(scrollPos));
+            sessionStorage.removeItem('scrollPos');
+        }, 150);
     }
 });
 
 // Función para actualizar solo el contenido de una categoría específica
 function actualizarCategoria(categoria) {
-    // Por ahora, la forma más sencilla es recargar toda la página
-    // pero manteniendo el tab activo
-    sessionStorage.setItem('tabActivo', categoria.toLowerCase());
-    window.location.reload();
+    // NO hacer reload - actualizar dinámicamente SIN flash
+    const categoriaNormalizada = categoria.charAt(0).toUpperCase() + categoria.slice(1);
     
-    // TODO: En futuro se puede mejorar para actualizar solo el HTML de la categoría
-    // sin recargar, pero requiere más endpoints en el backend
+    // Obtener datos actualizados del servidor
+    fetch(`/api/obtener-datos-categoria/${categoriaNormalizada}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 1. Actualizar parejas no asignadas
+            actualizarParejasNoAsignadas(categoriaNormalizada, data.parejas_no_asignadas);
+            
+            // 2. Actualizar grupos (parejas dentro de cada grupo)
+            actualizarGrupos(categoriaNormalizada, data.grupos);
+            
+            // 3. Actualizar partidos
+            actualizarPartidos(categoriaNormalizada, data.partidos);
+            
+            // 4. Reinicializar drag and drop
+            inicializarDragAndDrop();
+        } else {
+            console.error('Error al actualizar');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Función auxiliar para actualizar parejas no asignadas
+function actualizarParejasNoAsignadas(categoria, parejas) {
+    // Usar la función existente renderizarParejasNoAsignadas
+    renderizarParejasNoAsignadas(categoria, parejas);
+}
+
+// Función auxiliar para actualizar grupos
+function actualizarGrupos(categoria, grupos) {
+    grupos.forEach((grupo, index) => {
+        const grupoCard = document.querySelector(`[data-grupo-id="${grupo.id}"][data-categoria="${categoria}"]`);
+        if (!grupoCard) return;
+        
+        const cardBody = grupoCard.querySelector('.card-body');
+        if (!cardBody) return;
+        
+        // Actualizar info de franja y cancha
+        const alertInfo = cardBody.querySelector('.alert-light');
+        if (alertInfo) {
+            alertInfo.innerHTML = `
+                <small class="d-block">
+                    <i class="bi bi-clock-fill"></i> <strong>${grupo.franja_horaria || 'Por coordinar'}</strong>
+                </small>
+                <small class="d-block">
+                    <i class="bi bi-geo-alt-fill"></i> <strong>Cancha ${grupo.cancha || 'Por asignar'}</strong>
+                </small>
+            `;
+        }
+        
+        // Actualizar parejas (slots)
+        const parejasContainer = cardBody.querySelector('h6.fw-bold').nextElementSibling;
+        if (!parejasContainer) return;
+        
+        let parejasHtml = '';
+        for (let slot = 0; slot < 3; slot++) {
+            const pareja = grupo.parejas[slot];
+            
+            if (pareja) {
+                const franjaAsignada = grupo.franja_horaria;
+                const franjasPareja = pareja.franjas_disponibles || [];
+                const compatibleExacto = franjaAsignada && franjasPareja.includes(franjaAsignada);
+                
+                let compatibleParcial = false;
+                if (franjaAsignada && !compatibleExacto && franjasPareja.length > 0) {
+                    const diaAsignado = franjaAsignada.split(' ')[0];
+                    compatibleParcial = franjasPareja.some(f => f.split(' ')[0] === diaAsignado);
+                }
+                
+                const borderClass = compatibleExacto ? '' : (compatibleParcial ? 'border-warning border-2' : 'border-danger border-2');
+                const textClass = compatibleExacto ? '' : (compatibleParcial ? 'text-warning' : 'text-danger');
+                const tooltip = compatibleExacto ? '' : (compatibleParcial ? 'Esta pareja eligió este día pero en otro horario' : 'Esta pareja no eligió este día');
+                
+                parejasHtml += `
+                    <div class="pareja-slot mb-2 p-2 bg-white rounded border ${borderClass}" 
+                         draggable="true"
+                         data-pareja-id="${pareja.id}"
+                         data-pareja-nombre="${pareja.nombre}"
+                         data-grupo-origen="${grupo.id}"
+                         data-grupo-id="${grupo.id}"
+                         data-slot="${slot}"
+                         data-posicion="${pareja.posicion_grupo || ''}"
+                         ondragstart="dragStart(event)"
+                         ondrop="dropEnSlot(event)"
+                         ondragover="allowDropSlot(event)"
+                         ondragleave="removeDragOverSlot(event)"
+                         ${tooltip ? `title="${tooltip}"` : ''}>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-truncate ${textClass}" title="${pareja.nombre}">
+                                    ${slot + 1}. ${pareja.nombre}
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-clock"></i> ${franjasPareja.join(', ') || 'Sin horarios'}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-telephone"></i> ${pareja.telefono}
+                                </small>
+                            </div>
+                            <div class="ms-2 d-flex gap-1">
+                                <span class="posicion-badge ${pareja.posicion_grupo === 1 ? 'posicion-primero' : ''}" 
+                                      onclick="asignarPosicion(${pareja.id}, 1, '${categoria}', ${grupo.id})"
+                                      title="1° Puesto">🥇</span>
+                                <span class="posicion-badge ${pareja.posicion_grupo === 2 ? 'posicion-segundo' : ''}"
+                                      onclick="asignarPosicion(${pareja.id}, 2, '${categoria}', ${grupo.id})"
+                                      title="2° Puesto">🥈</span>
+                                <span class="posicion-badge ${pareja.posicion_grupo === 3 ? 'posicion-tercero' : ''}"
+                                      onclick="asignarPosicion(${pareja.id}, 3, '${categoria}', ${grupo.id})"
+                                      title="3° Puesto">🥉</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                parejasHtml += `
+                    <div class="pareja-slot pareja-slot-vacio mb-2 p-2 bg-light rounded border border-dashed" 
+                         data-grupo-id="${grupo.id}"
+                         data-slot="${slot}"
+                         ondrop="dropEnSlot(event)"
+                         ondragover="allowDropSlot(event)"
+                         ondragleave="removeDragOverSlot(event)"
+                         style="min-height: 80px; display: flex; align-items: center; justify-content: center; border-style: dashed !important;">
+                        <div class="text-muted text-center">
+                            <i class="bi bi-plus-circle"></i>
+                            <small class="d-block">Slot ${slot + 1} vacío</small>
+                            <small class="d-block" style="font-size: 0.7rem;">Arrastra una pareja aquí</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Reemplazar el contenido de parejas
+        const h6 = cardBody.querySelector('h6.fw-bold');
+        if (h6) {
+            // Eliminar todos los divs de pareja-slot existentes
+            const existingSlots = cardBody.querySelectorAll('.pareja-slot, .pareja-slot-vacio');
+            existingSlots.forEach(slot => slot.remove());
+            
+            // Insertar el nuevo HTML después del h6
+            h6.insertAdjacentHTML('afterend', parejasHtml);
+        }
+        
+        // Actualizar score en el footer
+        const footer = grupoCard.querySelector('.card-footer');
+        if (footer) {
+            const score = grupo.score || 0.0;
+            let badgeHtml = '';
+            if (score === 3.0) {
+                badgeHtml = `<span class="badge bg-success">✅ Perfecto: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 2.5) {
+                badgeHtml = `<span class="badge bg-success">✅ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 2.0) {
+                badgeHtml = `<span class="badge bg-warning text-dark">⚠️ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score >= 1.0) {
+                badgeHtml = `<span class="badge bg-info text-white">📅 Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else if (score > 0.0) {
+                badgeHtml = `<span class="badge bg-warning text-dark">⚠️ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            } else {
+                badgeHtml = `<span class="badge bg-danger">❌ Calidad: ${score.toFixed(1)}/3.0</span>`;
+            }
+            footer.innerHTML = badgeHtml;
+        }
+    });
+}
+
+// Función auxiliar para actualizar partidos
+function actualizarPartidos(categoria, partidos) {
+    Object.keys(partidos).forEach(grupoId => {
+        const container = document.querySelector(`#partidos-grupo-${grupoId}`);
+        if (!container) return;
+        
+        const partidosGrupo = partidos[grupoId];
+        if (!partidosGrupo || partidosGrupo.length === 0) {
+            container.innerHTML = '<p class="text-muted">No hay partidos generados aún</p>';
+            return;
+        }
+        
+        const html = `
+            <ul class="list-group list-group-flush">
+                ${partidosGrupo.map(p => `
+                    <li class="list-group-item">
+                        <strong>${p.pareja1}</strong> vs <strong>${p.pareja2}</strong>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+        container.innerHTML = html;
+    });
 }
 
 // Función para actualizar todas las categorías (más rápido que reload completo)

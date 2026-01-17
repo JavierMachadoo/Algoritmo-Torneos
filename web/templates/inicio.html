@@ -160,12 +160,59 @@
 
     <!-- Lista de Parejas Cargadas -->
     {% if parejas %}
-    <div class="row justify-content-center mt-5">
+    <!-- Leyenda de Estados -->
+    {% if resultado %}
+    {% set sin_asignar_count = namespace(value=0) %}
+    {% set fuera_horario_count = namespace(value=0) %}
+    {% for p in parejas %}
+        {% if not p.esta_asignada %}
+            {% set sin_asignar_count.value = sin_asignar_count.value + 1 %}
+        {% endif %}
+        {% if p.fuera_de_horario %}
+            {% set fuera_horario_count.value = fuera_horario_count.value + 1 %}
+        {% endif %}
+    {% endfor %}
+    <div class="row justify-content-center mt-5" {% if sin_asignar_count.value == 0 and fuera_horario_count.value == 0 %}style="display:none;"{% endif %}>
+        <div class="col-lg-10">
+            <div class="alert alert-light border d-flex align-items-center justify-content-center" role="alert">
+                <div class="d-flex gap-4 flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        <span><strong>Rojo:</strong> Sin grupo asignado</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                        <span><strong>Amarillo:</strong> Fuera de horario preferido</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row justify-content-center mt-3">
         <div class="col-lg-10">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-gradient-primary">
-                    <h5 class="mb-0 text-white">
+                    <h5 class="mb-0 text-white" id="headerTablaParejas">
                         <i class="bi bi-people-fill me-2"></i>Parejas Cargadas ({{ parejas|length }})
+                        {% if resultado %}
+                        {% set sin_asignar = namespace(count=0) %}
+                        {% set fuera_horario = namespace(count=0) %}
+                        {% for p in parejas %}
+                            {% if not p.esta_asignada %}
+                                {% set sin_asignar.count = sin_asignar.count + 1 %}
+                            {% endif %}
+                            {% if p.fuera_de_horario %}
+                                {% set fuera_horario.count = fuera_horario.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if sin_asignar.count > 0 %}
+                        <span class="badge bg-danger ms-2">{{ sin_asignar.count }} sin grupo</span>
+                        {% endif %}
+                        {% if fuera_horario.count > 0 %}
+                        <span class="badge bg-warning text-dark ms-2">{{ fuera_horario.count }} fuera de horario</span>
+                        {% endif %}
+                        {% endif %}
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -181,11 +228,20 @@
                                     <th width="80">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tablaParejas">
                                 {% for pareja in parejas %}
-                                <tr>
+                                {% set clase_estado = '' %}
+                                {% set icono_estado = '' %}
+                                {% if not pareja.esta_asignada %}
+                                    {% set clase_estado = 'pareja-sin-asignar' %}
+                                    {% set icono_estado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>' %}
+                                {% elif pareja.fuera_de_horario %}
+                                    {% set clase_estado = 'pareja-fuera-horario' %}
+                                    {% set icono_estado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>' %}
+                                {% endif %}
+                                <tr class="{{ clase_estado }}" data-id="{{ pareja.id }}" data-categoria="{{ pareja.categoria }}">
                                     <td>{{ loop.index }}</td>
-                                    <td><strong>{{ pareja.nombre }}</strong></td>
+                                    <td><strong>{{ icono_estado|safe }}{{ pareja.nombre }}</strong></td>
                                     <td>{{ pareja.telefono }}</td>
                                     <td>
                                         <span class="badge bg-{{ pareja.categoria|lower }}">
@@ -831,5 +887,179 @@ function confirmarGenerarGrupos() {
         }
     });
 }
+
+// ==================== ACTUALIZACIÓN AUTOMÁTICA DE TABLA ====================
+let ultimoNumParejas = {{ parejas|length }};
+let tieneResultado = {{ 'true' if resultado else 'false' }};
+
+function actualizarTablaParejas() {
+    $.ajax({
+        url: '/api/obtener-parejas',
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const parejas = response.parejas;
+                
+                // Solo actualizar si hay cambios
+                if (parejas.length !== ultimoNumParejas || detectarCambiosEstado(parejas)) {
+                    ultimoNumParejas = parejas.length;
+                    renderizarTablaParejas(parejas);
+                    actualizarHeader(parejas);
+                }
+            }
+        },
+        error: function() {
+            // Silenciosamente ignorar errores de actualización
+        }
+    });
+}
+
+function detectarCambiosEstado(parejas) {
+    // Detectar si alguna pareja cambió de estado
+    const tbody = document.getElementById('tablaParejas');
+    if (!tbody) return true;
+    
+    const filasActuales = tbody.querySelectorAll('tr');
+    if (filasActuales.length !== parejas.length) return true;
+    
+    for (let i = 0; i < parejas.length; i++) {
+        const pareja = parejas[i];
+        const fila = filasActuales[i];
+        
+        // Verificar si cambió el estado de asignación
+        const tieneClaseRoja = fila.classList.contains('pareja-sin-asignar');
+        const tieneClaseAmarilla = fila.classList.contains('pareja-fuera-horario');
+        
+        if (!pareja.esta_asignada && !tieneClaseRoja) return true;
+        if (pareja.fuera_de_horario && !tieneClaseAmarilla) return true;
+        if (pareja.esta_asignada && !pareja.fuera_de_horario && (tieneClaseRoja || tieneClaseAmarilla)) return true;
+    }
+    
+    return false;
+}
+
+function renderizarTablaParejas(parejas) {
+    const tbody = document.getElementById('tablaParejas');
+    if (!tbody) return;
+    
+    // Ordenar parejas por categoría
+    const ordenCategorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
+    const parejasOrdenadas = [...parejas].sort((a, b) => {
+        const indexA = ordenCategorias.indexOf(a.categoria);
+        const indexB = ordenCategorias.indexOf(b.categoria);
+        return indexA - indexB;
+    });
+    
+    // Limpiar tabla
+    tbody.innerHTML = '';
+    
+    // Si no hay parejas
+    if (parejas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay parejas cargadas</td></tr>';
+        return;
+    }
+    
+    // Agregar filas
+    parejasOrdenadas.forEach((pareja, index) => {
+        let claseEstado = '';
+        let iconoEstado = '';
+        
+        if (!pareja.esta_asignada) {
+            claseEstado = 'pareja-sin-asignar';
+            iconoEstado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>';
+        } else if (pareja.fuera_de_horario) {
+            claseEstado = 'pareja-fuera-horario';
+            iconoEstado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>';
+        }
+        
+        const tr = document.createElement('tr');
+        tr.className = claseEstado;
+        tr.setAttribute('data-id', pareja.id);
+        tr.setAttribute('data-categoria', pareja.categoria);
+        
+        const categoriaClass = pareja.categoria.toLowerCase();
+        
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${iconoEstado}${escapeHtml(pareja.nombre)}</strong></td>
+            <td>${escapeHtml(pareja.telefono)}</td>
+            <td>
+                <span class="badge bg-${categoriaClass}">
+                    ${escapeHtml(pareja.categoria)}
+                </span>
+            </td>
+            <td>
+                <small class="text-muted">
+                    ${pareja.franjas_disponibles.length} disponibles
+                </small>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" 
+                        onclick="eliminarPareja(${pareja.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarHeader(parejas) {
+    const header = document.getElementById('headerTablaParejas');
+    if (!header) return;
+    
+    let headerHTML = `<i class="bi bi-people-fill me-2"></i>Parejas Cargadas (${parejas.length})`;
+    
+    // Contar estados
+    const sinAsignar = parejas.filter(p => !p.esta_asignada).length;
+    const fueraHorario = parejas.filter(p => p.fuera_de_horario).length;
+    
+    if (sinAsignar > 0 || fueraHorario > 0) {
+        if (sinAsignar > 0) {
+            headerHTML += ` <span class="badge bg-danger ms-2">${sinAsignar} sin grupo</span>`;
+        }
+        if (fueraHorario > 0) {
+            headerHTML += ` <span class="badge bg-warning text-dark ms-2">${fueraHorario} fuera de horario</span>`;
+        }
+        
+        // Mostrar leyenda si hay estados
+        const leyendaRow = document.querySelector('.row.justify-content-center.mt-5');
+        if (leyendaRow && leyendaRow.querySelector('.alert.alert-light')) {
+            leyendaRow.style.display = '';
+        }
+    } else {
+        // Ocultar leyenda si no hay estados
+        const leyendaRow = document.querySelector('.row.justify-content-center.mt-5');
+        if (leyendaRow && leyendaRow.querySelector('.alert.alert-light')) {
+            leyendaRow.style.display = 'none';
+        }
+    }
+    
+    header.innerHTML = headerHTML;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text || '').replace(/[&<>"']/g, m => map[m]);
+}
+
+// Actualizar cada 3 segundos si hay parejas cargadas
+if ({{ parejas|length }} > 0) {
+    setInterval(actualizarTablaParejas, 3000);
+}
+
+// También actualizar cuando la ventana recupera el foco
+window.addEventListener('focus', function() {
+    if ({{ parejas|length }} > 0) {
+        actualizarTablaParejas();
+    }
+});
 </script>
 {% endblock %}

@@ -181,11 +181,41 @@
         </div>
     </div>
 
+    <!-- Leyenda de Estados -->
+    {% if resultado %}
+    <div class="row mb-3">
+        <div class="col">
+            <div class="alert alert-light border d-flex align-items-center justify-content-center" role="alert">
+                <div class="d-flex gap-4 flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        <span><strong>Rojo:</strong> Sin grupo asignado</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                        <span><strong>Amarillo:</strong> Fuera de horario preferido</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Tabla de Parejas -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">
+            <h5 class="mb-0" id="headerTablaParejas">
                 <i class="bi bi-list-ul"></i> Listado de Parejas ({{ parejas|length }})
+                {% if resultado %}
+                {% set sin_asignar = parejas|selectattr('esta_asignada', 'equalto', False)|list|length %}
+                {% set fuera_horario = parejas|selectattr('fuera_de_horario', 'equalto', True)|list|length %}
+                {% if sin_asignar > 0 %}
+                <span class="badge bg-danger ms-2">{{ sin_asignar }} sin grupo</span>
+                {% endif %}
+                {% if fuera_horario > 0 %}
+                <span class="badge bg-warning text-dark ms-2">{{ fuera_horario }} fuera de horario</span>
+                {% endif %}
+                {% endif %}
             </h5>
         </div>
         <div class="card-body p-0">
@@ -203,9 +233,18 @@
                     </thead>
                     <tbody id="tablaParejas">
                         {% for pareja in parejas %}
-                        <tr data-id="{{ pareja.id }}" data-categoria="{{ pareja.categoria }}">
+                        {% set clase_estado = '' %}
+                        {% set icono_estado = '' %}
+                        {% if not pareja.esta_asignada %}
+                            {% set clase_estado = 'pareja-sin-asignar' %}
+                            {% set icono_estado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>' %}
+                        {% elif pareja.fuera_de_horario %}
+                            {% set clase_estado = 'pareja-fuera-horario' %}
+                            {% set icono_estado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>' %}
+                        {% endif %}
+                        <tr data-id="{{ pareja.id }}" data-categoria="{{ pareja.categoria }}" class="{{ clase_estado }}">
                             <td>{{ loop.index }}</td>
-                            <td class="fw-bold">{{ pareja.nombre }}</td>
+                            <td class="fw-bold">{{ icono_estado|safe }}{{ pareja.nombre }}</td>
                             <td><i class="bi bi-telephone"></i> {{ pareja.telefono }}</td>
                             <td><span class="badge bg-secondary">{{ pareja.categoria }}</span></td>
                             <td><small>{{ ', '.join(pareja.franjas_disponibles) or 'Sin especificar' }}</small></td>
@@ -718,17 +757,44 @@ function actualizarTablaParejas(parejas) {
         return;
     }
     
+    // Ordenar parejas por categoría
+    const ordenCategorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
+    const parejasOrdenadas = [...parejas].sort((a, b) => {
+        const indexA = ordenCategorias.indexOf(a.categoria);
+        const indexB = ordenCategorias.indexOf(b.categoria);
+        return indexA - indexB;
+    });
+    
     // Agregar filas de parejas
-    parejas.forEach((pareja, index) => {
+    parejasOrdenadas.forEach((pareja, index) => {
         const fila = document.createElement('tr');
         fila.setAttribute('data-id', pareja.id);
         fila.setAttribute('data-categoria', pareja.categoria);
+        
+        // Determinar clases de estilo según el estado
+        let claseEstado = '';
+        let iconoEstado = '';
+        let tooltipEstado = '';
+        
+        if (!pareja.esta_asignada) {
+            // Pareja NO asignada a ningún grupo (ROJO)
+            claseEstado = 'pareja-sin-asignar';
+            iconoEstado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>';
+            tooltipEstado = 'Sin grupo asignado';
+        } else if (pareja.fuera_de_horario) {
+            // Pareja asignada pero fuera de su horario (AMARILLO)
+            claseEstado = 'pareja-fuera-horario';
+            iconoEstado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>';
+            tooltipEstado = 'Fuera de horario preferido';
+        }
+        
+        fila.className = claseEstado;
         
         const franjas = pareja.franjas_disponibles ? pareja.franjas_disponibles.join(', ') : 'Sin especificar';
         
         fila.innerHTML = `
             <td>${index + 1}</td>
-            <td class="fw-bold">${escapeHtml(pareja.nombre)}</td>
+            <td class="fw-bold">${iconoEstado}${escapeHtml(pareja.nombre)}</td>
             <td><i class="bi bi-telephone"></i> ${escapeHtml(pareja.telefono)}</td>
             <td><span class="badge bg-secondary">${escapeHtml(pareja.categoria)}</span></td>
             <td><small>${escapeHtml(franjas)}</small></td>
@@ -753,9 +819,22 @@ function actualizarTablaParejas(parejas) {
     });
     
     // Actualizar contador en el header de la tabla
-    const headerElement = document.querySelector('.card-header h5');
+    const headerElement = document.querySelector('#headerTablaParejas');
     if (headerElement) {
-        headerElement.innerHTML = `<i class="bi bi-list-ul"></i> Listado de Parejas (${parejas.length})`;
+        let headerHTML = `<i class="bi bi-list-ul"></i> Listado de Parejas (${parejas.length})`;
+        
+        // Contar parejas sin asignar y fuera de horario
+        const sinAsignar = parejas.filter(p => !p.esta_asignada).length;
+        const fueraHorario = parejas.filter(p => p.fuera_de_horario).length;
+        
+        if (sinAsignar > 0) {
+            headerHTML += ` <span class="badge bg-danger ms-2">${sinAsignar} sin grupo</span>`;
+        }
+        if (fueraHorario > 0) {
+            headerHTML += ` <span class="badge bg-warning text-dark ms-2">${fueraHorario} fuera de horario</span>`;
+        }
+        
+        headerElement.innerHTML = headerHTML;
     }
 }
 
