@@ -6,7 +6,6 @@ from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
     PosicionGrupo, FixtureGenerator, FixtureFinales
 )
-from core.clasificacion import CalculadorClasificacion
 from utils import CSVProcessor, CalendarioBuilder
 from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
