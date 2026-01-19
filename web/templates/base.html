@@ -68,8 +68,8 @@
         </div>
     </nav>
 
-    <!-- Mensajes Flash -->
-    <div class="container mt-3">
+    <!-- Mensajes Flash (deshabilitados) -->
+    <div class="container mt-3" style="display:none;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
