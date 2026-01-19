@@ -4272,8 +4272,14 @@ function abrirModalResultado(categoria, grupoId, pareja1Id, pareja2Id, pareja1No
         }
         
         // Llamar a verificarResultado para revisar si hay que mostrar tie-break
-        console.log('Llamando verificarResultado inicial');
-        verificarResultado();
+        console.log('Llamando verificarResultado inicial (diferido)');
+        if (window.requestAnimationFrame) {
+            window.requestAnimationFrame(function() {
+                verificarResultado();
+            });
+        } else {
+            setTimeout(verificarResultado, 0);
+        }
     }, { once: true });
     
     // Limpiar al cerrar
