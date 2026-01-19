@@ -3,7 +3,7 @@ Módulo para calcular automáticamente las posiciones en los grupos
 basándose en los resultados de los partidos.
 """
 
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from dataclasses import dataclass
 from core.models import Grupo, Pareja, ResultadoPartido, PosicionGrupo
 
