@@ -5,7 +5,7 @@ basándose en los resultados de los partidos.
 
 from typing import List, Dict
 from dataclasses import dataclass
-from core.models import Grupo, Pareja, ResultadoPartido, PosicionGrupo
+from core.models import Grupo, PosicionGrupo
 
 
 @dataclass
