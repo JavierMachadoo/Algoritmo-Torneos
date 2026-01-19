@@ -4,6 +4,8 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 """
 
 from flask import Flask, render_template, session, redirect, url_for, flash
+from flask_session import Session
+import os
 
 from config import (
     SECRET_KEY, 
@@ -24,8 +26,20 @@ def crear_app():
     
     # Configuración básica
     app.secret_key = SECRET_KEY
+    
+    # Configuración de sesiones del lado del servidor
+    app.config['SESSION_TYPE'] = 'filesystem'  # Guardar sesiones en archivos
+    app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(__file__), 'flask_session')
     app.config['SESSION_PERMANENT'] = False
+    app.config['SESSION_USE_SIGNER'] = True  # Firmar cookies de sesión para seguridad
+    app.config['SESSION_KEY_PREFIX'] = 'torneo_'
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    
+    # Crear directorio de sesiones si no existe
+    os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    
+    # Inicializar Flask-Session
+    Session(app)
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
