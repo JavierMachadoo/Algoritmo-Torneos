@@ -6,6 +6,8 @@ from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
     PosicionGrupo, FixtureGenerator, FixtureFinales
 )
+from core.models import ResultadoPartido
+from core.clasificacion import CalculadorClasificacion
 from utils import CSVProcessor, CalendarioBuilder
 from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
@@ -91,18 +93,26 @@ def regenerar_calendario(resultado_data):
         # Actualizar calendario en resultado_data
         resultado_data['calendario'] = calendario
         
-        # Actualizar partidos de cada grupo en resultado_data
+        # Actualizar partidos de cada grupo en resultado_data con IDs
         for categoria, grupos_obj in resultado_obj.grupos_por_categoria.items():
             grupos_list = resultado_data['grupos_por_categoria'].get(categoria, [])
             for grupo_obj in grupos_obj:
                 # Buscar el grupo correspondiente en resultado_data por ID
                 for grupo_dict in grupos_list:
                     if grupo_dict['id'] == grupo_obj.id:
-                        # Actualizar partidos
+                        # Actualizar partidos CON IDs
                         grupo_dict['partidos'] = [
-                            {'pareja1': p1.nombre, 'pareja2': p2.nombre}
+                            {
+                                'pareja1': p1.nombre, 
+                                'pareja2': p2.nombre,
+                                'pareja1_id': p1.id,
+                                'pareja2_id': p2.id
+                            }
                             for p1, p2 in grupo_obj.partidos
                         ]
+                        # Preservar resultados y estado
+                        grupo_dict['resultados'] = grupo_obj.resultados
+                        grupo_dict['resultados_completos'] = grupo_obj.resultados_completos
                         break
         
         return calendario
@@ -373,6 +383,17 @@ def obtener_parejas():
     })
 
 
+@api_bp.route('/resultado_algoritmo', methods=['GET'])
+def obtener_resultado_algoritmo():
+    """Obtiene el resultado completo del algoritmo con grupos y parejas."""
+    resultado_data = session.get('resultado_algoritmo')
+    
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
+    
+    return jsonify(resultado_data)
+
+
 @api_bp.route('/intercambiar-pareja', methods=['POST'])
 def intercambiar_pareja():
     """Intercambia parejas entre slots específicos de grupos."""
@@ -510,12 +531,19 @@ def serializar_resultado(resultado, num_canchas):
                 'id': grupo.id,
                 'parejas': [p.to_dict() for p in grupo.parejas],
                 'partidos': [
-                    {'pareja1': p1.nombre, 'pareja2': p2.nombre}
+                    {
+                        'pareja1': p1.nombre, 
+                        'pareja2': p2.nombre,
+                        'pareja1_id': p1.id,
+                        'pareja2_id': p2.id
+                    }
                     for p1, p2 in grupo.partidos
                 ],
+                'resultados': {},  # Inicializar diccionario de resultados vacío
                 'franja_horaria': grupo.franja_horaria,
                 'cancha': cancha_num,
-                'score': grupo.score_compatibilidad
+                'score': grupo.score_compatibilidad,
+                'resultados_completos': False
             })
     
     calendario_builder = CalendarioBuilder(num_canchas)
@@ -784,7 +812,9 @@ def crear_grupo_manual():
         'score': 0.0,  # Score de calidad del grupo
         'score_compatibilidad': 0.0,
         'parejas': [],
-        'partidos': []
+        'partidos': [],
+        'resultados': {},  # Inicializar diccionario de resultados vacío
+        'resultados_completos': False
     }
     
     grupos_dict[categoria].append(nuevo_grupo)
@@ -1030,6 +1060,10 @@ def deserializar_resultado(resultado_data):
             grupo.franja_horaria = grupo_dict.get('franja_horaria')
             grupo.score_compatibilidad = grupo_dict.get('score', 0.0)
             
+            # Cargar resultados guardados
+            grupo.resultados = grupo_dict.get('resultados', {})
+            grupo.resultados_completos = grupo_dict.get('resultados_completos', False)
+            
             for pareja_dict in grupo_dict['parejas']:
                 pareja = Pareja(
                     id=pareja_dict['id'],
@@ -1130,6 +1164,214 @@ def asignar_posicion():
         import traceback
         return jsonify({
             'error': f'Error al asignar posición: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+# ==================== ENDPOINTS PARA RESULTADOS DE PARTIDOS ====================
+
+@api_bp.route('/guardar-resultado-partido', methods=['POST'])
+def guardar_resultado_partido():
+    """Guarda o actualiza el resultado de un partido de grupo"""
+    from core.models import ResultadoPartido
+    from core.clasificacion import CalculadorClasificacion
+    
+    data = request.json
+    categoria = data.get('categoria')
+    grupo_id = data.get('grupo_id')
+    pareja1_id = data.get('pareja1_id')
+    pareja2_id = data.get('pareja2_id')
+    
+    # Datos del resultado
+    games_set1_p1 = data.get('games_set1_pareja1')
+    games_set1_p2 = data.get('games_set1_pareja2')
+    games_set2_p1 = data.get('games_set2_pareja1')
+    games_set2_p2 = data.get('games_set2_pareja2')
+    tiebreak_p1 = data.get('tiebreak_pareja1')
+    tiebreak_p2 = data.get('tiebreak_pareja2')
+    
+    if not all([categoria, grupo_id is not None, pareja1_id is not None, pareja2_id is not None]):
+        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    
+    try:
+        resultado_data = session.get('resultado_algoritmo')
+        if not resultado_data:
+            return jsonify({'error': 'No hay resultados cargados'}), 400
+        
+        # Buscar el grupo
+        grupos_categoria = resultado_data['grupos_por_categoria'].get(categoria, [])
+        grupo_encontrado = None
+        
+        for grupo in grupos_categoria:
+            if grupo['id'] == grupo_id:
+                grupo_encontrado = grupo
+                break
+        
+        if not grupo_encontrado:
+            return jsonify({'error': 'Grupo no encontrado'}), 404
+        
+        # Calcular sets ganados
+        sets_p1 = 0
+        sets_p2 = 0
+        
+        if games_set1_p1 is not None and games_set1_p2 is not None:
+            if games_set1_p1 > games_set1_p2:
+                sets_p1 += 1
+            else:
+                sets_p2 += 1
+        
+        if games_set2_p1 is not None and games_set2_p2 is not None:
+            if games_set2_p1 > games_set2_p2:
+                sets_p1 += 1
+            else:
+                sets_p2 += 1
+        
+        # Crear objeto resultado
+        resultado = ResultadoPartido(
+            pareja1_id=pareja1_id,
+            pareja2_id=pareja2_id,
+            sets_pareja1=sets_p1,
+            sets_pareja2=sets_p2,
+            games_set1_pareja1=games_set1_p1,
+            games_set1_pareja2=games_set1_p2,
+            games_set2_pareja1=games_set2_p1,
+            games_set2_pareja2=games_set2_p2,
+            tiebreak_pareja1=tiebreak_p1,
+            tiebreak_pareja2=tiebreak_p2
+        )
+        
+        # Guardar resultado en el grupo
+        if 'resultados' not in grupo_encontrado:
+            grupo_encontrado['resultados'] = {}
+        
+        ids_ordenados = sorted([pareja1_id, pareja2_id])
+        key = f"{ids_ordenados[0]}-{ids_ordenados[1]}"
+        grupo_encontrado['resultados'][key] = resultado.to_dict()
+        
+        # Verificar si todos los resultados están completos
+        grupo_encontrado['resultados_completos'] = False
+        if len(grupo_encontrado.get('parejas', [])) == 3:
+            resultados = grupo_encontrado.get('resultados', {})
+            resultados_completos = sum(
+                1 for r in resultados.values() 
+                if ResultadoPartido.from_dict(r).esta_completo()
+            )
+            grupo_encontrado['resultados_completos'] = (resultados_completos == 3)
+        
+        # Si todos los resultados están completos, calcular posiciones automáticamente
+        if grupo_encontrado.get('resultados_completos', False):
+            # Reconstruir objeto Grupo para usar el calculador
+            grupo_obj = Grupo(
+                id=grupo_encontrado['id'],
+                categoria=categoria,
+                franja_horaria=grupo_encontrado.get('franja_horaria')
+            )
+            
+            # Agregar parejas
+            for pareja_dict in grupo_encontrado['parejas']:
+                pareja = Pareja(
+                    id=pareja_dict['id'],
+                    nombre=pareja_dict['nombre'],
+                    telefono=pareja_dict.get('telefono', 'Sin teléfono'),
+                    categoria=pareja_dict['categoria'],
+                    franjas_disponibles=pareja_dict.get('franjas_disponibles', []),
+                    grupo_asignado=grupo_encontrado['id']
+                )
+                grupo_obj.parejas.append(pareja)
+            
+            # Agregar resultados
+            for key, resultado_dict in grupo_encontrado['resultados'].items():
+                grupo_obj.resultados[key] = ResultadoPartido.from_dict(resultado_dict)
+            
+            # Calcular posiciones
+            posiciones = CalculadorClasificacion.asignar_posiciones(grupo_obj)
+            
+            # Asignar posiciones a las parejas
+            for pareja_dict in grupo_encontrado['parejas']:
+                pareja_id = pareja_dict['id']
+                if pareja_id in posiciones:
+                    pareja_dict['posicion_grupo'] = posiciones[pareja_id].value
+        
+        # Guardar en sesión
+        session['resultado_algoritmo'] = resultado_data
+        session.modified = True
+        guardar_estado_torneo()
+        
+        return jsonify({
+            'success': True,
+            'mensaje': '✓ Resultado guardado',
+            'resultado': resultado.to_dict(),
+            'resultados_completos': grupo_encontrado.get('resultados_completos', False)
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al guardar resultado: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+@api_bp.route('/obtener-tabla-posiciones/<categoria>/<int:grupo_id>', methods=['GET'])
+def obtener_tabla_posiciones(categoria, grupo_id):
+    """Obtiene la tabla de posiciones de un grupo"""
+    from core.models import ResultadoPartido
+    from core.clasificacion import CalculadorClasificacion
+    
+    try:
+        resultado_data = session.get('resultado_algoritmo')
+        if not resultado_data:
+            return jsonify({'error': 'No hay resultados cargados'}), 400
+        
+        # Buscar el grupo
+        grupos_categoria = resultado_data['grupos_por_categoria'].get(categoria, [])
+        grupo_encontrado = None
+        
+        for grupo in grupos_categoria:
+            if grupo['id'] == grupo_id:
+                grupo_encontrado = grupo
+                break
+        
+        if not grupo_encontrado:
+            return jsonify({'error': 'Grupo no encontrado'}), 404
+        
+        # Reconstruir objeto Grupo
+        grupo_obj = Grupo(
+            id=grupo_encontrado['id'],
+            categoria=categoria,
+            franja_horaria=grupo_encontrado.get('franja_horaria')
+        )
+        
+        # Agregar parejas
+        for pareja_dict in grupo_encontrado['parejas']:
+            pareja = Pareja(
+                id=pareja_dict['id'],
+                nombre=pareja_dict['nombre'],
+                telefono=pareja_dict.get('telefono', 'Sin teléfono'),
+                categoria=pareja_dict['categoria'],
+                franjas_disponibles=pareja_dict.get('franjas_disponibles', []),
+                grupo_asignado=grupo_encontrado['id']
+            )
+            grupo_obj.parejas.append(pareja)
+        
+        # Agregar resultados
+        resultados_dict = grupo_encontrado.get('resultados', {})
+        for key, resultado_dict in resultados_dict.items():
+            grupo_obj.resultados[key] = ResultadoPartido.from_dict(resultado_dict)
+        
+        # Calcular tabla de posiciones
+        tabla = CalculadorClasificacion.calcular_tabla_posiciones(grupo_obj)
+        
+        return jsonify({
+            'success': True,
+            'tabla': tabla,
+            'resultados_completos': grupo_encontrado.get('resultados_completos', False)
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': f'Error al obtener tabla: {str(e)}',
             'traceback': traceback.format_exc()
         }), 500
 
