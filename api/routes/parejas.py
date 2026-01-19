@@ -1226,9 +1226,6 @@ def guardar_resultado_partido():
             else:
                 sets_p2 += 1
         
-        print(f"DEBUG: Sets calculados - P1: {sets_p1}, P2: {sets_p2}")
-        print(f"DEBUG: Tie-break - P1: {tiebreak_p1} (tipo: {type(tiebreak_p1)}), P2: {tiebreak_p2} (tipo: {type(tiebreak_p2)})")
-        
         # Crear objeto resultado
         resultado = ResultadoPartido(
             pareja1_id=pareja1_id,
@@ -1243,10 +1240,7 @@ def guardar_resultado_partido():
             tiebreak_pareja2=tiebreak_p2
         )
         
-        print(f"DEBUG: Resultado completo: {resultado.esta_completo()}")
-        print(f"DEBUG: Ganador calculado: {resultado.calcular_ganador()}")
         resultado_dict = resultado.to_dict()
-        print(f"DEBUG: Resultado dict: {resultado_dict}")
         
         # Guardar resultado en el grupo
         if 'resultados' not in grupo_encontrado:
@@ -1255,9 +1249,6 @@ def guardar_resultado_partido():
         ids_ordenados = sorted([pareja1_id, pareja2_id])
         key = f"{ids_ordenados[0]}-{ids_ordenados[1]}"
         grupo_encontrado['resultados'][key] = resultado_dict
-        
-        print(f"DEBUG: Guardando con key: {key}")
-        print(f"DEBUG: Resultados actuales del grupo: {list(grupo_encontrado['resultados'].keys())}")
         
         # Verificar si todos los resultados están completos
         grupo_encontrado['resultados_completos'] = False
