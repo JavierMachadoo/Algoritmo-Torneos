@@ -4685,59 +4685,59 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         })
         .catch(error => {
-            console.error('Error al cargar tablas:', error);
+            Toast.error('Error al cargar tablas: ' + (error && error.message ? error.message : 'Error desconocido'));
         });
 });
 
 // Función simplificada que obtiene los nombres del DOM
 function abrirModalPorIds(categoria, grupoId, pareja1Id, pareja2Id) {
-    console.log('=== abrirModalPorIds ===', {categoria, grupoId, pareja1Id, pareja2Id});
+    
     
     // Buscar los nombres en los datos del resultado
     fetch('/api/resultado_algoritmo')
         .then(response => {
-            console.log('Response status:', response.status);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Data recibida:', data);
-            console.log('Categorías disponibles:', Object.keys(data.grupos_por_categoria || {}));
+            
+            
+            
             
             const grupos = data.grupos_por_categoria[categoria] || [];
-            console.log(`Grupos en ${categoria}:`, grupos.length);
+            
             
             const grupo = grupos.find(g => g.id === grupoId);
             
             if (!grupo) {
-                console.error('Grupo no encontrado. Buscando grupoId:', grupoId);
-                console.error('Grupos disponibles:', grupos.map(g => g.id));
+                
+                
                 Toast.error('Grupo no encontrado');
                 return;
             }
             
-            console.log('Grupo encontrado:', grupo);
-            console.log('Parejas en grupo:', grupo.parejas);
+            
+            
             
             // Buscar las parejas por ID
             const pareja1 = grupo.parejas.find(p => p.id === pareja1Id);
             const pareja2 = grupo.parejas.find(p => p.id === pareja2Id);
             
             if (!pareja1 || !pareja2) {
-                console.error('Parejas no encontradas. Buscando IDs:', pareja1Id, pareja2Id);
-                console.error('IDs disponibles:', grupo.parejas.map(p => p.id));
+                
+                
                 Toast.error('Parejas no encontradas');
                 return;
             }
             
-            console.log('Abriendo modal con:', pareja1.nombre, 'vs', pareja2.nombre);
+            
             abrirModalResultado(categoria, grupoId, pareja1Id, pareja2Id, pareja1.nombre, pareja2.nombre);
         })
         .catch(error => {
-            console.error('Error completo:', error);
-            console.error('Stack:', error.stack);
+            
+            
             Toast.error('Error al cargar datos: ' + error.message);
         });
 }
