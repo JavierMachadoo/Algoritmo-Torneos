@@ -4667,6 +4667,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Función simplificada que obtiene los nombres del DOM
 function abrirModalPorIds(categoria, grupoId, pareja1Id, pareja2Id) {
     
+    // Validar IDs de parejas antes de realizar la petición
+    const pareja1Num = Number(pareja1Id);
+    const pareja2Num = Number(pareja2Id);
+    if (!Number.isFinite(pareja1Num) || pareja1Num <= 0 ||
+        !Number.isFinite(pareja2Num) || pareja2Num <= 0) {
+        Toast.error('Identificadores de pareja inválidos');
+        return;
+    }
     
     // Buscar los nombres en los datos del resultado
     fetch('/api/resultado_algoritmo')
