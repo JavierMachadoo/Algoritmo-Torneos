@@ -15,6 +15,7 @@ from config import (
     EMOJI_CATEGORIA, 
     COLORES_CATEGORIA
 )
+from config.settings import BASE_DIR
 from api import api_bp
 from utils.torneo_storage import storage
 
@@ -22,11 +23,12 @@ from utils.torneo_storage import storage
 def crear_app():
     """Factory para crear y configurar la aplicación Flask."""
     # Configure logging
+    log_file = os.path.join(BASE_DIR, 'app.log')
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('app.log'),
+            logging.FileHandler(log_file),
             logging.StreamHandler()
         ]
     )
