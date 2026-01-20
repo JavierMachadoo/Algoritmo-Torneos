@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 import pandas as pd
 import os
+import logging
 
 from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
@@ -13,6 +14,7 @@ from utils.torneo_storage import storage
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+logger = logging.getLogger(__name__)
 
 
 # ==================== HELPERS ====================
@@ -1305,10 +1307,9 @@ def guardar_resultado_partido():
         })
     
     except Exception as e:
-        import traceback
+        logger.exception("Error al guardar resultado del partido")
         return jsonify({
-            'error': f'Error al guardar resultado: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al guardar resultado. Por favor, intente nuevamente.'
         }), 500
 
 
