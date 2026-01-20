@@ -22,6 +22,51 @@ logger = logging.getLogger(__name__)
 
 # ==================== HELPERS ====================
 
+def recalcular_estadisticas(resultado_data):
+    """Recalcula las estadísticas globales del torneo basándose en el estado actual."""
+    grupos_dict = resultado_data.get('grupos_por_categoria', {})
+    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+    
+    # Contar parejas asignadas
+    parejas_asignadas = 0
+    total_grupos = 0
+    sum_scores = 0.0
+    grupos_con_score = 0
+    
+    for categoria, grupos in grupos_dict.items():
+        for grupo in grupos:
+            total_grupos += 1
+            parejas_en_grupo = len(grupo.get('parejas', []))
+            parejas_asignadas += parejas_en_grupo
+            
+            # Sumar score de compatibilidad
+            score = grupo.get('score', 0.0)
+            if score > 0:
+                sum_scores += score
+                grupos_con_score += 1
+    
+    # Total de parejas (asignadas + no asignadas)
+    total_parejas = parejas_asignadas + len(parejas_sin_asignar)
+    
+    # Calcular porcentaje de asignación
+    porcentaje_asignacion = (parejas_asignadas / total_parejas * 100) if total_parejas > 0 else 0
+    
+    # Calcular score promedio (sobre 3.0)
+    score_promedio = (sum_scores / grupos_con_score) if grupos_con_score > 0 else 0.0
+    
+    # Actualizar estadísticas en resultado_data
+    resultado_data['estadisticas'] = {
+        'parejas_asignadas': parejas_asignadas,
+        'total_parejas': total_parejas,
+        'parejas_sin_asignar': len(parejas_sin_asignar),
+        'porcentaje_asignacion': porcentaje_asignacion,
+        'total_grupos': total_grupos,
+        'score_compatibilidad_promedio': score_promedio
+    }
+    
+    return resultado_data['estadisticas']
+
+
 def recalcular_score_grupo(grupo_dict):
     """Recalcula el score de compatibilidad de un grupo según sus parejas actuales."""
     parejas = grupo_dict.get('parejas', [])
@@ -218,21 +263,26 @@ def agregar_pareja():
             parejas_sin_asignar.append(nueva_pareja)
             resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
             
-            # Actualizar estadísticas
-            if 'estadisticas' in resultado_data:
-                resultado_data['estadisticas']['total_parejas'] = len(parejas)
+            # Recalcular estadísticas globales
+            estadisticas = recalcular_estadisticas(resultado_data)
             
             session['resultado_algoritmo'] = resultado_data
     
     session.modified = True
     guardar_estado_torneo()
     
-    return jsonify({
+    response_data = {
         'success': True,
         'mensaje': f'Pareja "{nombre}" agregada correctamente',
         'pareja': nueva_pareja,
         'desde_resultados': desde_resultados
-    })
+    }
+    
+    # Incluir estadísticas si estamos en resultados
+    if desde_resultados and resultado_data:
+        response_data['estadisticas'] = estadisticas
+    
+    return jsonify(response_data)
 
 
 @api_bp.route('/eliminar-pareja', methods=['POST'])
@@ -301,6 +351,9 @@ def remover_pareja_de_grupo():
     # Regenerar calendario completo
     regenerar_calendario(resultado_data)
     
+    # Recalcular estadísticas globales
+    estadisticas = recalcular_estadisticas(resultado_data)
+    
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
@@ -308,7 +361,8 @@ def remover_pareja_de_grupo():
     
     return jsonify({
         'success': True,
-        'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas'
+        'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas',
+        'estadisticas': estadisticas
     })
 
 
@@ -460,13 +514,17 @@ def intercambiar_pareja():
         # Regenerar calendario completo
         regenerar_calendario(resultado)
         
+        # Recalcular estadísticas globales
+        estadisticas = recalcular_estadisticas(resultado)
+        
         session['resultado_algoritmo'] = resultado
         session.modified = True
         guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
             'success': True,
-            'mensaje': mensaje
+            'mensaje': mensaje,
+            'estadisticas': estadisticas
         })
     except Exception as e:
         logger.error(f"Error al intercambiar: {str(e)}", exc_info=True)
@@ -656,6 +714,9 @@ def asignar_pareja_a_grupo():
     # Regenerar calendario completo
     regenerar_calendario(resultado_data)
     
+    # Recalcular estadísticas globales
+    estadisticas = recalcular_estadisticas(resultado_data)
+    
     # Actualizar session
     session['resultado_algoritmo'] = resultado_data
     session.modified = True
@@ -663,7 +724,8 @@ def asignar_pareja_a_grupo():
     
     return jsonify({
         'success': True,
-        'mensaje': f'✓ Pareja asignada al grupo correctamente'
+        'mensaje': f'✓ Pareja asignada al grupo correctamente',
+        'estadisticas': estadisticas
     })
 
 
@@ -1577,6 +1639,22 @@ def verificar_posiciones_completas(grupos: list) -> bool:
 # ==========================================
 # ENDPOINTS PARA ACTUALIZACIÓN SELECTIVA
 # ==========================================
+
+@api_bp.route('/estadisticas', methods=['GET'])
+def obtener_estadisticas():
+    """Obtiene las estadísticas actualizadas del torneo."""
+    resultado_data = session.get('resultado_algoritmo')
+    if not resultado_data:
+        return jsonify({'error': 'No hay resultados disponibles'}), 404
+    
+    # Recalcular estadísticas para asegurar que están actualizadas
+    estadisticas = recalcular_estadisticas(resultado_data)
+    
+    return jsonify({
+        'success': True,
+        'estadisticas': estadisticas
+    })
+
 
 @api_bp.route('/obtener-categoria/<categoria>', methods=['GET'])
 def obtener_categoria(categoria):

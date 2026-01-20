@@ -22,6 +22,9 @@ class CalendarioBuilder:
         calendario = self.construir_calendario_vacio()
         franjas_a_horas = self._mapear_franjas_a_horas()
         
+        # Crear mapeo de grupo_id a letra por categoría
+        grupo_a_letra = self._crear_mapeo_grupos_a_letras(resultado_algoritmo)
+        
         for categoria, grupos in resultado_algoritmo.grupos_por_categoria.items():
             for grupo in grupos:
                 if not grupo.franja_horaria:
@@ -32,9 +35,26 @@ class CalendarioBuilder:
                 if canchas_por_grupo and grupo.id in canchas_por_grupo:
                     cancha_asignada = canchas_por_grupo[grupo.id]
                 
-                self._asignar_partidos_grupo(calendario, grupo, categoria, franjas_a_horas, cancha_asignada)
+                self._asignar_partidos_grupo(
+                    calendario, grupo, categoria, franjas_a_horas, 
+                    cancha_asignada, grupo_a_letra.get(grupo.id, 'A')
+                )
         
         return calendario
+    
+    def _crear_mapeo_grupos_a_letras(self, resultado_algoritmo) -> Dict:
+        """Crea un diccionario que mapea grupo_id a letra (A, B, C, D)."""
+        letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+        grupo_a_letra = {}
+        
+        for categoria, grupos in resultado_algoritmo.grupos_por_categoria.items():
+            # Ordenar grupos por ID para mantener consistencia
+            grupos_ordenados = sorted(grupos, key=lambda g: g.id)
+            for idx, grupo in enumerate(grupos_ordenados):
+                letra = letras[idx] if idx < len(letras) else str(idx + 1)
+                grupo_a_letra[grupo.id] = letra
+        
+        return grupo_a_letra
     
     def _mapear_franjas_a_horas(self) -> Dict:
         return {
@@ -49,7 +69,7 @@ class CalendarioBuilder:
             'Sábado 19:00': ('Sábado', ['19:00', '20:00', '21:00']),
         }
     
-    def _asignar_partidos_grupo(self, calendario, grupo, categoria, franjas_a_horas, cancha_asignada=None):
+    def _asignar_partidos_grupo(self, calendario, grupo, categoria, franjas_a_horas, cancha_asignada=None, grupo_letra='A'):
         franja_grupo = grupo.franja_horaria
         
         for franja_key, (dia, horas_disponibles) in franjas_a_horas.items():
@@ -71,6 +91,7 @@ class CalendarioBuilder:
                         partido = {
                             'categoria': categoria,
                             'grupo_id': grupo.id,
+                            'grupo_letra': grupo_letra,
                             'pareja1': p1.nombre,
                             'pareja2': p2.nombre
                         }

@@ -570,6 +570,27 @@
     #disponibilidadInfo .alert-secondary {
         opacity: 0.6;
     }
+    
+    /* Animación para actualización de estadísticas */
+    .stat-updated {
+        animation: pulse-stat 0.6s ease-in-out;
+    }
+    
+    @keyframes pulse-stat {
+        0% {
+            transform: scale(1);
+            color: #2d3748;
+        }
+        50% {
+            transform: scale(1.15);
+            color: #28a745;
+            text-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+        100% {
+            transform: scale(1);
+            color: #2d3748;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -946,20 +967,15 @@
 
     <!-- Modal Ingresar Resultado de Partido -->
     <div class="modal fade" id="modalResultadoPartido" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-trophy-fill"></i> Ingresar Resultado del Partido
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 1.5rem;">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-trophy-fill me-2"></i> Resultado del Partido
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Reglas del pádel:</strong> Se juegan 2 sets al mejor de 6 games. Si cada pareja gana 1 set, se juega un super tie-break a 11 puntos (con diferencia de 2).
-                    </div>
-                    
+                <div class="modal-body" style="padding: 2rem;">
                     <form id="formResultadoPartido">
                         <input type="hidden" id="resultadoCategoria">
                         <input type="hidden" id="resultadoGrupoId">
@@ -967,105 +983,97 @@
                         <input type="hidden" id="resultadoPareja2Id">
                         
                         <!-- Nombres de las parejas -->
-                        <div class="row mb-4">
-                            <div class="col-md-5 text-center">
-                                <h5 class="text-primary" id="resultadoPareja1Nombre">Pareja 1</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-4" style="padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                            <div class="text-center flex-fill">
+                                <h5 class="fw-bold mb-0 text-primary" id="resultadoPareja1Nombre" style="font-size: 1.1rem;">Pareja 1</h5>
                             </div>
-                            <div class="col-md-2 text-center">
-                                <h5 class="text-muted">VS</h5>
+                            <div class="text-center px-3">
+                                <div class="badge bg-dark" style="font-size: 1rem; padding: 0.5rem 1rem;">VS</div>
                             </div>
-                            <div class="col-md-5 text-center">
-                                <h5 class="text-primary" id="resultadoPareja2Nombre">Pareja 2</h5>
+                            <div class="text-center flex-fill">
+                                <h5 class="fw-bold mb-0 text-primary" id="resultadoPareja2Nombre" style="font-size: 1.1rem;">Pareja 2</h5>
                             </div>
                         </div>
                         
-                        <!-- Primer Set -->
-                        <div class="card mb-3 border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <strong>Primer Set</strong>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Games <span id="labelPareja1Set1">Pareja 1</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="gamesSet1Pareja1" min="0" max="7" required>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <div class="fs-1 text-muted">-</div>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Games <span id="labelPareja2Set1">Pareja 2</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="gamesSet1Pareja2" min="0" max="7" required>
-                                    </div>
+                        <!-- Sets en formato más compacto -->
+                        <div class="mb-4">
+                            <!-- Set 1 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted" style="font-size: 0.85rem;">
+                                    <i class="bi bi-circle-fill text-primary" style="font-size: 0.6rem;"></i> PRIMER SET
+                                </label>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                           id="gamesSet1Pareja1" min="0" max="7" required
+                                           placeholder="0"
+                                           style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                                    <div class="text-muted fw-bold" style="font-size: 1.5rem;">-</div>
+                                    <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                           id="gamesSet1Pareja2" min="0" max="7" required
+                                           placeholder="0"
+                                           style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Segundo Set -->
-                        <div class="card mb-3 border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <strong>Segundo Set</strong>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Games <span id="labelPareja1Set2">Pareja 1</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="gamesSet2Pareja1" min="0" max="7" required>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <div class="fs-1 text-muted">-</div>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Games <span id="labelPareja2Set2">Pareja 2</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="gamesSet2Pareja2" min="0" max="7" required>
-                                    </div>
+                            
+                            <!-- Set 2 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted" style="font-size: 0.85rem;">
+                                    <i class="bi bi-circle-fill text-primary" style="font-size: 0.6rem;"></i> SEGUNDO SET
+                                </label>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                           id="gamesSet2Pareja1" min="0" max="7" required
+                                           placeholder="0"
+                                           style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                                    <div class="text-muted fw-bold" style="font-size: 1.5rem;">-</div>
+                                    <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                           id="gamesSet2Pareja2" min="0" max="7" required
+                                           placeholder="0"
+                                           style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Super Tie-break (condicional) -->
-                        <div class="card mb-3 border-warning" id="tiebreakCard" style="display: none;">
-                            <div class="card-header bg-warning text-dark">
-                                <strong><i class="bi bi-lightning-fill"></i> Super Tie-break</strong>
-                                <small class="d-block">Cada pareja ganó un set. Ingresa el resultado del tie-break.</small>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Puntos <span id="labelPareja1TB">Pareja 1</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="tiebreakPareja1" min="0">
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <div class="fs-1 text-muted">-</div>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold">Puntos <span id="labelPareja2TB">Pareja 2</span></label>
-                                        <input type="number" class="form-control form-control-lg text-center" 
-                                               id="tiebreakPareja2" min="0">
+                        <div id="tiebreakCard" style="display: none;">
+                            <div class="alert alert-warning mb-3" style="border-radius: 12px; border-left: 4px solid #ffc107;">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-lightning-fill me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <strong>Super Tie-break</strong>
+                                        <small class="d-block text-muted">Cada pareja ganó un set</small>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="d-flex gap-3 align-items-center mb-3">
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="tiebreakPareja1" min="0"
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #ffc107;">
+                                <div class="text-warning fw-bold" style="font-size: 1.5rem;">-</div>
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="tiebreakPareja2" min="0"
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #ffc107;">
                             </div>
                         </div>
                         
                         <!-- Resumen del ganador -->
-                        <div class="alert alert-success text-center" id="resumenGanador" style="display: none;">
-                            <h5 class="mb-0">
-                                <i class="bi bi-trophy-fill"></i> 
-                                <span id="nombreGanador"></span> gana el partido
+                        <div id="resumenGanador" style="display: none; padding: 1.5rem; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 15px; text-align: center;">
+                            <h5 class="mb-2">
+                                <i class="bi bi-trophy-fill text-warning" style="font-size: 1.8rem;"></i>
                             </h5>
-                            <small class="text-muted d-block mt-1" id="detalleResultado"></small>
+                            <h6 class="fw-bold text-success mb-1" id="nombreGanador"></h6>
+                            <small class="text-muted" id="detalleResultado"></small>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btnGuardarResultado">
-                        <i class="bi bi-check-circle-fill"></i> Guardar Resultado
+                <div class="modal-footer" style="padding: 1.25rem 2rem; background: #f8f9fa;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; padding: 0.625rem 1.5rem;">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnGuardarResultado" style="border-radius: 10px; padding: 0.625rem 2rem;">
+                        <i class="bi bi-check-circle-fill me-2"></i> Guardar
                     </button>
                 </div>
             </div>
@@ -1759,11 +1767,11 @@
                                         <div class="ms-2">
                                             <!-- Indicador de posición asignada automáticamente -->
                                             {% if pareja.posicion_grupo == 1 %}
-                                                <span class="badge bg-success" title="1° Puesto (Automático)">🥇 1°</span>
+                                                <span class="badge text-dark" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);" title="1° Puesto (Automático)">1°</span>
                                             {% elif pareja.posicion_grupo == 2 %}
-                                                <span class="badge bg-warning text-dark" title="2° Puesto (Automático)">🥈 2°</span>
+                                                <span class="badge text-dark" style="background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);" title="2° Puesto (Automático)">2°</span>
                                             {% elif pareja.posicion_grupo == 3 %}
-                                                <span class="badge bg-info text-white" title="3° Puesto (Automático)">🥉 3°</span>
+                                                <span class="badge text-white" style="background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);" title="3° Puesto (Automático)">3°</span>
                                             {% endif %}
                                         </div>
                                     {% endif %}
@@ -2028,7 +2036,7 @@
     <div class="partido-bloque-simple {{ clase_categoria[partido.categoria] }}">
         <div class="mb-2 text-center">
             <span class="badge-categoria">{{ emoji_categoria[partido.categoria] }} {{ partido.categoria }}</span>
-            <span class="badge-grupo">Grupo {{ partido.grupo_id }}</span>
+            <span class="badge-grupo">Grupo {{ partido.grupo_letra | default('A') }}</span>
         </div>
         
         <div class="row align-items-center g-0">
@@ -2133,6 +2141,10 @@ function asignarParejaNoAsignadaASlot(parejaId, grupoId, slot, categoria) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Actualizar estadísticas si están disponibles
+            if (data.estadisticas) {
+                actualizarEstadisticas(data.estadisticas);
+            }
             // Actualizar manteniendo el tab activo
             actualizarCategoria(categoria);
         } else {
@@ -2160,6 +2172,10 @@ function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDesti
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Actualizar estadísticas si están disponibles
+            if (data.estadisticas) {
+                actualizarEstadisticas(data.estadisticas);
+            }
             // Actualizar manteniendo el tab activo
             const categoriaActual = obtenerCategoriaActual();
             actualizarCategoria(categoriaActual);
@@ -2551,6 +2567,11 @@ function agregarParejaDesdeModal() {
         if (data.success) {
             Toast.success(data.mensaje + ' - Agregada a parejas no asignadas');
             
+            // Actualizar estadísticas si están disponibles
+            if (data.estadisticas) {
+                actualizarEstadisticas(data.estadisticas);
+            }
+            
             // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarPareja'));
             modal.hide();
@@ -2904,6 +2925,12 @@ function eliminarParejaGrupo(parejaId) {
             Toast.error(data.error);
         } else {
             Toast.success(data.mensaje);
+            
+            // Actualizar estadísticas si están disponibles
+            if (data.estadisticas) {
+                actualizarEstadisticas(data.estadisticas);
+            }
+            
             const modalGrupo = bootstrap.Modal.getInstance(document.getElementById('modalEditarGrupo'));
             if (modalGrupo) modalGrupo.hide();
             
@@ -3639,7 +3666,10 @@ function actualizarCategoria(categoria) {
             // 4. Actualizar calendario general
             actualizarCalendarioGeneral();
             
-            // 5. Reinicializar drag and drop
+            // 5. Actualizar estadísticas globales
+            actualizarEstadisticasDesdeServidor();
+            
+            // 6. Reinicializar drag and drop
             inicializarDragAndDrop();
         } else {
             console.error('Error al actualizar');
@@ -3739,9 +3769,9 @@ function actualizarGrupos(categoria, grupos) {
                             </div>
                             ${pareja.posicion_grupo ? `
                                 <div class="ms-2">
-                                    ${pareja.posicion_grupo === 1 ? '<span class="badge bg-success" title="1° Puesto (Automático)">🥇 1°</span>' : ''}
-                                    ${pareja.posicion_grupo === 2 ? '<span class="badge bg-warning text-dark" title="2° Puesto (Automático)">🥈 2°</span>' : ''}
-                                    ${pareja.posicion_grupo === 3 ? '<span class="badge bg-info text-white" title="3° Puesto (Automático)">🥉 3°</span>' : ''}
+                                    ${pareja.posicion_grupo === 1 ? '<span class="badge text-dark" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);" title="1° Puesto (Automático)">1°</span>' : ''}
+                                    ${pareja.posicion_grupo === 2 ? '<span class="badge text-dark" style="background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);" title="2° Puesto (Automático)">2°</span>' : ''}
+                                    ${pareja.posicion_grupo === 3 ? '<span class="badge text-white" style="background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);" title="3° Puesto (Automático)">3°</span>' : ''}
                                 </div>
                             ` : ''}
                         </div>
@@ -3992,7 +4022,7 @@ function renderizarCalendario(calendario) {
             <div class="partido-bloque-simple ${claseCategoria}">
                 <div class="mb-2 text-center">
                     <span class="badge-categoria">${emoji} ${partido.categoria}</span>
-                    <span class="badge-grupo">Grupo ${partido.grupo_id}</span>
+                    <span class="badge-grupo">Grupo ${partido.grupo_letra || 'A'}</span>
                 </div>
                 <div class="row align-items-center g-0">
                     <div class="col-5 text-end pe-2">
@@ -4171,8 +4201,6 @@ function abrirModalResultado(categoria, grupoId, pareja1Id, pareja2Id, pareja1No
     const elementosCriticos = [
         'resultadoCategoria', 'resultadoGrupoId', 'resultadoPareja1Id', 'resultadoPareja2Id',
         'resultadoPareja1Nombre', 'resultadoPareja2Nombre',
-        'labelPareja1Set1', 'labelPareja2Set1', 'labelPareja1Set2', 'labelPareja2Set2',
-        'labelPareja1TB', 'labelPareja2TB',
         'formResultadoPartido', 'tiebreakCard',
         'modalResultadoPartido'
     ];
@@ -4195,17 +4223,6 @@ function abrirModalResultado(categoria, grupoId, pareja1Id, pareja2Id, pareja1No
     // Actualizar nombres en el modal
     document.getElementById('resultadoPareja1Nombre').textContent = pareja1Nombre;
     document.getElementById('resultadoPareja2Nombre').textContent = pareja2Nombre;
-    
-    // Actualizar labels con nombres cortos
-    const nombreCortoP1 = pareja1Nombre.length > 15 ? pareja1Nombre.substring(0, 15) + '...' : pareja1Nombre;
-    const nombreCortoP2 = pareja2Nombre.length > 15 ? pareja2Nombre.substring(0, 15) + '...' : pareja2Nombre;
-    
-    document.getElementById('labelPareja1Set1').textContent = nombreCortoP1;
-    document.getElementById('labelPareja2Set1').textContent = nombreCortoP2;
-    document.getElementById('labelPareja1Set2').textContent = nombreCortoP1;
-    document.getElementById('labelPareja2Set2').textContent = nombreCortoP2;
-    document.getElementById('labelPareja1TB').textContent = nombreCortoP1;
-    document.getElementById('labelPareja2TB').textContent = nombreCortoP2;
     
     // Limpiar formulario
     document.getElementById('formResultadoPartido').reset();
@@ -4627,6 +4644,57 @@ function renderizarTablaPosiciones(categoria, grupoId, tabla) {
     });
     
     tbody.innerHTML = html;
+}
+
+// Función para actualizar estadísticas en tiempo real
+function actualizarEstadisticas(estadisticas) {
+    if (!estadisticas) return;
+    
+    // Actualizar Parejas Asignadas
+    const parejasAsignadasEl = document.querySelector('.stat-card:nth-child(1) .stat-number');
+    if (parejasAsignadasEl) {
+        parejasAsignadasEl.textContent = `${estadisticas.parejas_asignadas}/${estadisticas.total_parejas}`;
+        parejasAsignadasEl.classList.add('stat-updated');
+        setTimeout(() => parejasAsignadasEl.classList.remove('stat-updated'), 600);
+    }
+    
+    // Actualizar Tasa de Asignación
+    const tasaAsignacionEl = document.querySelector('.stat-card:nth-child(2) .stat-number');
+    if (tasaAsignacionEl) {
+        tasaAsignacionEl.textContent = `${Math.round(estadisticas.porcentaje_asignacion)}%`;
+        tasaAsignacionEl.classList.add('stat-updated');
+        setTimeout(() => tasaAsignacionEl.classList.remove('stat-updated'), 600);
+    }
+    
+    // Actualizar Grupos Formados
+    const gruposFormadosEl = document.querySelector('.stat-card:nth-child(3) .stat-number');
+    if (gruposFormadosEl) {
+        gruposFormadosEl.textContent = estadisticas.total_grupos;
+        gruposFormadosEl.classList.add('stat-updated');
+        setTimeout(() => gruposFormadosEl.classList.remove('stat-updated'), 600);
+    }
+    
+    // Actualizar Calidad Promedio
+    const calidadPromedioEl = document.querySelector('.stat-card:nth-child(4) .stat-number');
+    if (calidadPromedioEl) {
+        calidadPromedioEl.textContent = `${estadisticas.score_compatibilidad_promedio.toFixed(2)}/3.0`;
+        calidadPromedioEl.classList.add('stat-updated');
+        setTimeout(() => calidadPromedioEl.classList.remove('stat-updated'), 600);
+    }
+}
+
+// Función para obtener estadísticas del servidor y actualizarlas
+function actualizarEstadisticasDesdeServidor() {
+    fetch('/api/estadisticas')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.estadisticas) {
+                actualizarEstadisticas(data.estadisticas);
+            }
+        })
+        .catch(error => {
+            console.error('Error al actualizar estadísticas:', error);
+        });
 }
 
 // Cargar todas las tablas de posiciones al iniciar la página
