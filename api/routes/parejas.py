@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import logging
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
     PosicionGrupo, FixtureGenerator, FixtureFinales
@@ -466,8 +469,8 @@ def intercambiar_pareja():
             'mensaje': mensaje
         })
     except Exception as e:
-        import traceback
-        return jsonify({'error': f'Error al intercambiar: {str(e)}', 'traceback': traceback.format_exc()}), 500
+        logger.error(f"Error al intercambiar: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Error al intercambiar parejas. Por favor, intenta nuevamente.'}), 500
 
 
 @api_bp.route('/ejecutar-algoritmo', methods=['POST'])
@@ -497,10 +500,9 @@ def ejecutar_algoritmo():
             'resultado': resultado
         })
     except Exception as e:
-        import traceback
+        logger.error(f"Error al ejecutar algoritmo: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al ejecutar algoritmo: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al ejecutar el algoritmo. Por favor, verifica los datos e intenta nuevamente.'
         }), 500
 
 
@@ -1033,16 +1035,14 @@ def exportar_google_sheets():
             'url': url
         })
     except KeyError as e:
-        import traceback
+        logger.error(f"Error en la estructura de datos: clave faltante {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error en la estructura de datos: clave faltante {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error en la estructura de datos. Por favor, verifica que todos los datos estén completos.'
         }), 500
     except Exception as e:
-        import traceback
+        logger.error(f"Error al exportar: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al exportar: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al exportar a Google Sheets. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1161,10 +1161,9 @@ def asignar_posicion():
         })
     
     except Exception as e:
-        import traceback
+        logger.error(f"Error al asignar posición: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al asignar posición: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al asignar posición. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1307,9 +1306,9 @@ def guardar_resultado_partido():
         })
     
     except Exception as e:
-        logger.exception("Error al guardar resultado del partido")
+        logger.error(f"Error al guardar resultado: {str(e)}", exc_info=True)
         return jsonify({
-            'error': 'Error al guardar resultado. Por favor, intente nuevamente.'
+            'error': 'Error al guardar el resultado. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1370,10 +1369,9 @@ def obtener_tabla_posiciones(categoria, grupo_id):
         })
     
     except Exception as e:
-        import traceback
+        logger.error(f"Error al obtener tabla: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al obtener tabla: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al obtener la tabla de posiciones. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1433,10 +1431,9 @@ def generar_fixture(categoria):
         })
     
     except Exception as e:
-        import traceback
+        logger.error(f"Error al generar fixture: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al generar fixture: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al generar el fixture. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1531,10 +1528,9 @@ def marcar_ganador():
         })
     
     except Exception as e:
-        import traceback
+        logger.error(f"Error al marcar ganador: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al marcar ganador: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al marcar el ganador. Por favor, intenta nuevamente.'
         }), 500
 
 
@@ -1563,10 +1559,9 @@ def obtener_calendario_finales():
         })
     
     except Exception as e:
-        import traceback
+        logger.error(f"Error al generar calendario de finales: {str(e)}", exc_info=True)
         return jsonify({
-            'error': f'Error al generar calendario de finales: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': 'Error al generar el calendario de finales. Por favor, intenta nuevamente.'
         }), 500
 
 

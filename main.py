@@ -6,6 +6,7 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 from flask import Flask, render_template, session, redirect, url_for, flash
 from flask_session import Session
 import os
+import logging
 
 from config import (
     SECRET_KEY, 
@@ -14,12 +15,24 @@ from config import (
     EMOJI_CATEGORIA, 
     COLORES_CATEGORIA
 )
+from config.settings import BASE_DIR
 from api import api_bp
 from utils.torneo_storage import storage
 
 
 def crear_app():
     """Factory para crear y configurar la aplicación Flask."""
+    # Configure logging
+    log_file = os.path.join(BASE_DIR, 'app.log')
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    
     app = Flask(__name__, 
                 template_folder='web/templates',
                 static_folder='web/static')
