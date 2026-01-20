@@ -3855,8 +3855,6 @@ function actualizarPartidos(categoria, grupos) {
                 const resultado = resultados[resultado_key] || {};
                 const tiene_resultado = resultado.ganador_id !== undefined && resultado.ganador_id !== null;
                 
-                console.log(`Partido ${idx + 1} (${p1_id} vs ${p2_id}): key=${resultado_key}, tiene_resultado=${tiene_resultado}`, resultado);
-                
                 const borderClass = tiene_resultado ? 'border-success border-2' : (puede_ingresar ? '' : 'border-danger');
                 const cursor = puede_ingresar ? 'pointer' : 'not-allowed';
                 const opacity = puede_ingresar ? '' : 'opacity: 0.6;';
