@@ -4683,42 +4683,26 @@ function abrirModalPorIds(categoria, grupoId, pareja1Id, pareja2Id) {
             return response.json();
         })
         .then(data => {
-            
-            
-            
-            
             const grupos = data.grupos_por_categoria[categoria] || [];
-            
-            
             const grupo = grupos.find(g => g.id === grupoId);
             
             if (!grupo) {
-                
-                
                 Toast.error('Grupo no encontrado');
                 return;
             }
-            
-            
-            
             
             // Buscar las parejas por ID
             const pareja1 = grupo.parejas.find(p => p.id === pareja1Id);
             const pareja2 = grupo.parejas.find(p => p.id === pareja2Id);
             
             if (!pareja1 || !pareja2) {
-                
-                
                 Toast.error('Parejas no encontradas');
                 return;
             }
             
-            
             abrirModalResultado(categoria, grupoId, pareja1Id, pareja2Id, pareja1.nombre, pareja2.nombre);
         })
         .catch(error => {
-            
-            
             Toast.error('Error al cargar datos: ' + error.message);
         });
 }
