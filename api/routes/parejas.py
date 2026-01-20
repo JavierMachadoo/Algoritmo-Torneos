@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify, session
 import pandas as pd
 import os
 import logging
-import traceback
 
 # Configure logging
 logger = logging.getLogger(__name__)
