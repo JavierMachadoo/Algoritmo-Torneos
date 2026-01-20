@@ -1,7 +1,7 @@
 {
   "nombre": "Torneo 26/12/2025",
   "fecha_creacion": "2025-12-26T13:18:53.825559",
-  "fecha_modificacion": "2026-01-19T20:18:56.307517",
+  "fecha_modificacion": "2026-01-19T21:23:42.485912",
   "parejas": [
     {
       "id": 1,
@@ -160,6 +160,7 @@
       "telefono": "092226274",
       "categoria": "Sexta",
       "franjas_disponibles": [
+        "Sábado 09:00",
         "Sábado 16:00",
         "Sábado 19:00"
       ]
@@ -299,6 +300,28 @@
         "Jueves 18:00",
         "Sábado 16:00"
       ]
+    },
+    {
+      "id": 29,
+      "nombre": "dkslad",
+      "telefono": "095095059",
+      "categoria": "Sexta",
+      "franjas_disponibles": [
+        "Sábado 09:00",
+        "Viernes 18:00",
+        "Viernes 21:00"
+      ]
+    },
+    {
+      "id": 30,
+      "nombre": "Klosdkls",
+      "telefono": "098594059",
+      "categoria": "Sexta",
+      "franjas_disponibles": [
+        "Sábado 09:00",
+        "Viernes 21:00",
+        "Sábado 09:00"
+      ]
     }
   ],
   "resultado_algoritmo": {
@@ -316,7 +339,7 @@
                 "Jueves 20:00"
               ],
               "grupo_asignado": 1,
-              "posicion_grupo": 3
+              "posicion_grupo": null
             },
             {
               "id": 4,
@@ -329,7 +352,7 @@
                 "Viernes 21:00"
               ],
               "grupo_asignado": 1,
-              "posicion_grupo": 1
+              "posicion_grupo": null
             },
             {
               "id": 14,
@@ -341,7 +364,7 @@
                 "Viernes 18:00"
               ],
               "grupo_asignado": 1,
-              "posicion_grupo": 2
+              "posicion_grupo": null
             }
           ],
           "partidos": [
@@ -364,51 +387,11 @@
               "pareja2_id": 14
             }
           ],
-          "resultados": {
-            "1-4": {
-              "pareja1_id": 1,
-              "pareja2_id": 4,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 5,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 11,
-              "tiebreak_pareja2": 14,
-              "ganador_id": 4
-            },
-            "1-14": {
-              "pareja1_id": 1,
-              "pareja2_id": 14,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 5,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 3,
-              "tiebreak_pareja2": 14,
-              "ganador_id": 14
-            },
-            "4-14": {
-              "pareja1_id": 4,
-              "pareja2_id": 14,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 5,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 15,
-              "tiebreak_pareja2": 11,
-              "ganador_id": 4
-            }
-          },
+          "resultados": {},
           "franja_horaria": "Jueves 18:00",
           "cancha": 1,
           "score": 2.5,
-          "resultados_completos": true
+          "resultados_completos": false
         }
       ],
       "Séptima": [
@@ -477,7 +460,7 @@
             }
           ],
           "resultados": {},
-          "franja_horaria": "Viernes 21:00",
+          "franja_horaria": "Jueves 20:00",
           "cancha": 1,
           "score": 3.0,
           "resultados_completos": false
@@ -704,7 +687,7 @@
                 "Viernes 21:00"
               ],
               "grupo_asignado": 422,
-              "posicion_grupo": null
+              "posicion_grupo": 1
             },
             {
               "id": 12,
@@ -716,7 +699,7 @@
                 "Viernes 21:00"
               ],
               "grupo_asignado": 416,
-              "posicion_grupo": null
+              "posicion_grupo": 2
             },
             {
               "id": 23,
@@ -731,7 +714,7 @@
                 "Sábado 19:00"
               ],
               "grupo_asignado": 425,
-              "posicion_grupo": null
+              "posicion_grupo": 3
             }
           ],
           "partidos": [
@@ -754,11 +737,51 @@
               "pareja2_id": 23
             }
           ],
-          "resultados": {},
+          "resultados": {
+            "6-12": {
+              "pareja1_id": 6,
+              "pareja2_id": 12,
+              "sets_pareja1": 2,
+              "sets_pareja2": 0,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 5,
+              "games_set2_pareja1": 6,
+              "games_set2_pareja2": 5,
+              "tiebreak_pareja1": null,
+              "tiebreak_pareja2": null,
+              "ganador_id": 6
+            },
+            "6-23": {
+              "pareja1_id": 6,
+              "pareja2_id": 23,
+              "sets_pareja1": 1,
+              "sets_pareja2": 1,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 5,
+              "games_set2_pareja1": 5,
+              "games_set2_pareja2": 6,
+              "tiebreak_pareja1": 11,
+              "tiebreak_pareja2": 5,
+              "ganador_id": 6
+            },
+            "12-23": {
+              "pareja1_id": 12,
+              "pareja2_id": 23,
+              "sets_pareja1": 2,
+              "sets_pareja2": 0,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 4,
+              "games_set2_pareja1": 6,
+              "games_set2_pareja2": 4,
+              "tiebreak_pareja1": null,
+              "tiebreak_pareja2": null,
+              "ganador_id": 12
+            }
+          },
           "franja_horaria": "Viernes 18:00",
           "cancha": 2,
           "score": 3.0,
-          "resultados_completos": false
+          "resultados_completos": true
         },
         {
           "id": 371,
@@ -772,7 +795,7 @@
                 "Sábado 12:00"
               ],
               "grupo_asignado": 425,
-              "posicion_grupo": null
+              "posicion_grupo": 1
             },
             {
               "id": 17,
@@ -784,7 +807,7 @@
                 "Sábado 12:00"
               ],
               "grupo_asignado": 423,
-              "posicion_grupo": null
+              "posicion_grupo": 3
             },
             {
               "id": 21,
@@ -796,7 +819,7 @@
                 "Sábado 12:00"
               ],
               "grupo_asignado": 424,
-              "posicion_grupo": null
+              "posicion_grupo": 2
             }
           ],
           "partidos": [
@@ -819,11 +842,51 @@
               "pareja2_id": 21
             }
           ],
-          "resultados": {},
+          "resultados": {
+            "7-17": {
+              "pareja1_id": 7,
+              "pareja2_id": 17,
+              "sets_pareja1": 2,
+              "sets_pareja2": 0,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 5,
+              "games_set2_pareja1": 6,
+              "games_set2_pareja2": 5,
+              "tiebreak_pareja1": null,
+              "tiebreak_pareja2": null,
+              "ganador_id": 7
+            },
+            "7-21": {
+              "pareja1_id": 7,
+              "pareja2_id": 21,
+              "sets_pareja1": 1,
+              "sets_pareja2": 1,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 3,
+              "games_set2_pareja1": 4,
+              "games_set2_pareja2": 6,
+              "tiebreak_pareja1": 11,
+              "tiebreak_pareja2": 5,
+              "ganador_id": 7
+            },
+            "17-21": {
+              "pareja1_id": 17,
+              "pareja2_id": 21,
+              "sets_pareja1": 1,
+              "sets_pareja2": 1,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 5,
+              "games_set2_pareja1": 5,
+              "games_set2_pareja2": 6,
+              "tiebreak_pareja1": 5,
+              "tiebreak_pareja2": 11,
+              "ganador_id": 21
+            }
+          },
           "franja_horaria": "Sábado 12:00",
           "cancha": 1,
           "score": 3.0,
-          "resultados_completos": false
+          "resultados_completos": true
         },
         {
           "id": 372,
@@ -887,8 +950,74 @@
           ],
           "resultados": {},
           "franja_horaria": "Jueves 20:00",
-          "cancha": 1,
+          "cancha": 2,
           "score": 3.0,
+          "resultados_completos": false
+        },
+        {
+          "id": 427,
+          "franja_horaria": "Sábado 09:00",
+          "cancha": "2",
+          "score": 3.0,
+          "score_compatibilidad": 3.0,
+          "parejas": [
+            {
+              "id": 15,
+              "nombre": "Mateo Rodriguez  Matias barenchi",
+              "telefono": "092226274",
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "grupo_asignado": 425,
+              "posicion_grupo": null
+            },
+            {
+              "id": 30,
+              "nombre": "Klosdkls",
+              "telefono": "098594059",
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Viernes 21:00",
+                "Sábado 09:00"
+              ]
+            },
+            {
+              "id": 29,
+              "nombre": "dkslad",
+              "telefono": "095095059",
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 09:00",
+                "Viernes 18:00",
+                "Viernes 21:00"
+              ]
+            }
+          ],
+          "partidos": [
+            {
+              "pareja1": "Mateo Rodriguez  Matias barenchi",
+              "pareja2": "Klosdkls",
+              "pareja1_id": 15,
+              "pareja2_id": 30
+            },
+            {
+              "pareja1": "Mateo Rodriguez  Matias barenchi",
+              "pareja2": "dkslad",
+              "pareja1_id": 15,
+              "pareja2_id": 29
+            },
+            {
+              "pareja1": "Klosdkls",
+              "pareja2": "dkslad",
+              "pareja1_id": 30,
+              "pareja2_id": 29
+            }
+          ],
+          "resultados": {},
           "resultados_completos": false
         }
       ],
@@ -957,14 +1086,14 @@
           ],
           "resultados": {},
           "franja_horaria": "Viernes 21:00",
-          "cancha": 2,
+          "cancha": 1,
           "score": 3.0,
           "resultados_completos": false
         }
       ]
     },
     "estadisticas": {
-      "total_parejas": 28,
+      "total_parejas": 30,
       "parejas_asignadas": 27,
       "parejas_sin_asignar": 1,
       "porcentaje_asignacion": 96.42857142857143,
@@ -985,20 +1114,7 @@
       "grupos_compatibilidad_perfecta": 8,
       "grupos_compatibilidad_parcial": 1
     },
-    "parejas_sin_asignar": [
-      {
-        "id": 15,
-        "nombre": "Mateo Rodriguez  Matias barenchi",
-        "telefono": "092226274",
-        "categoria": "Sexta",
-        "franjas_disponibles": [
-          "Sábado 16:00",
-          "Sábado 19:00"
-        ],
-        "grupo_asignado": 425,
-        "posicion_grupo": null
-      }
-    ],
+    "parejas_sin_asignar": [],
     "calendario": {
       "Jueves": {
         "18:00": [
@@ -1021,30 +1137,45 @@
         ],
         "20:00": [
           {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabril y Mario",
+            "pareja2": "Gabriel y Mario Larrosa"
+          },
+          {
             "categoria": "Sexta",
             "grupo_id": 372,
             "pareja1": "Daniel Fedorczuk y Marcelo",
             "pareja2": "Diego sacarelo"
-          },
-          null
+          }
         ],
         "21:00": [
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabril y Mario",
+            "pareja2": "Nicolas Romay Javier Machin"
+          },
           {
             "categoria": "Sexta",
             "grupo_id": 372,
             "pareja1": "Daniel Fedorczuk y Marcelo",
             "pareja2": "Stella San Martin . Franco"
-          },
-          null
+          }
         ],
         "22:00": [
+          {
+            "categoria": "Séptima",
+            "grupo_id": 2,
+            "pareja1": "Gabriel y Mario Larrosa",
+            "pareja2": "Nicolas Romay Javier Machin"
+          },
           {
             "categoria": "Sexta",
             "grupo_id": 372,
             "pareja1": "Diego sacarelo",
             "pareja2": "Stella San Martin . Franco"
-          },
-          null
+          }
         ]
       },
       "Viernes": {
@@ -1092,45 +1223,30 @@
         ],
         "21:00": [
           {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabril y Mario",
-            "pareja2": "Gabriel y Mario Larrosa"
-          },
-          {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Martín Ortiz - Rodrigo Oviedo"
-          }
+          },
+          null
         ],
         "22:00": [
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabril y Mario",
-            "pareja2": "Nicolas Romay Javier Machin"
-          },
           {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Jose Miqueiro - Andres Salort",
             "pareja2": "Alejandro Vazquez , nicolas"
-          }
+          },
+          null
         ],
         "23:00": [
-          {
-            "categoria": "Séptima",
-            "grupo_id": 2,
-            "pareja1": "Gabriel y Mario Larrosa",
-            "pareja2": "Nicolas Romay Javier Machin"
-          },
           {
             "categoria": "Quinta",
             "grupo_id": 426,
             "pareja1": "Martín Ortiz - Rodrigo Oviedo",
             "pareja2": "Alejandro Vazquez , nicolas"
-          }
+          },
+          null
         ]
       },
       "Sábado": {
@@ -1141,7 +1257,12 @@
             "pareja1": "Santiago Cheker y Nicolas Genova",
             "pareja2": "Yisela Quintana"
           },
-          null
+          {
+            "categoria": "Sexta",
+            "grupo_id": 427,
+            "pareja1": "Mateo Rodriguez  Matias barenchi",
+            "pareja2": "Klosdkls"
+          }
         ],
         "10:00": [
           {
@@ -1150,7 +1271,12 @@
             "pareja1": "Santiago Cheker y Nicolas Genova",
             "pareja2": "Lucia Marino y Catalina Quiroz"
           },
-          null
+          {
+            "categoria": "Sexta",
+            "grupo_id": 427,
+            "pareja1": "Mateo Rodriguez  Matias barenchi",
+            "pareja2": "dkslad"
+          }
         ],
         "11:00": [
           {
@@ -1159,7 +1285,12 @@
             "pareja1": "Yisela Quintana",
             "pareja2": "Lucia Marino y Catalina Quiroz"
           },
-          null
+          {
+            "categoria": "Sexta",
+            "grupo_id": 427,
+            "pareja1": "Klosdkls",
+            "pareja2": "dkslad"
+          }
         ],
         "12:00": [
           {

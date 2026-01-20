@@ -4541,63 +4541,27 @@ function guardarResultadoPartido() {
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
         if (data.success) {
-            console.log('Guardado exitoso');
             Toast.success(data.mensaje);
             
-            // Cerrar modal y limpiar
+            // Cerrar modal
             const modalElement = document.getElementById('modalResultadoPartido');
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) {
                 modal.hide();
             }
             
-            // Actualizar dinámicamente sin recargar la página
-            console.log('Actualizando vista de la categoría:', categoria);
-            console.log('Grupo ID:', grupoId, 'Pareja 1:', pareja1Id, 'Pareja 2:', pareja2Id);
+            // Guardar la pestaña activa antes del reload
+            const activeTab = document.querySelector('#mainTabs .nav-link.active');
+            if (activeTab) {
+                sessionStorage.setItem('activeTab', activeTab.id);
+            }
             
-            // 1. Actualizar partidos del grupo específico
-            fetch('/api/resultado_algoritmo')
-                .then(response => response.json())
-                .then(resultData => {
-                    console.log('Datos recibidos del servidor:', resultData);
-                    const grupos = resultData.grupos_por_categoria[categoria] || [];
-                    console.log('Grupos de la categoría:', grupos.length);
-                    
-                    // Buscar el grupo actualizado
-                    const grupoActualizado = grupos.find(g => g.id === grupoId);
-                    if (grupoActualizado) {
-                        console.log('Grupo actualizado encontrado:', grupoActualizado);
-                        console.log('Resultados en el grupo:', grupoActualizado.resultados);
-                        const ids_ordenados = [pareja1Id, pareja2Id].sort((a, b) => a - b);
-                        const key = ids_ordenados.join('-');
-                        console.log('Buscando resultado con key:', key);
-                        console.log('Resultado encontrado:', grupoActualizado.resultados ? grupoActualizado.resultados[key] : 'NO HAY RESULTADOS');
-                    } else {
-                        console.warn('Grupo NO encontrado en los datos actualizados');
-                    }
-                    
-                    // 2. Actualizar partidos
-                    actualizarPartidos(categoria, grupos);
-                    
-                    // 3. Actualizar tabla de posiciones
-                    cargarTablaPosiciones(categoria, grupoId);
-                    
-                    // 4. Actualizar calendario general si está visible
-                    if (document.querySelector('#fixture-main.active')) {
-                        actualizarCalendarioGeneral();
-                    }
-                    
-                    console.log('Vista actualizada correctamente');
-                })
-                .catch(error => {
-                    console.error('Error actualizando vista:', error);
-                    // Si falla la actualización dinámica, recargar como fallback
-                    setTimeout(() => location.reload(), 500);
-                });
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 300);
         } else {
-            console.error('Error del servidor:', data.error);
             Toast.error('Error: ' + data.error);
         }
     })
@@ -4669,6 +4633,17 @@ function renderizarTablaPosiciones(categoria, grupoId, tabla) {
 
 // Cargar todas las tablas de posiciones al iniciar la página
 document.addEventListener('DOMContentLoaded', function() {
+    // Restaurar la pestaña activa después del reload
+    const savedTab = sessionStorage.getItem('activeTab');
+    if (savedTab) {
+        const tabButton = document.getElementById(savedTab);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+        }
+        sessionStorage.removeItem('activeTab');
+    }
+    
     const categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
     
     // Cargar tablas para cada categoría
