@@ -1,7 +1,7 @@
 {
   "nombre": "Torneo 26/12/2025",
   "fecha_creacion": "2025-12-26T13:18:53.825559",
-  "fecha_modificacion": "2026-01-20T02:49:14.101810",
+  "fecha_modificacion": "2026-01-20T18:28:27.519469",
   "parejas": [
     {
       "categoria": "Cuarta",
@@ -664,7 +664,7 @@
               "nombre": "Daniel Fedorchuk //  Marcelo Pardo",
               "telefono": "097462469 Marcelo 094543354 Daniel",
               "grupo_asignado": 422,
-              "posicion_grupo": 1
+              "posicion_grupo": null
             },
             {
               "categoria": "Sexta",
@@ -676,7 +676,7 @@
               "nombre": "Diego Martínez// Bruno Graffigna",
               "telefono": "098317011",
               "grupo_asignado": 416,
-              "posicion_grupo": 2
+              "posicion_grupo": null
             },
             {
               "categoria": "Sexta",
@@ -691,7 +691,7 @@
               "nombre": "Javier Machado / Mathias Hartwich",
               "telefono": "094005497",
               "grupo_asignado": 425,
-              "posicion_grupo": 3
+              "posicion_grupo": null
             }
           ],
           "partidos": [
@@ -714,51 +714,11 @@
               "pareja2_id": 23
             }
           ],
-          "resultados": {
-            "6-12": {
-              "pareja1_id": 6,
-              "pareja2_id": 12,
-              "sets_pareja1": 2,
-              "sets_pareja2": 0,
-              "games_set1_pareja1": 7,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 6,
-              "games_set2_pareja2": 3,
-              "tiebreak_pareja1": null,
-              "tiebreak_pareja2": null,
-              "ganador_id": 6
-            },
-            "6-23": {
-              "pareja1_id": 6,
-              "pareja2_id": 23,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 4,
-              "games_set2_pareja1": 4,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 11,
-              "tiebreak_pareja2": 7,
-              "ganador_id": 6
-            },
-            "12-23": {
-              "pareja1_id": 12,
-              "pareja2_id": 23,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 5,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 14,
-              "tiebreak_pareja2": 12,
-              "ganador_id": 12
-            }
-          },
+          "resultados": {},
           "franja_horaria": "Viernes 18:00",
           "cancha": 2,
           "score": 3.0,
-          "resultados_completos": true
+          "resultados_completos": false
         },
         {
           "id": 371,
@@ -772,7 +732,7 @@
               "nombre": "Augusto y Pablito",
               "telefono": "091 261 367",
               "grupo_asignado": 425,
-              "posicion_grupo": 1
+              "posicion_grupo": null
             },
             {
               "categoria": "Sexta",
@@ -784,7 +744,7 @@
               "nombre": "Santi Olivera y Carlos Di Peta",
               "telefono": "099034734",
               "grupo_asignado": 423,
-              "posicion_grupo": 2
+              "posicion_grupo": null
             },
             {
               "categoria": "Sexta",
@@ -796,7 +756,7 @@
               "nombre": "Agustín Bonilla / Facundo Silva",
               "telefono": "092055305",
               "grupo_asignado": 424,
-              "posicion_grupo": 3
+              "posicion_grupo": null
             }
           ],
           "partidos": [
@@ -819,51 +779,11 @@
               "pareja2_id": 21
             }
           ],
-          "resultados": {
-            "7-17": {
-              "pareja1_id": 7,
-              "pareja2_id": 17,
-              "sets_pareja1": 1,
-              "sets_pareja2": 1,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 5,
-              "games_set2_pareja1": 5,
-              "games_set2_pareja2": 6,
-              "tiebreak_pareja1": 11,
-              "tiebreak_pareja2": 5,
-              "ganador_id": 7
-            },
-            "7-21": {
-              "pareja1_id": 7,
-              "pareja2_id": 21,
-              "sets_pareja1": 2,
-              "sets_pareja2": 0,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 3,
-              "games_set2_pareja1": 6,
-              "games_set2_pareja2": 4,
-              "tiebreak_pareja1": null,
-              "tiebreak_pareja2": null,
-              "ganador_id": 7
-            },
-            "17-21": {
-              "pareja1_id": 17,
-              "pareja2_id": 21,
-              "sets_pareja1": 2,
-              "sets_pareja2": 0,
-              "games_set1_pareja1": 6,
-              "games_set1_pareja2": 2,
-              "games_set2_pareja1": 6,
-              "games_set2_pareja2": 3,
-              "tiebreak_pareja1": null,
-              "tiebreak_pareja2": null,
-              "ganador_id": 17
-            }
-          },
+          "resultados": {},
           "franja_horaria": "Sábado 12:00",
           "cancha": 1,
           "score": 3.0,
-          "resultados_completos": true
+          "resultados_completos": false
         },
         {
           "id": 372,
@@ -1297,5 +1217,196 @@
     }
   },
   "num_canchas": 2,
-  "estado": "grupos_generados"
+  "estado": "grupos_generados",
+  "fixtures_finales": {
+    "Cuarta": {
+      "categoria": "Cuarta",
+      "octavos": [],
+      "cuartos": [],
+      "semifinales": [
+        {
+          "id": "Cuarta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Cuarta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Cuarta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Séptima": {
+      "categoria": "Séptima",
+      "octavos": [],
+      "cuartos": [
+        {
+          "id": "Séptima_cuartos_1",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_2",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_3",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 3,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_4",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 4,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "semifinales": [
+        {
+          "id": "Séptima_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Séptima_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Sexta": {
+      "categoria": "Sexta",
+      "octavos": [],
+      "cuartos": [],
+      "semifinales": [
+        {
+          "id": "Sexta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Sexta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Sexta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Quinta": {
+      "categoria": "Quinta",
+      "octavos": [],
+      "cuartos": [],
+      "semifinales": [
+        {
+          "id": "Quinta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Quinta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Quinta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    }
+  }
 }

@@ -10,6 +10,7 @@ from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
     PosicionGrupo, FixtureGenerator, FixtureFinales
 )
+from core.fixture_finales_generator import GeneradorFixtureFinales
 from utils import CSVProcessor, CalendarioBuilder
 from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
@@ -21,6 +22,60 @@ logger = logging.getLogger(__name__)
 
 
 # ==================== HELPERS ====================
+
+def regenerar_fixtures_categoria(categoria, resultado_data):
+    """Regenera los fixtures de finales para una categoría específica.
+    
+    Args:
+        categoria: String con el nombre de la categoría (ej: '4ta')
+        resultado_data: Dict con el estado del torneo
+    """
+    try:
+        # Obtener los grupos de la categoría
+        grupos_data = resultado_data.get('grupos_por_categoria', {}).get(categoria, [])
+        if not grupos_data:
+            logger.warning(f"No se encontraron grupos para la categoría {categoria}")
+            return
+        
+        # Reconstruir objetos Grupo desde el dict
+        grupos = []
+        for grupo_data in grupos_data:
+            try:
+                grupo = Grupo.from_dict(grupo_data)
+                grupos.append(grupo)
+            except Exception as e:
+                logger.error(f"Error al reconstruir grupo: {e}")
+                continue
+        
+        if not grupos:
+            logger.warning(f"No se pudieron reconstruir grupos para {categoria}")
+            return
+        
+        # Generar fixture para esta categoría
+        generador = GeneradorFixtureFinales()
+        fixture = generador.generar_fixture(grupos)
+        
+        # Guardar en el torneo
+        torneo = storage.cargar()
+        if not torneo:
+            torneo = {}
+        
+        if 'fixtures_finales' not in torneo:
+            torneo['fixtures_finales'] = {}
+        
+        # Convertir fixture a dict
+        if fixture:
+            torneo['fixtures_finales'][categoria] = fixture.to_dict()
+        else:
+            torneo['fixtures_finales'][categoria] = None
+        
+        storage.guardar(torneo)
+        logger.info(f"Fixtures regenerados exitosamente para categoría {categoria}")
+        
+    except Exception as e:
+        logger.error(f"Error al regenerar fixtures para {categoria}: {e}")
+        import traceback
+        traceback.print_exc()
 
 def recalcular_estadisticas(resultado_data):
     """Recalcula las estadísticas globales del torneo basándose en el estado actual."""
@@ -1207,6 +1262,9 @@ def asignar_posicion():
         
         # Verificar si ya se pueden generar las finales
         puede_generar = verificar_posiciones_completas(grupos_categoria)
+        
+        # REGENERAR FIXTURES cuando se asignan posiciones
+        regenerar_fixtures_categoria(categoria, resultado_data)
         
         # Preparar mensaje según la acción
         if posicion == 0:

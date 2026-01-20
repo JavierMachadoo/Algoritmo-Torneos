@@ -17,6 +17,7 @@ from config import (
 )
 from config.settings import BASE_DIR
 from api import api_bp
+from api.routes.finales import finales_bp
 from utils.torneo_storage import storage
 
 
@@ -56,6 +57,7 @@ def crear_app():
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
+    app.register_blueprint(finales_bp)
     
     # Middleware: Sincronizar sesión con almacenamiento
     @app.before_request
@@ -139,6 +141,25 @@ def crear_app():
         
         return render_template('resultados.html', 
                              resultado=resultado,
+                             categorias=CATEGORIAS,
+                             colores=COLORES_CATEGORIA,
+                             emojis=EMOJI_CATEGORIA,
+                             torneo=torneo)
+    
+    @app.route('/finales')
+    def finales():
+        """Página de visualización de finales y calendario del domingo."""
+        resultado = session.get('resultado_algoritmo')
+        
+        if not resultado:
+            flash('Primero debes generar los grupos', 'warning')
+            return redirect(url_for('inicio'))
+        
+        torneo = storage.cargar()
+        fixtures = torneo.get('fixtures_finales', {})
+        
+        return render_template('finales.html',
+                             fixtures=fixtures,
                              categorias=CATEGORIAS,
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,

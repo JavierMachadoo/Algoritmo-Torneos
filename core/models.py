@@ -219,6 +219,37 @@ class Grupo:
             'score_compatibilidad': self.score_compatibilidad,
             'resultados_completos': self.todos_resultados_completos()
         }
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Reconstruye un Grupo desde un diccionario"""
+        # Si no tiene categoria directa, intentar obtenerla de la primera pareja
+        categoria = data.get('categoria')
+        if not categoria and data.get('parejas'):
+            categoria = data['parejas'][0].get('categoria', 'Sin categoría')
+        
+        grupo = cls(
+            id=data['id'],
+            categoria=categoria or 'Sin categoría',
+            franja_horaria=data.get('franja_horaria'),
+            score_compatibilidad=data.get('score_compatibilidad', 0.0)
+        )
+        
+        # Reconstruir parejas
+        for pareja_dict in data.get('parejas', []):
+            pareja = Pareja.from_dict(pareja_dict)
+            grupo.parejas.append(pareja)
+        
+        # Reconstruir partidos
+        if grupo.esta_completo():
+            grupo.generar_partidos()
+        
+        # Reconstruir resultados
+        for key, resultado_dict in data.get('resultados', {}).items():
+            resultado = ResultadoPartido.from_dict(resultado_dict)
+            grupo.resultados[key] = resultado
+        
+        return grupo
 
 
 @dataclass

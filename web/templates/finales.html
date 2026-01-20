@@ -1,0 +1,878 @@
+{% extends "base.html" %}
+
+{% block title %}Finales - Torneo de Pádel{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== ESTILOS GENERALES ========== */
+    .finales-page {
+        padding: 2rem 0 3rem;
+        min-height: 100vh;
+    }
+    
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: #718096;
+    }
+
+    /* ========== TABS ========== */
+    .finales-tabs {
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+
+    .finales-tabs .nav-link {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #718096;
+        padding: 1rem 2rem;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .finales-tabs .nav-link:hover {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        background: transparent;
+    }
+
+    .finales-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        background: transparent;
+    }
+
+    /* ========== CATEGORÍAS GRID ========== */
+    .categorias-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .categoria-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .categoria-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 6px;
+        transition: width 0.3s ease;
+    }
+    
+    .categoria-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .categoria-card:hover::before {
+        width: 100%;
+        opacity: 0.1;
+    }
+    
+    /* Colores por Categoría */
+    .categoria-cuarta::before, .categoria-4ta::before { background: #28a745; }
+    .categoria-cuarta .categoria-icon, .categoria-4ta .categoria-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+    
+    .categoria-quinta::before, .categoria-5ta::before { background: #ffc107; }
+    .categoria-quinta .categoria-icon, .categoria-5ta .categoria-icon { background: linear-gradient(135deg, #ffc107, #ffb700); }
+    
+    .categoria-sexta::before, .categoria-6ta::before { background: #17a2b8; }
+    .categoria-sexta .categoria-icon, .categoria-6ta .categoria-icon { background: linear-gradient(135deg, #17a2b8, #138496); }
+    
+    .categoria-septima::before, .categoria-7ma::before { background: #9b7fed; }
+    .categoria-septima .categoria-icon, .categoria-7ma .categoria-icon { background: linear-gradient(135deg, #9b7fed, #7c3aed); }
+    
+    .categoria-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .categoria-info {
+        flex: 1;
+    }
+    
+    .categoria-nombre {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .categoria-detalle {
+        font-size: 0.9rem;
+        color: #718096;
+        margin: 0;
+    }
+
+    /* ========== BRACKET / LLAVE ========== */
+    .bracket-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow-x: auto;
+        margin-bottom: 2rem;
+    }
+
+    .bracket {
+        display: flex;
+        gap: 3rem;
+        min-width: fit-content;
+        padding: 2rem 1rem;
+    }
+
+    .bracket-round {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        gap: 2rem;
+    }
+
+    .round-title {
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+
+    .bracket-match {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        min-width: 220px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .bracket-match:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .bracket-team {
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .bracket-team:first-child {
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .bracket-team:hover {
+        background: #f7fafc;
+    }
+
+    .bracket-team.ganador {
+        background: #f0f9ff;
+        font-weight: 700;
+        color: #0369a1;
+    }
+
+    .bracket-team.ganador::before {
+        content: '✓';
+        position: absolute;
+        left: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #0369a1;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .team-name {
+        font-size: 0.95rem;
+        color: #2d3748;
+        flex: 1;
+        padding-left: 1.5rem;
+    }
+
+    .bracket-team.empty .team-name {
+        color: #cbd5e0;
+        font-style: italic;
+    }
+
+    .match-badge {
+        font-size: 0.75rem;
+        background: #e2e8f0;
+        color: #4a5568;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    /* Líneas conectoras del bracket */
+    .bracket-round {
+        position: relative;
+    }
+
+    /* ========== CALENDARIO ========== */
+    .calendario-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .calendario-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .calendario-titulo {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .calendario-subtitulo {
+        color: #718096;
+        font-size: 1rem;
+    }
+
+    /* horario-info: removed per user request */
+
+    .cancha-section {
+        margin-bottom: 3rem;
+    }
+
+    .cancha-titulo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .partido-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .partido-row:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* partido-hora: removed per user request */
+
+    .partido-info {
+        flex: 1;
+        padding: 0 1.5rem;
+    }
+
+    .partido-categoria {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #718096;
+        margin-bottom: 0.25rem;
+    }
+
+    .partido-fase {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+
+    .partido-parejas {
+        font-size: 0.9rem;
+        color: #4a5568;
+    }
+
+    .break-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: 12px;
+        margin: 1.5rem 0;
+    }
+
+    .break-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #92400e;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Estados */
+    .no-fixtures {
+        text-align: center;
+        padding: 3rem;
+        color: #718096;
+    }
+
+    .no-fixtures i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    /* Loading */
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3rem;
+        color: #667eea;
+    }
+
+    /* Botón regenerar */
+    .btn-regenerar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-regenerar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Empty state */
+    .empty-bracket {
+        text-align: center;
+        padding: 3rem;
+        color: #718096;
+    }
+
+    .empty-bracket i {
+        font-size: 3rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+
+    .empty-bracket p {
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="finales-page">
+    <div class="container-fluid px-4">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="page-title">
+                <i class="bi bi-trophy-fill text-warning me-3"></i>
+                Finales del Torneo
+            </h1>
+            <p class="page-subtitle">Llaves de eliminación directa y calendario del domingo</p>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs finales-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab-llaves" role="tab">
+                    <i class="bi bi-diagram-3 me-2"></i>Llaves
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-calendario" role="tab">
+                    <i class="bi bi-calendar-event me-2"></i>Calendario Domingo
+                </a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- TAB: LLAVES -->
+            <div class="tab-pane fade show active" id="tab-llaves" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h4 mb-0">Selecciona una categoría</h2>
+                    <button class="btn btn-regenerar" onclick="regenerarFixtures()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Regenerar Llaves
+                    </button>
+                </div>
+
+                <!-- Grid de Categorías -->
+                <div class="categorias-grid">
+                    {% for categoria in categorias %}
+                    <div class="categoria-card categoria-{{ categoria.lower() }}" 
+                         onclick="mostrarBracket('{{ categoria }}')">
+                        <div class="categoria-icon">
+                            {{ emojis.get(categoria, '🎾') }}
+                        </div>
+                        <div class="categoria-info">
+                            <h3 class="categoria-nombre">{{ categoria|capitalize }}</h3>
+                            <p class="categoria-detalle" id="detalle-{{ categoria }}">
+                                Cargando...
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Bracket Container -->
+                <div id="bracket-container" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h4 mb-0">
+                            <span id="bracket-categoria-titulo"></span>
+                        </h3>
+                        <button class="btn btn-outline-secondary" onclick="ocultarBracket()">
+                            <i class="bi bi-x-lg me-2"></i>Cerrar
+                        </button>
+                    </div>
+                    <div class="bracket-container">
+                        <div id="bracket-content" class="bracket">
+                            <!-- Bracket dinámico -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado vacío -->
+                <div id="empty-state" class="empty-bracket" style="display: none;">
+                    <i class="bi bi-info-circle"></i>
+                    <p>Selecciona una categoría para ver su llave de finales</p>
+                </div>
+            </div>
+
+            <!-- TAB: CALENDARIO -->
+            <div class="tab-pane fade" id="tab-calendario" role="tabpanel">
+                <div class="calendario-container">
+                    <div class="calendario-header">
+                        <h2 class="calendario-titulo">
+                            <i class="bi bi-calendar-event text-primary me-2"></i>
+                            Calendario del Domingo
+                        </h2>
+                        <p class="calendario-subtitulo">Todos los partidos de finales</p>
+                    </div>
+
+                    <div id="calendario-content">
+                        <div class="loading-spinner">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let fixturesData = {};
+let calendarioData = {};
+
+// Cargar fixtures al inicio
+document.addEventListener('DOMContentLoaded', function() {
+    cargarFixtures();
+    actualizarDetallesCategorias();
+});
+
+// Cargar fixtures de todas las categorías
+async function cargarFixtures() {
+    try {
+        const response = await fetch('/api/finales/fixtures');
+        const data = await response.json();
+        
+        if (data.success) {
+            fixturesData = data.fixtures;
+            actualizarDetallesCategorias();
+        } else {
+            console.error('Error al cargar fixtures:', data.message);
+        }
+    } catch (error) {
+        console.error('Error en cargarFixtures:', error);
+    }
+}
+
+// Actualizar detalles en las tarjetas de categorías
+function actualizarDetallesCategorias() {
+    const categorias = {{ categorias|tojson }};
+    
+    categorias.forEach(categoria => {
+        const detalle = document.getElementById(`detalle-${categoria}`);
+        if (!detalle) return;
+        
+        if (!fixturesData[categoria]) {
+            detalle.textContent = 'Sin datos disponibles';
+            return;
+        }
+        
+        const fixture = fixturesData[categoria];
+        let texto = '';
+        
+        // Contar partidos por fase
+        const numOctavos = fixture.octavos?.length || 0;
+        const numCuartos = fixture.cuartos?.length || 0;
+        const numSemis = fixture.semifinales?.length || 0;
+        const tieneFinal = fixture.final ? 1 : 0;
+        
+        if (numOctavos > 0) {
+            texto = `${numOctavos} octavos • ${numCuartos} cuartos • ${numSemis} semis`;
+        } else if (numCuartos > 0) {
+            texto = `${numCuartos} cuartos • ${numSemis} semis • ${tieneFinal} final`;
+        } else if (numSemis > 0) {
+            texto = `${numSemis} semifinales • ${tieneFinal} final`;
+        } else {
+            texto = 'Esperando resultados de grupos';
+        }
+        
+        detalle.textContent = texto;
+    });
+}
+
+// Mostrar bracket de una categoría
+function mostrarBracket(categoria) {
+    const container = document.getElementById('bracket-container');
+    const content = document.getElementById('bracket-content');
+    const titulo = document.getElementById('bracket-categoria-titulo');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (!fixturesData[categoria]) {
+        mostrarToast('No hay datos para esta categoría', 'warning');
+        return;
+    }
+    
+    const fixture = fixturesData[categoria];
+    
+    // Actualizar título
+    titulo.innerHTML = `<i class="bi bi-trophy-fill text-warning me-2"></i>${categoria.toUpperCase()}`;
+    
+    // Generar bracket HTML
+    const bracketHTML = generarBracketHTML(fixture);
+    content.innerHTML = bracketHTML;
+    
+    // Mostrar container
+    emptyState.style.display = 'none';
+    container.style.display = 'block';
+    
+    // Scroll suave al bracket
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Ocultar bracket
+function ocultarBracket() {
+    const container = document.getElementById('bracket-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    container.style.display = 'none';
+    emptyState.style.display = 'block';
+}
+
+// Generar HTML del bracket
+function generarBracketHTML(fixture) {
+    let html = '';
+    
+    // Octavos (si existen)
+    if (fixture.octavos && fixture.octavos.length > 0) {
+        html += generarRondaHTML('Octavos', fixture.octavos);
+    }
+    
+    // Cuartos (si existen)
+    if (fixture.cuartos && fixture.cuartos.length > 0) {
+        html += generarRondaHTML('Cuartos', fixture.cuartos);
+    }
+    
+    // Semifinales
+    if (fixture.semifinales && fixture.semifinales.length > 0) {
+        html += generarRondaHTML('Semifinales', fixture.semifinales);
+    }
+    
+    // Final
+    if (fixture.final) {
+        html += generarRondaHTML('Final', [fixture.final]);
+    }
+    
+    return html || '<p class="text-muted text-center">No hay partidos generados aún</p>';
+}
+
+// Generar HTML de una ronda
+function generarRondaHTML(nombreRonda, partidos) {
+    let html = `
+        <div class="bracket-round">
+            <div class="round-title">${nombreRonda}</div>
+    `;
+    
+    partidos.forEach(partido => {
+        html += generarPartidoHTML(partido);
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+// Generar HTML de un partido
+function generarPartidoHTML(partido) {
+    const pareja1 = partido.pareja1 ? partido.pareja1.nombre : 'Por definir';
+    const pareja2 = partido.pareja2 ? partido.pareja2.nombre : 'Por definir';
+    const ganadorId = partido.ganador ? partido.ganador.id : null;
+    
+    const pareja1Class = ganadorId && partido.pareja1 && ganadorId === partido.pareja1.id ? 'ganador' : '';
+    const pareja2Class = ganadorId && partido.pareja2 && ganadorId === partido.pareja2.id ? 'ganador' : '';
+    
+    const pareja1Empty = !partido.pareja1 ? 'empty' : '';
+    const pareja2Empty = !partido.pareja2 ? 'empty' : '';
+    
+    return `
+        <div class="bracket-match" data-partido-id="${partido.id}">
+            <div class="bracket-team ${pareja1Class} ${pareja1Empty}" 
+                 onclick="seleccionarGanador('${partido.id}', ${partido.pareja1 ? partido.pareja1.id : 'null'})">
+                <span class="team-name">${pareja1}</span>
+            </div>
+            <div class="bracket-team ${pareja2Class} ${pareja2Empty}"
+                 onclick="seleccionarGanador('${partido.id}', ${partido.pareja2 ? partido.pareja2.id : 'null'})">
+                <span class="team-name">${pareja2}</span>
+            </div>
+        </div>
+    `;
+}
+
+// Seleccionar ganador de un partido
+async function seleccionarGanador(partidoId, parejaId) {
+    if (!parejaId) {
+        mostrarToast('Esta pareja aún no está definida', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/finales/partido/${partidoId}/ganador`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ganador_id: parejaId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarToast('Ganador actualizado correctamente', 'success');
+            await cargarFixtures();
+            
+            // Recargar el bracket actual
+            const titulo = document.getElementById('bracket-categoria-titulo');
+            if (titulo) {
+                const categoria = titulo.textContent.trim().replace(/[^a-zA-Z0-9]/g, '');
+                if (categoria) {
+                    mostrarBracket(categoria);
+                }
+            }
+        } else {
+            mostrarToast(data.message || 'Error al actualizar ganador', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarToast('Error al actualizar ganador', 'error');
+    }
+}
+
+// Regenerar todos los fixtures
+async function regenerarFixtures() {
+    if (!confirm('¿Estás seguro de regenerar las llaves? Esto actualizará todas las clasificaciones basándose en los resultados actuales de los grupos.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/finales/fixtures/regenerar', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarToast('Llaves regeneradas exitosamente', 'success');
+            fixturesData = data.fixtures;
+            actualizarDetallesCategorias();
+            ocultarBracket();
+        } else {
+            mostrarToast(data.message || 'Error al regenerar llaves', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarToast('Error al regenerar llaves', 'error');
+    }
+}
+
+// Cargar calendario cuando se muestra el tab
+document.querySelector('a[href="#tab-calendario"]').addEventListener('shown.bs.tab', function() {
+    cargarCalendario();
+});
+
+// Cargar calendario
+async function cargarCalendario() {
+    try {
+        const content = document.getElementById('calendario-content');
+        content.innerHTML = '<div class="loading-spinner"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
+        
+        const response = await fetch('/api/finales/calendario');
+        const data = await response.json();
+        
+        if (data.success) {
+            calendarioData = data.calendario;
+            renderizarCalendario(data.calendario);
+        } else {
+            content.innerHTML = `<div class="text-center text-muted p-5">${data.message}</div>`;
+        }
+    } catch (error) {
+        console.error('Error al cargar calendario:', error);
+        document.getElementById('calendario-content').innerHTML = '<div class="text-center text-danger p-5">Error al cargar el calendario</div>';
+    }
+}
+
+// Renderizar calendario
+function renderizarCalendario(calendario) {
+    const content = document.getElementById('calendario-content');
+    let html = '';
+    
+    // Cancha 1
+    if (calendario.cancha_1 && calendario.cancha_1.length > 0) {
+        html += `
+            <div class="cancha-section">
+                <h3 class="cancha-titulo">
+                    <i class="bi bi-layout-text-sidebar-reverse"></i>
+                    Cancha 1
+                </h3>
+        `;
+        
+        let horaAnterior = '';
+        calendario.cancha_1.forEach((partido, index) => {
+            // Insertar break si es necesario
+            if (partido.hora_inicio === '16:00' && horaAnterior < '16:00') {
+                html += `
+                    <div class="break-row">
+                        <span class="break-text">
+                            <i class="bi bi-pause-circle-fill"></i>
+                            PAUSA - 15:00 a 16:00
+                        </span>
+                    </div>
+                `;
+            }
+            
+            html += generarPartidoCalendarioHTML(partido);
+            horaAnterior = partido.hora_inicio;
+        });
+        
+        html += '</div>';
+    }
+    
+    // Cancha 2
+    if (calendario.cancha_2 && calendario.cancha_2.length > 0) {
+        html += `
+            <div class="cancha-section">
+                <h3 class="cancha-titulo">
+                    <i class="bi bi-layout-text-sidebar-reverse"></i>
+                    Cancha 2
+                </h3>
+        `;
+        
+        let horaAnterior = '';
+        calendario.cancha_2.forEach((partido, index) => {
+            // Insertar break si es necesario
+            if (partido.hora_inicio === '16:00' && horaAnterior < '16:00') {
+                html += `
+                    <div class="break-row">
+                        <span class="break-text">
+                            <i class="bi bi-pause-circle-fill"></i>
+                            PAUSA - 15:00 a 16:00
+                        </span>
+                    </div>
+                `;
+            }
+            
+            html += generarPartidoCalendarioHTML(partido);
+            horaAnterior = partido.hora_inicio;
+        });
+        
+        html += '</div>';
+    }
+    
+    if (!html) {
+        html = '<div class="text-center text-muted p-5">No hay partidos programados</div>';
+    }
+    
+    content.innerHTML = html;
+}
+
+// Generar HTML de un partido en el calendario
+function generarPartidoCalendarioHTML(partido) {
+    const pareja1 = partido.pareja1 || 'Por definir';
+    const pareja2 = partido.pareja2 || 'Por definir';
+    
+    return `
+        <div class="partido-row">
+            <div class="partido-info">
+                <div class="partido-categoria">${partido.categoria.toUpperCase()}</div>
+                <div class="partido-fase">${partido.fase}</div>
+                <div class="partido-parejas">${pareja1} <strong>vs</strong> ${pareja2}</div>
+            </div>
+        </div>
+    `;
+}
+
+// Helper: Mostrar toast
+function mostrarToast(mensaje, tipo = 'info') {
+    if (typeof showToast === 'function') {
+        showToast(mensaje, tipo);
+    } else {
+        alert(mensaje);
+    }
+}
+</script>
+{% endblock %}

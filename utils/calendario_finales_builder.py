@@ -1,55 +1,250 @@
 """
-Builder para el calendario de finales del domingo.
-Define horarios fijos para cada fase y categoría.
+Módulo para generar el calendario de finales del domingo.
+Organiza todos los partidos de finales respetando las restricciones horarias.
 """
 
-from typing import Dict, List, Tuple
+from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
-class SlotFinal:
-    """Representa un slot de partido en el calendario de finales"""
-    categoria: str  # "Cuarta", "Quinta", "Sexta", "Séptima"
-    fase: str  # "Cuartos", "Semifinal", "Final"
-    numero_partido: int  # 1, 2, 3, 4 (para identificar cuál cuarto/semi)
+class BloqueHorario:
+    """Representa un bloque horario disponible"""
+    inicio: str  # formato "HH:MM"
+    fin: str     # formato "HH:MM"
+    cancha: int  # 1 o 2
     
+    def duracion_minutos(self) -> int:
+        """Calcula la duración del bloque en minutos"""
+        h_inicio, m_inicio = map(int, self.inicio.split(':'))
+        h_fin, m_fin = map(int, self.fin.split(':'))
+        return (h_fin * 60 + m_fin) - (h_inicio * 60 + m_inicio)
 
+
+@dataclass
+class PartidoCalendarizado:
+    """Representa un partido con su horario asignado"""
+    partido_id: str
+    categoria: str
+    fase: str
+    numero_partido: int
+    pareja1: Optional[str]
+    pareja2: Optional[str]
+    hora_inicio: str
+    hora_fin: str
+    cancha: int
+    
+    def to_dict(self):
+        return {
+            'partido_id': self.partido_id,
+            'categoria': self.categoria,
+            'fase': self.fase,
+            'numero_partido': self.numero_partido,
+            'pareja1': self.pareja1,
+            'pareja2': self.pareja2,
+            'hora_inicio': self.hora_inicio,
+            'hora_fin': self.hora_fin,
+            'cancha': self.cancha
+        }
+
+
+class GeneradorCalendarioFinales:
+    """Genera el calendario del domingo para todos los partidos de finales"""
+    
+    # Configuración de horarios
+    HORARIOS_DISPONIBLES = [
+        # Mañana/Tarde
+        ("09:00", "15:00"),
+        # Tarde/Noche (después del break)
+        ("16:00", "22:00")
+    ]
+    
+    DURACION_PARTIDO = 60  # minutos por partido
+    TIEMPO_CAMBIO = 10     # minutos entre partidos
+    
+    # Orden de prioridad de categorías (empezar por 7ma)
+    ORDEN_CATEGORIAS = ["7ma", "6ta", "5ta", "4ta"]
+    
+    # Orden de fases (de menor a mayor importancia)
+    ORDEN_FASES = {
+        "Octavos de Final": 1,
+        "Cuartos de Final": 2,
+        "Semifinal": 3,
+        "Final": 4
+    }
+    
+    @staticmethod
+    def generar_bloques_horarios() -> List[BloqueHorario]:
+        """Genera todos los bloques horarios disponibles para ambas canchas"""
+        bloques = []
+        
+        for cancha in [1, 2]:
+            for inicio, fin in GeneradorCalendarioFinales.HORARIOS_DISPONIBLES:
+                # Calcular cuántos partidos caben en este bloque
+                h_inicio, m_inicio = map(int, inicio.split(':'))
+                h_fin, m_fin = map(int, fin.split(':'))
+                
+                tiempo_disponible = (h_fin * 60 + m_fin) - (h_inicio * 60 + m_inicio)
+                tiempo_por_partido = GeneradorCalendarioFinales.DURACION_PARTIDO + GeneradorCalendarioFinales.TIEMPO_CAMBIO
+                
+                # Crear bloques individuales para cada partido posible
+                num_partidos = tiempo_disponible // tiempo_por_partido
+                
+                for i in range(num_partidos):
+                    minutos_inicio = h_inicio * 60 + m_inicio + (i * tiempo_por_partido)
+                    minutos_fin = minutos_inicio + GeneradorCalendarioFinales.DURACION_PARTIDO
+                    
+                    hora_inicio = f"{minutos_inicio // 60:02d}:{minutos_inicio % 60:02d}"
+                    hora_fin = f"{minutos_fin // 60:02d}:{minutos_fin % 60:02d}"
+                    
+                    bloques.append(BloqueHorario(
+                        inicio=hora_inicio,
+                        fin=hora_fin,
+                        cancha=cancha
+                    ))
+        
+        return bloques
+    
+    @staticmethod
+    def obtener_partidos_para_calendarizar(fixtures: Dict[str, dict]) -> List[Dict]:
+        """
+        Obtiene todos los partidos de finales que deben calendarizarse.
+        Retorna lista ordenada por prioridad (categoría y fase).
+        """
+        partidos = []
+        
+        for categoria in GeneradorCalendarioFinales.ORDEN_CATEGORIAS:
+            if categoria not in fixtures:
+                continue
+            
+            fixture = fixtures[categoria]
+            
+            # Agregar partidos de cada fase
+            for fase_key, fase_nombre in [('octavos', 'Octavos de Final'), 
+                                          ('cuartos', 'Cuartos de Final'),
+                                          ('semifinales', 'Semifinal')]:
+                if fase_key in fixture:
+                    for partido in fixture[fase_key]:
+                        if partido:  # Verificar que el partido existe
+                            partidos.append({
+                                'partido_id': partido.get('id'),
+                                'categoria': categoria,
+                                'fase': fase_nombre,
+                                'numero_partido': partido.get('numero_partido', 1),
+                                'pareja1': partido.get('pareja1', {}).get('nombre') if partido.get('pareja1') else None,
+                                'pareja2': partido.get('pareja2', {}).get('nombre') if partido.get('pareja2') else None,
+                                'prioridad_categoria': GeneradorCalendarioFinales.ORDEN_CATEGORIAS.index(categoria),
+                                'prioridad_fase': GeneradorCalendarioFinales.ORDEN_FASES.get(fase_nombre, 0)
+                            })
+            
+            # Agregar final
+            if fixture.get('final'):
+                final = fixture['final']
+                partidos.append({
+                    'partido_id': final.get('id'),
+                    'categoria': categoria,
+                    'fase': 'Final',
+                    'numero_partido': 1,
+                    'pareja1': final.get('pareja1', {}).get('nombre') if final.get('pareja1') else None,
+                    'pareja2': final.get('pareja2', {}).get('nombre') if final.get('pareja2') else None,
+                    'prioridad_categoria': GeneradorCalendarioFinales.ORDEN_CATEGORIAS.index(categoria),
+                    'prioridad_fase': GeneradorCalendarioFinales.ORDEN_FASES.get('Final', 0)
+                })
+        
+        # Ordenar: primero por fase (octavos antes que finales), luego por categoría
+        # Esto hace que las fases tempranas de todas las categorías se jueguen primero
+        partidos.sort(key=lambda p: (p['prioridad_fase'], p['prioridad_categoria']))
+        
+        return partidos
+    
+    @staticmethod
+    def asignar_horarios(fixtures: Dict[str, dict]) -> Dict:
+        """
+        Asigna horarios a todos los partidos de finales.
+        Retorna calendario organizado por cancha y horario.
+        """
+        bloques = GeneradorCalendarioFinales.generar_bloques_horarios()
+        partidos = GeneradorCalendarioFinales.obtener_partidos_para_calendarizar(fixtures)
+        
+        calendario = {
+            'cancha_1': [],
+            'cancha_2': [],
+            'sin_asignar': []
+        }
+        
+        logger.info(f"Asignando {len(partidos)} partidos a {len(bloques)} bloques horarios")
+        
+        # Asignar cada partido a un bloque
+        idx_bloque = 0
+        for partido in partidos:
+            if idx_bloque >= len(bloques):
+                # No hay más bloques disponibles
+                calendario['sin_asignar'].append(partido)
+                logger.warning(f"No hay bloques disponibles para {partido['partido_id']}")
+                continue
+            
+            bloque = bloques[idx_bloque]
+            
+            partido_calendarizado = PartidoCalendarizado(
+                partido_id=partido['partido_id'],
+                categoria=partido['categoria'],
+                fase=partido['fase'],
+                numero_partido=partido['numero_partido'],
+                pareja1=partido['pareja1'],
+                pareja2=partido['pareja2'],
+                hora_inicio=bloque.inicio,
+                hora_fin=bloque.fin,
+                cancha=bloque.cancha
+            )
+            
+            # Agregar al calendario
+            if bloque.cancha == 1:
+                calendario['cancha_1'].append(partido_calendarizado.to_dict())
+            else:
+                calendario['cancha_2'].append(partido_calendarizado.to_dict())
+            
+            idx_bloque += 1
+        
+        # Ordenar por hora de inicio
+        calendario['cancha_1'].sort(key=lambda p: p['hora_inicio'])
+        calendario['cancha_2'].sort(key=lambda p: p['hora_inicio'])
+        
+        logger.info(f"Calendario generado: Cancha 1: {len(calendario['cancha_1'])} partidos, "
+                   f"Cancha 2: {len(calendario['cancha_2'])} partidos, "
+                   f"Sin asignar: {len(calendario['sin_asignar'])} partidos")
+        
+        return calendario
+    
+    @staticmethod
+    def generar_resumen_horarios() -> List[str]:
+        """Genera un resumen de los horarios disponibles"""
+        return [
+            "🌅 Mañana/Tarde: 09:00 - 15:00 (ambas canchas)",
+            "⏸️  Pausa: 15:00 - 16:00",
+            "🌆 Tarde/Noche: 16:00 - 22:00 (ambas canchas)"
+        ]
+
+
+# LEGACY CODE BELOW - Mantener por compatibilidad
 class CalendarioFinalesBuilder:
-    """
-    Construye el calendario de finales del domingo con horarios predefinidos.
+    """DEPRECATED: Usar GeneradorCalendarioFinales en su lugar"""
     
-    Basado en el formato del torneo:
-    - Categorías: 4ta, 5ta, 6ta, 7ma
-    - Fases: Cuartos (4 partidos), Semifinales (2 partidos), Final (1 partido)
-    """
+    @dataclass
+    class SlotFinal:
+        """Representa un slot de partido en el calendario de finales"""
+        categoria: str
+        fase: str
+        numero_partido: int
     
-    # Horarios disponibles el domingo
     HORARIOS_DOMINGO = [
         "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
         "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
     ]
     
-    # Estructura del calendario: hora -> (cancha1, cancha2)
     ESTRUCTURA_CALENDARIO = {
-        # Mañana: Cuartos de Final
-        "09:00": (
-            SlotFinal("Quinta", "Cuartos", 1),
-            SlotFinal("Quinta", "Cuartos", 2)
-        ),
-        "10:00": (
-            SlotFinal("Quinta", "Cuartos", 3),
-            SlotFinal("Quinta", "Cuartos", 4)
-        ),
-        "11:00": (
-            SlotFinal("Séptima", "Cuartos", 1),
-            SlotFinal("Séptima", "Cuartos", 2)
-        ),
-        "12:00": (
-            SlotFinal("Séptima", "Cuartos", 3),
-            SlotFinal("Séptima", "Cuartos", 4)
-        ),
-        
         # Mediodía: Semifinales y más Cuartos
         "13:00": (
             SlotFinal("Quinta", "Semifinal", 1),
