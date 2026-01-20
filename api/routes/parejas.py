@@ -196,11 +196,11 @@ def agregar_pareja():
     # Generar nuevo ID único
     max_id = max([p['id'] for p in parejas], default=0)
     nueva_pareja = {
+        'categoria': categoria,
+        'franjas_disponibles': franjas,
         'id': max_id + 1,
         'nombre': nombre,
-        'telefono': telefono or 'Sin teléfono',
-        'categoria': categoria,
-        'franjas_disponibles': franjas
+        'telefono': telefono or 'Sin teléfono'
     }
     
     parejas.append(nueva_pareja)
