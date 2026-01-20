@@ -131,11 +131,11 @@ class Pareja:
     
     def to_dict(self):
         return {
+            'categoria': self.categoria,
+            'franjas_disponibles': self.franjas_disponibles,
             'id': self.id,
             'nombre': self.nombre,
             'telefono': self.telefono,
-            'categoria': self.categoria,
-            'franjas_disponibles': self.franjas_disponibles,
             'grupo_asignado': self.grupo_asignado,
             'posicion_grupo': self.posicion_grupo.value if self.posicion_grupo else None
         }
