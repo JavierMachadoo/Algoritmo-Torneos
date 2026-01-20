@@ -17,6 +17,7 @@ from utils.torneo_storage import storage
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+logger = logging.getLogger(__name__)
 
 
 # ==================== HELPERS ====================
@@ -198,11 +199,11 @@ def agregar_pareja():
     # Generar nuevo ID único
     max_id = max([p['id'] for p in parejas], default=0)
     nueva_pareja = {
+        'categoria': categoria,
+        'franjas_disponibles': franjas,
         'id': max_id + 1,
         'nombre': nombre,
-        'telefono': telefono or 'Sin teléfono',
-        'categoria': categoria,
-        'franjas_disponibles': franjas
+        'telefono': telefono or 'Sin teléfono'
     }
     
     parejas.append(nueva_pareja)

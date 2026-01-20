@@ -134,11 +134,11 @@ class CSVProcessor:
             # Validar que tengamos los datos mínimos
             if nombre and categoria:
                 parejas.append({
+                    'categoria': categoria,
+                    'franjas_disponibles': franjas,
                     'id': len(parejas) + 1,
                     'nombre': nombre,
-                    'telefono': telefono or 'Sin teléfono',
-                    'categoria': categoria,
-                    'franjas_disponibles': franjas
+                    'telefono': telefono or 'Sin teléfono'
                 })
         
         return parejas
