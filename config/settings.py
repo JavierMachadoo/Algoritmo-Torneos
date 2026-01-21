@@ -17,7 +17,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Credenciales de acceso - CAMBIAR EN PRODUCCIÓN
 # ADMIN_PASSWORD debe ser un hash generado con werkzeug.security.generate_password_hash
-# Para generar: python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password'))"
+# Para generar (reemplaza 'tu_password' con tu contraseña deseada):
+#   python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password'))"
 # Valor por defecto es hash de 'torneopadel2026' (CAMBIAR EN PRODUCCIÓN)
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'scrypt:32768:8:1$9Z4jKkE6i36umt47$e7df026239aa63a6b09363d4f1a352ae053dcc3eed2bc2c5656a477a1369eef2544d8143c57149e977ce72d8e3547efc33ffd1a23db09934595bb4ce9393f0d2')

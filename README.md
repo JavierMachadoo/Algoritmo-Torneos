@@ -69,6 +69,7 @@ cp .env.example .env
 # - ADMIN_PASSWORD: Contraseña hasheada (ver abajo)
 
 # Para generar un hash seguro de tu contraseña:
+# (Reemplaza 'tu_password_aqui' con tu contraseña deseada)
 python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password_aqui'))"
 ```
 
