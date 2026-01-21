@@ -49,6 +49,9 @@ def crear_app():
     app.jwt_handler = jwt_handler  # Hacer accesible en toda la app
     
     # Configurar rate limiter para protección contra ataques de fuerza bruta
+    # Nota: Para producción, considerar usar Redis storage en lugar de memory://
+    # y configurar key_func para manejar correctamente X-Forwarded-For headers
+    # si la app está detrás de un proxy/load balancer
     limiter = Limiter(
         app=app,
         key_func=get_remote_address,
