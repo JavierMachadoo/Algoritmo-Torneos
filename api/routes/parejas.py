@@ -16,7 +16,6 @@ from utils.calendario_finales_builder import CalendarioFinalesBuilder
 from utils.torneo_storage import storage
 from utils.api_helpers import (
     obtener_datos_desde_token,
-    actualizar_datos_en_token,
     crear_respuesta_con_token_actualizado,
     sincronizar_con_storage_y_token
 )
