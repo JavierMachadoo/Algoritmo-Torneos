@@ -17,12 +17,22 @@ from utils.torneo_storage import storage
 from utils.api_helpers import (
     obtener_datos_desde_token,
     crear_respuesta_con_token_actualizado,
-    sincronizar_con_storage_y_token
+    sincronizar_con_storage_y_token,
+    verificar_autenticacion_api
 )
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
+
+
+# Middleware para verificar autenticación en todas las rutas de API
+@api_bp.before_request
+def verificar_auth():
+    """Verifica que el usuario esté autenticado antes de acceder a la API."""
+    authenticated, error_response = verificar_autenticacion_api()
+    if not authenticated:
+        return error_response
 
 
 # ==================== HELPERS ====================

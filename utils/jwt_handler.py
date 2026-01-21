@@ -94,17 +94,27 @@ class JWTHandler:
         """
         Decorador para proteger rutas que requieren autenticación.
         Inyecta 'current_data' en kwargs con los datos del token.
+        
+        Uso:
+            @jwt_handler.decorador_requiere_token
+            def mi_ruta(current_data):
+                username = current_data.get('username')
+                ...
         """
         @wraps(f)
         def decorated(*args, **kwargs):
             token = self.obtener_token_desde_request()
             
             if not token:
-                return jsonify({'error': 'Token no proporcionado'}), 401
+                return jsonify({'error': 'Token no proporcionado', 'redirect': '/login'}), 401
             
             data = self.verificar_token(token)
             if data is None:
-                return jsonify({'error': 'Token inválido o expirado'}), 401
+                return jsonify({'error': 'Token inválido o expirado', 'redirect': '/login'}), 401
+            
+            # Verificar que esté autenticado
+            if not data.get('authenticated'):
+                return jsonify({'error': 'No autenticado', 'redirect': '/login'}), 401
             
             # Inyectar datos del token en la función
             kwargs['current_data'] = data
@@ -142,6 +152,6 @@ def crear_respuesta_con_token(jwt_handler, data, mensaje='', status=200):
     response.set_cookie('token', token, 
                        httponly=True,  # No accesible desde JavaScript
                        samesite='Lax',  # CSRF protection
-                       max_age=60*60*24)  # 24 horas
+                       max_age=60*60*2)  # 2 horas
     
     return response, status

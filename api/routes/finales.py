@@ -8,10 +8,20 @@ from core.fixture_finales_generator import GeneradorFixtureFinales
 from core.models import Grupo, FixtureFinales
 from utils.calendario_finales_builder import GeneradorCalendarioFinales
 from utils.torneo_storage import storage
+from utils.api_helpers import verificar_autenticacion_api
 
 logger = logging.getLogger(__name__)
 
 finales_bp = Blueprint('finales', __name__, url_prefix='/api/finales')
+
+
+# Middleware para verificar autenticación en todas las rutas de finales
+@finales_bp.before_request
+def verificar_auth():
+    """Verifica que el usuario esté autenticado antes de acceder a la API."""
+    authenticated, error_response = verificar_autenticacion_api()
+    if not authenticated:
+        return error_response
 
 
 @finales_bp.route('/fixtures', methods=['GET'])

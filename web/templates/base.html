@@ -70,6 +70,14 @@
                         </a>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white px-4 py-2 rounded-pill" 
+                           href="{{ url_for('logout') }}" 
+                           style="font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; background: rgba(220, 53, 69, 0.3);"
+                           title="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right me-2"></i>Salir
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

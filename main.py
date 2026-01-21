@@ -12,7 +12,9 @@ from config import (
     CATEGORIAS, 
     FRANJAS_HORARIAS, 
     EMOJI_CATEGORIA, 
-    COLORES_CATEGORIA
+    COLORES_CATEGORIA,
+    ADMIN_USERNAME,
+    ADMIN_PASSWORD
 )
 from config.settings import BASE_DIR
 from api import api_bp
@@ -40,8 +42,8 @@ def crear_app():
     app.secret_key = SECRET_KEY
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     
-    # Inicializar JWT handler
-    jwt_handler = JWTHandler(SECRET_KEY, expiration_hours=24)
+    # Inicializar JWT handler con expiración de 2 horas (seguridad)
+    jwt_handler = JWTHandler(SECRET_KEY, expiration_hours=2)
     app.jwt_handler = jwt_handler  # Hacer accesible en toda la app
     
     # Registrar blueprints
@@ -60,25 +62,67 @@ def crear_app():
             'num_canchas': torneo.get('num_canchas', 2)
         }
     
-    # Middleware: Asegurar que siempre haya un token
+    # Middleware: Verificar autenticación
     @app.before_request
-    def asegurar_token():
-        """Asegura que cada request tenga un token válido."""
-        # Skip para archivos estáticos
-        if request.path.startswith('/static/'):
+    def verificar_autenticacion():
+        """Verifica que el usuario esté autenticado antes de acceder a rutas protegidas."""
+        # Rutas públicas que no requieren autenticación
+        rutas_publicas = ['/login', '/static/']
+        
+        # Permitir acceso a rutas públicas
+        if any(request.path.startswith(ruta) for ruta in rutas_publicas):
             return
         
+        # Verificar token JWT
         token = jwt_handler.obtener_token_desde_request()
         
-        # Si no hay token o es inválido, crear uno nuevo
-        if not token or not jwt_handler.verificar_token(token):
-            import time
-            data = {
-                'session_id': 'torneo_session',
-                'timestamp': int(time.time())
-            }
-            # El token se enviará en la respuesta
-            request.token_data = data
+        if not token:
+            return redirect(url_for('login'))
+        
+        # Verificar que el token sea válido y contenga authenticated=True
+        data = jwt_handler.verificar_token(token)
+        if not data or not data.get('authenticated'):
+            return redirect(url_for('login'))
+    
+    # Rutas de autenticación
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        """Página de login."""
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            
+            # Verificar credenciales
+            if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+                # Crear token con autenticación exitosa
+                import time
+                data = {
+                    'authenticated': True,
+                    'username': username,
+                    'timestamp': int(time.time())
+                }
+                token = jwt_handler.generar_token(data)
+                
+                response = make_response(redirect(url_for('inicio')))
+                response.set_cookie('token', token,
+                                  httponly=True,
+                                  samesite='Lax',
+                                  max_age=60*60*2)  # 2 horas
+                
+                flash('¡Bienvenido!', 'success')
+                return response
+            else:
+                flash('Usuario o contraseña incorrectos', 'error')
+        
+        return render_template('login.html')
+    
+    @app.route('/logout')
+    def logout():
+        """Cerrar sesión."""
+        response = make_response(redirect(url_for('login')))
+        response.set_cookie('token', '', expires=0)
+        flash('Sesión cerrada', 'info')
+        return response
     
     # Rutas principales
     @app.route('/')
@@ -134,14 +178,6 @@ def crear_app():
                              categorias=CATEGORIAS,
                              franjas=FRANJAS_HORARIAS))
         
-        # Si hay datos nuevos del token, actualizar la cookie
-        if hasattr(request, 'token_data'):
-            nuevo_token = jwt_handler.generar_token(request.token_data)
-            response.set_cookie('token', nuevo_token, 
-                              httponly=True, 
-                              samesite='Lax',
-                              max_age=60*60*24)
-        
         return response
     
     @app.route('/resultados')
@@ -162,14 +198,6 @@ def crear_app():
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,
                              torneo=torneo))
-        
-        # Actualizar token si es necesario
-        if hasattr(request, 'token_data'):
-            nuevo_token = jwt_handler.generar_token(request.token_data)
-            response.set_cookie('token', nuevo_token, 
-                              httponly=True, 
-                              samesite='Lax',
-                              max_age=60*60*24)
         
         return response
     
@@ -193,14 +221,6 @@ def crear_app():
                              emojis=EMOJI_CATEGORIA,
                              resultado=resultado,
                              torneo=torneo))
-        
-        # Actualizar token si es necesario
-        if hasattr(request, 'token_data'):
-            nuevo_token = jwt_handler.generar_token(request.token_data)
-            response.set_cookie('token', nuevo_token, 
-                              httponly=True, 
-                              samesite='Lax',
-                              max_age=60*60*24)
         
         return response
     

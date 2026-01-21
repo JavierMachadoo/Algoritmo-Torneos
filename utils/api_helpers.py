@@ -2,11 +2,32 @@
 Helper functions para trabajar con JWT en las rutas de la API.
 """
 
-from flask import current_app, jsonify, make_response
+from flask import current_app, jsonify, make_response, request
 from utils.torneo_storage import storage
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def verificar_autenticacion_api():
+    """
+    Verifica que la petición a la API esté autenticada.
+    
+    Returns:
+        Tuple (authenticated: bool, error_response: Response|None)
+        Si authenticated es False, error_response contiene la respuesta de error
+    """
+    jwt_handler = current_app.jwt_handler
+    token = jwt_handler.obtener_token_desde_request()
+    
+    if not token:
+        return False, jsonify({'error': 'No autenticado', 'redirect': '/login'}), 401
+    
+    data = jwt_handler.verificar_token(token)
+    if not data or not data.get('authenticated'):
+        return False, jsonify({'error': 'Sesión inválida o expirada', 'redirect': '/login'}), 401
+    
+    return True, None
 
 
 def obtener_datos_desde_token():
@@ -62,9 +83,10 @@ def crear_respuesta_con_token_actualizado(data_respuesta, datos_token=None, stat
     """
     jwt_handler = current_app.jwt_handler
     
-    # Token mínimo - solo valida sesión, no almacena datos
+    # Token mínimo - mantiene autenticación
     import time
     token_data = {
+        'authenticated': True,
         'session_id': 'torneo_session',
         'timestamp': int(time.time())
     }
@@ -86,7 +108,7 @@ def crear_respuesta_con_token_actualizado(data_respuesta, datos_token=None, stat
     response.set_cookie('token', nuevo_token,
                        httponly=True,
                        samesite='Lax',
-                       max_age=60*60*24)  # 24 horas
+                       max_age=60*60*2)  # 2 horas
     
     return response
 

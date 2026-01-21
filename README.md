@@ -56,7 +56,19 @@ source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-4. **Ejecutar aplicación:**
+4. **Configurar seguridad (IMPORTANTE):**
+```bash
+# Copiar archivo de ejemplo
+cp .env.example .env
+
+# Editar .env y cambiar las credenciales
+# Especialmente para producción:
+# - SECRET_KEY: Usa una clave fuerte y aleatoria
+# - ADMIN_USERNAME: Usuario personalizado
+# - ADMIN_PASSWORD: Contraseña segura
+```
+
+5. **Ejecutar aplicación:**
 ```bash
 python main.py
 ```
@@ -89,19 +101,32 @@ Juan/Pedro,099123456,Cuarta,Sí,No,Sí,...
 
 ## Deployment en Vercel
 
-La aplicación usa JWT stateless, perfecta para serverless:
+La aplicación usa JWT stateless con autenticación, perfecta para serverless:
 
 1. Instala Vercel CLI: `npm i -g vercel`
 2. Crea `vercel.json` en la raíz
-3. Despliega: `vercel --prod`
+3. Configura variables de entorno en Vercel:
+   - `SECRET_KEY`: Clave fuerte para firmar tokens JWT
+   - `ADMIN_USERNAME`: Usuario de administrador
+   - `ADMIN_PASSWORD`: Contraseña segura
+   - `DEBUG`: False
+4. Despliega: `vercel --prod`
 
-**Variables de entorno requeridas:**
-- `SECRET_KEY`: Clave para firmar tokens JWT
+**⚠️ IMPORTANTE:** Cambia las credenciales antes de subir a producción
+
+## Seguridad
+
+- 🔐 **Autenticación JWT:** Login obligatorio antes de acceder
+- 🔒 **Sesiones seguras:** Tokens con expiración de 2 horas
+- 🛡️ **Rutas protegidas:** Todas las rutas y APIs requieren autenticación
+- 🚫 **HttpOnly cookies:** Tokens no accesibles desde JavaScript
+- ⚙️ **Variables de entorno:** Credenciales configurables
 
 ## Características técnicas
 
 - ✅ **Stateless:** Sin sesiones de servidor, compatible con serverless
-- ✅ **JWT tokens:** Autenticación mínima (<200 bytes)
+- ✅ **JWT tokens:** Autenticación segura con expiración
+- ✅ **Login protegido:** Sistema de credenciales con hash seguro
 - ✅ **Storage JSON:** Persistencia simple en archivos
 - ✅ **Sin dependencias externas:** No requiere DB ni Redis
 - ✅ **Drag & drop:** Interfaz intuitiva para reorganizar grupos

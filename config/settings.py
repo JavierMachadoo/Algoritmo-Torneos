@@ -1,10 +1,24 @@
 import os
 from pathlib import Path
+import secrets
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'tu_clave_secreta_super_segura_aqui_123')
+# SECRET_KEY: DEBE estar en .env en producción
+# Si no existe, genera uno temporal (solo para desarrollo)
+_default_secret = secrets.token_urlsafe(32) if os.getenv('SECRET_KEY') is None else None
+SECRET_KEY = os.getenv('SECRET_KEY', _default_secret)
+
+if _default_secret and not os.getenv('DEBUG', 'True') == 'True':
+    import warnings
+    warnings.warn('⚠️  SECRET_KEY no configurado! Usando secret temporal. Configure SECRET_KEY en .env')
+
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
+# Credenciales de acceso - CAMBIAR EN PRODUCCIÓN
+# Para mayor seguridad, usa variables de entorno
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'torneopadel2026')
 
 UPLOAD_FOLDER = BASE_DIR / 'data' / 'uploads'
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)

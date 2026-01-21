@@ -59,6 +59,16 @@ const JWTHelper = (() => {
         try {
             const response = await fetch(url, config);
             
+            // Verificar si la respuesta indica que la sesión expiró
+            if (response.status === 401) {
+                const data = await response.json();
+                if (data.redirect) {
+                    // Redirigir al login
+                    window.location.href = data.redirect;
+                    return response;
+                }
+            }
+            
             // Si la respuesta incluye un token en el JSON, guardarlo
             if (response.ok) {
                 const contentType = response.headers.get('content-type');
