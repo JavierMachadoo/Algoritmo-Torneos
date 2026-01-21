@@ -142,14 +142,33 @@ class GeneradorFixtureFinales:
     
     @staticmethod
     def _generar_con_cuartos(categoria: str, clasificados: Dict) -> FixtureFinales:
-        """Genera fixture con cuartos (4 grupos)"""
+        """
+        Genera fixture con cuartos (4 grupos).
+        Asegura que grupos A y B no se enfrenten hasta la final.
+        Estructura: A vs C/D, B vs C/D para evitar cruces A-B en semis.
+        """
         fixture = FixtureFinales(categoria=categoria)
         
         primeros = clasificados[1]
         segundos = clasificados[2]
         
-        # Crear 4 partidos de cuartos
-        for i in range(4):
+        # Definir slots para 4 grupos (evitar A-B y C-D en semis)
+        # Cuarto 1: 1° Grupo A vs 2° Grupo C  (Semi 1 - izquierda superior)
+        # Cuarto 2: 1° Grupo D vs 2° Grupo B  (Semi 1 - izquierda inferior)
+        # Cuarto 3: 1° Grupo B vs 2° Grupo D  (Semi 2 - derecha superior)
+        # Cuarto 4: 1° Grupo C vs 2° Grupo A  (Semi 2 - derecha inferior)
+        # Semi 1: grupos A,C,D,B -> Semi 2: grupos B,D,C,A
+        # Final: cualquier combinación posible
+        
+        slots = [
+            {'slot1': {'pos': 1, 'grupo_idx': 0}, 'slot2': {'pos': 2, 'grupo_idx': 2}},  # Cuarto 1: 1°A vs 2°C
+            {'slot1': {'pos': 1, 'grupo_idx': 3}, 'slot2': {'pos': 2, 'grupo_idx': 1}},  # Cuarto 2: 1°D vs 2°B
+            {'slot1': {'pos': 1, 'grupo_idx': 1}, 'slot2': {'pos': 2, 'grupo_idx': 3}},  # Cuarto 3: 1°B vs 2°D
+            {'slot1': {'pos': 1, 'grupo_idx': 2}, 'slot2': {'pos': 2, 'grupo_idx': 0}},  # Cuarto 4: 1°C vs 2°A
+        ]
+        
+        # Crear 4 partidos de cuartos con la información de slots
+        for i, slot_config in enumerate(slots):
             partido_id = f"{categoria}_cuartos_{i+1}"
             partido = PartidoFinal(
                 id=partido_id,
@@ -157,11 +176,29 @@ class GeneradorFixtureFinales:
                 numero_partido=i+1
             )
             
-            # Asignar parejas si están disponibles
-            if i < len(primeros):
-                partido.pareja1 = primeros[i]['pareja']
-            if i < len(segundos):
-                partido.pareja2 = segundos[i]['pareja']
+            # Información de slot para pareja1
+            slot1 = slot_config['slot1']
+            if slot1['grupo_idx'] < len(primeros) if slot1['pos'] == 1 else len(segundos):
+                lista = primeros if slot1['pos'] == 1 else segundos
+                if slot1['grupo_idx'] < len(lista):
+                    partido.pareja1 = lista[slot1['grupo_idx']]['pareja']
+                    partido.slot1_info = f"{slot1['pos']}° Grupo {chr(65 + slot1['grupo_idx'])}"
+                else:
+                    partido.slot1_info = f"{slot1['pos']}° Grupo {chr(65 + slot1['grupo_idx'])}"
+            else:
+                partido.slot1_info = f"{slot1['pos']}° Grupo {chr(65 + slot1['grupo_idx'])}"
+            
+            # Información de slot para pareja2
+            slot2 = slot_config['slot2']
+            if slot2['grupo_idx'] < len(segundos) if slot2['pos'] == 2 else len(primeros):
+                lista = segundos if slot2['pos'] == 2 else primeros
+                if slot2['grupo_idx'] < len(lista):
+                    partido.pareja2 = lista[slot2['grupo_idx']]['pareja']
+                    partido.slot2_info = f"{slot2['pos']}° Grupo {chr(65 + slot2['grupo_idx'])}"
+                else:
+                    partido.slot2_info = f"{slot2['pos']}° Grupo {chr(65 + slot2['grupo_idx'])}"
+            else:
+                partido.slot2_info = f"{slot2['pos']}° Grupo {chr(65 + slot2['grupo_idx'])}"
             
             fixture.cuartos.append(partido)
         

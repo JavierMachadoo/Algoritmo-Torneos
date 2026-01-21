@@ -123,176 +123,257 @@
     
     /* ========== ESTILOS ESTILO ITF ========== */
     .draw-container {
-        background: white;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background: #fafbfc;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+        overflow-x: auto;
     }
     
-    .round-section {
-        margin-bottom: 3rem;
+    /* Layout horizontal de llaves */
+    .draw-grid {
+        display: flex;
+        gap: 5rem;
+        min-width: fit-content;
+        padding: 1.5rem;
+        align-items: stretch;
+        position: relative;
+        min-height: 800px;
     }
     
-    .round-header {
-        text-align: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 3px solid #e9ecef;
+    .round-column {
+        display: flex;
+        flex-direction: column;
+        min-width: 320px;
+        position: relative;
+        height: 100%;
     }
     
-    .round-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .matches-grid {
+    /* Posicionamiento específico para cada ronda */
+    .round-column .matches-column {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 1.5rem;
+        grid-auto-rows: minmax(100px, 1fr);
+        gap: 2rem;
+        align-content: center;
+        flex: 1;
     }
     
-    /* ========== PARTIDO (MATCH) ========== */
-    .match-card {
-        background: #f8f9fa;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 2px solid #e9ecef;
-        transition: all 0.3s ease;
+    /* Cuartos: 4 partidos distribuidos uniformemente */
+    .round-column .matches-column .match-wrapper:nth-child(1) { grid-row: 1; }
+    .round-column .matches-column .match-wrapper:nth-child(2) { grid-row: 2; }
+    .round-column .matches-column .match-wrapper:nth-child(3) { grid-row: 3; }
+    .round-column .matches-column .match-wrapper:nth-child(4) { grid-row: 4; }
+    
+    /* Semis: 2 partidos centrados entre pares de cuartos */
+    .round-column:has(.match-wrapper:nth-child(2):last-child) .matches-column {
+        grid-template-rows: repeat(4, minmax(100px, 1fr));
+    }
+    .round-column:has(.match-wrapper:nth-child(2):last-child) .match-wrapper:nth-child(1) { 
+        grid-row: 1 / 3; 
+        align-self: center;
+    }
+    .round-column:has(.match-wrapper:nth-child(2):last-child) .match-wrapper:nth-child(2) { 
+        grid-row: 3 / 5; 
+        align-self: center;
     }
     
-    .match-card:hover {
-        border-color: #667eea;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    /* Final: 1 partido centrado en medio de todo */
+    .round-column:has(.match-wrapper:only-child) .matches-column {
+        grid-template-rows: repeat(4, minmax(100px, 1fr));
+    }
+    .round-column:has(.match-wrapper:only-child) .match-wrapper { 
+        grid-row: 2 / 4; 
+        align-self: center;
     }
     
-    .match-header {
-        background: #e9ecef;
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #6c757d;
+    .round-header-itf {
         text-align: center;
-    }
-    
-    .match-players {
-        padding: 0;
-    }
-    
-    .player-row {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid #e9ecef;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .player-row:last-child {
-        border-bottom: none;
-    }
-    
-    .player-row:hover:not(.winner):not(.por-definir) {
-        background: #f1f3f5;
-    }
-    
-    .player-row.winner {
-        background: linear-gradient(90deg, #e7f5ff 0%, #d0ebff 100%);
-        font-weight: 700;
-    }
-    
-    .player-row.por-definir {
-        opacity: 0.5;
-        cursor: not-allowed;
-        font-style: italic;
-        color: #adb5bd;
-    }
-    
-    .player-position {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: #6c757d;
+        padding: 0.9rem 1.5rem;
+        margin-bottom: 2.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        border-radius: 12px;
+        font-size: 0.95rem;
         font-weight: 700;
-        font-size: 0.85rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
     }
     
-    .player-row.winner .player-position {
-        background: #4c6ef5;
-    }
-    
-    .player-name {
+    .matches-column {
+        display: grid;
+        grid-auto-rows: minmax(100px, 1fr);
+        gap: 2rem;
+        align-content: center;
         flex: 1;
-        font-size: 1rem;
-    }
-    
-    .player-score {
-        display: flex;
-        gap: 0.5rem;
-        margin-left: 1rem;
-    }
-    
-    .score-set {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        background: white;
-        border: 2px solid #dee2e6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.9rem;
-        color: #495057;
-    }
-    
-    .player-row.winner .score-set {
-        border-color: #4c6ef5;
-        color: #4c6ef5;
-    }
-    
-    .winner-check {
-        margin-left: 0.75rem;
-        color: #4c6ef5;
-        font-size: 1.25rem;
-    }
-    
-    /* ========== LÍNEAS CONECTORAS ========== */
-    .rounds-connector {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 2rem 0;
-    }
-    
-    .connector-line {
-        flex: 1;
-        height: 3px;
-        background: linear-gradient(90deg, transparent 0%, #667eea 50%, transparent 100%);
         position: relative;
     }
     
-    .connector-arrow {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #667eea;
-        color: white;
+    .match-wrapper {
+        position: relative;
+    }
+    
+    /* ========== PARTIDO (MATCH) ESTILO ITF ========== */
+    .match-card-itf {
+        background: white;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        position: relative;
+        min-width: 280px;
+    }
+    
+    .match-card-itf:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 18px rgba(102, 126, 234, 0.2);
+        transform: translateX(3px);
+    }
+    
+    .player-row-itf {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.9rem 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        transition: all 0.2s ease;
+        min-height: 52px;
+        background: white;
+    }
+    
+    .player-row-itf:last-child {
+        border-bottom: none;
+    }
+    
+    .player-row-itf.winner {
+        background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%);
+        font-weight: 600;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .player-row-itf.por-definir {
+        opacity: 0.45;
+        font-style: italic;
+        color: #94a3b8;
+    }
+    
+    .player-name-itf {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #1e293b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .player-row-itf.winner .player-name-itf {
+        font-weight: 600;
+        color: #1e40af;
+    }
+    
+    .player-scores {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    
+    .score-set {
+        min-width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        background: #f1f5f9;
+        border: 1.5px solid #cbd5e1;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        margin: 0 1rem;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    
+    .player-row-itf.winner .score-set {
+        background: #bfdbfe;
+        border-color: #3b82f6;
+        color: #1e40af;
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+    }
+    
+    .player-check {
+        color: #10b981;
+        font-size: 1.1rem;
+        margin-left: 0.25rem;
+    }
+    
+    /* Sistema simple de líneas conectoras */
+    /* Línea horizontal que sale de cada partido */
+    .round-column.has-next .match-wrapper::after {
+        content: '';
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        width: 2.5rem;
+        height: 2px;
+        background: #94a3b8;
+        transform: translateY(-50%);
+    }
+    
+    /* Líneas verticales conectando cuartos a semis */
+    .round-column.has-next .match-wrapper:nth-child(1)::before,
+    .round-column.has-next .match-wrapper:nth-child(3)::before {
+        content: '';
+        position: absolute;
+        left: calc(100% + 2.5rem);
+        top: 50%;
+        width: 2px;
+        height: calc(100px + 2rem);
+        background: #94a3b8;
+    }
+    
+    .round-column.has-next .match-wrapper:nth-child(2)::before,
+    .round-column.has-next .match-wrapper:nth-child(4)::before {
+        content: '';
+        position: absolute;
+        left: calc(100% + 2.5rem);
+        bottom: 50%;
+        width: 2px;
+        height: calc(100px + 2rem);
+        background: #94a3b8;
+    }
+    
+    /* Última pata horizontal que sale del medio de la línea vertical hacia la siguiente fase */
+    /* Sale del punto medio entre cuartos 1-2 hacia semi 1, y entre cuartos 3-4 hacia semi 2 */
+    .round-column.has-next .match-wrapper:nth-child(1)::after {
+        /* Extender la línea horizontal del cuarto 1 */
+        width: calc(2.5rem + 2px);
+    }
+    
+    .round-column.has-next .match-wrapper:nth-child(3)::after {
+        /* Extender la línea horizontal del cuarto 3 */
+        width: calc(2.5rem + 2px);
+    }
+    
+    /* Línea horizontal que sale del medio de la vertical hacia la siguiente fase */
+    .round-column.has-next .matches-column::before {
+        content: '';
+        position: absolute;
+        left: calc(100% + 2.5rem);
+        top: calc(12.5% + 50px + 1rem);
+        width: 2.5rem;
+        height: 2px;
+        background: #94a3b8;
+    }
+    
+    .round-column.has-next .matches-column::after {
+        content: '';
+        position: absolute;
+        left: calc(100% + 2.5rem);
+        top: calc(62.5% + 50px + 1rem);
+        width: 2.5rem;
+        height: 2px;
+        background: #94a3b8;
     }
     
     /* ========== BOTONES FLOTANTES ========== */
@@ -497,7 +578,7 @@
             <!-- Header -->
             <div class="page-header">
                 <h1 class="page-title">
-                    <i class="bi bi-trophy-fill me-3"></i>FINALES
+                    <i class="bi bi-trophy-fill me-3"></i>FINALES 
                 </h1>
                 <p class="page-subtitle">Llaves eliminatorias y calendario del domingo</p>
             </div>
@@ -542,22 +623,22 @@
                     
                     <!-- Selector de Categoría -->
                     <div class="categorias-selector" id="categoriasSelector">
-                        <div class="categoria-btn categoria-btn-cuarta active" onclick="cambiarCategoria('4ta')">
+                        <div class="categoria-btn categoria-btn-cuarta active" onclick="cambiarCategoria('4ta', event)">
                             <span class="categoria-emoji">🟢</span>
                             <h3 class="categoria-nombre">4ta</h3>
                             <p class="categoria-fases mb-0" id="fases-4ta">Cargando...</p>
                         </div>
-                        <div class="categoria-btn categoria-btn-quinta" onclick="cambiarCategoria('5ta')">
+                        <div class="categoria-btn categoria-btn-quinta" onclick="cambiarCategoria('5ta', event)">
                             <span class="categoria-emoji">🟡</span>
                             <h3 class="categoria-nombre">5ta</h3>
                             <p class="categoria-fases mb-0" id="fases-5ta">Cargando...</p>
                         </div>
-                        <div class="categoria-btn categoria-btn-sexta" onclick="cambiarCategoria('6ta')">
+                        <div class="categoria-btn categoria-btn-sexta" onclick="cambiarCategoria('6ta', event)">
                             <span class="categoria-emoji">🔵</span>
                             <h3 class="categoria-nombre">6ta</h3>
                             <p class="categoria-fases mb-0" id="fases-6ta">Cargando...</p>
                         </div>
-                        <div class="categoria-btn categoria-btn-septima" onclick="cambiarCategoria('7ma')">
+                        <div class="categoria-btn categoria-btn-septima" onclick="cambiarCategoria('7ma', event)">
                             <span class="categoria-emoji">🟣</span>
                             <h3 class="categoria-nombre">7ma</h3>
                             <p class="categoria-fases mb-0" id="fases-7ma">Cargando...</p>
@@ -594,6 +675,111 @@
     </a>
 </div>
 
+<!-- Modal Ingresar Resultado de Partido Final -->
+<div class="modal fade" id="modalResultadoFinal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem;">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-trophy-fill me-2"></i> Resultado del Partido
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="formResultadoFinal">
+                    <input type="hidden" id="resultadoPartidoId">
+                    <input type="hidden" id="resultadoFase">
+                    <input type="hidden" id="resultadoCategoria">
+                    
+                    <!-- Nombres de las parejas -->
+                    <div class="d-flex justify-content-between align-items-center mb-4" style="padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                        <div class="text-center flex-fill">
+                            <h5 class="fw-bold mb-0 text-primary" id="resultadoFinalPareja1" style="font-size: 1.1rem;">Pareja 1</h5>
+                        </div>
+                        <div class="text-center px-3">
+                            <div class="badge bg-dark" style="font-size: 1rem; padding: 0.5rem 1rem;">VS</div>
+                        </div>
+                        <div class="text-center flex-fill">
+                            <h5 class="fw-bold mb-0 text-primary" id="resultadoFinalPareja2" style="font-size: 1.1rem;">Pareja 2</h5>
+                        </div>
+                    </div>
+                    
+                    <!-- Sets -->
+                    <div class="mb-4">
+                        <!-- Set 1 -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted" style="font-size: 0.85rem;">
+                                <i class="bi bi-circle-fill text-primary" style="font-size: 0.6rem;"></i> PRIMER SET
+                            </label>
+                            <div class="d-flex gap-3 align-items-center">
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="gamesSet1P1" min="0" max="7" required
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                                <div class="text-muted fw-bold" style="font-size: 1.5rem;">-</div>
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="gamesSet1P2" min="0" max="7" required
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                            </div>
+                        </div>
+                        
+                        <!-- Set 2 -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted" style="font-size: 0.85rem;">
+                                <i class="bi bi-circle-fill text-primary" style="font-size: 0.6rem;"></i> SEGUNDO SET
+                            </label>
+                            <div class="d-flex gap-3 align-items-center">
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="gamesSet2P1" min="0" max="7" required
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                                <div class="text-muted fw-bold" style="font-size: 1.5rem;">-</div>
+                                <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                       id="gamesSet2P2" min="0" max="7" required
+                                       placeholder="0"
+                                       style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #dee2e6;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Super Tie-break -->
+                    <div id="tiebreakCardFinal" style="display: none;">
+                        <div class="alert alert-warning mb-3" style="border-radius: 12px; border-left: 4px solid #ffc107;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-lightning-fill me-2" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <strong>Super Tie-break</strong>
+                                    <small class="d-block text-muted">Cada pareja ganó un set</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                   id="tiebreakP1" min="0"
+                                   placeholder="0"
+                                   style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #ffc107;">
+                            <div class="text-warning fw-bold" style="font-size: 1.5rem;">-</div>
+                            <input type="number" class="form-control form-control-lg text-center fw-bold" 
+                                   id="tiebreakP2" min="0"
+                                   placeholder="0"
+                                   style="font-size: 2rem; height: 70px; border-radius: 12px; border: 2px solid #ffc107;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding: 1.25rem 2rem; background: #f8f9fa;">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; padding: 0.625rem 1.5rem;">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="guardarResultadoFinal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 0.625rem 1.5rem; font-weight: 600;">
+                    <i class="bi bi-check-circle me-1"></i> Guardar Resultado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999"></div>
 {% endblock %}
@@ -620,9 +806,20 @@ async function cargarFixtures() {
         const data = await response.json();
         
         if (data.success) {
-            fixtures = data.fixtures;
+            // Mapear nombres de categorías del backend al frontend
+            fixtures = {};
+            if (data.fixtures['Cuarta']) fixtures['4ta'] = data.fixtures['Cuarta'];
+            if (data.fixtures['Quinta']) fixtures['5ta'] = data.fixtures['Quinta'];
+            if (data.fixtures['Sexta']) fixtures['6ta'] = data.fixtures['Sexta'];
+            if (data.fixtures['Séptima']) fixtures['7ma'] = data.fixtures['Séptima'];
+            
+            // Si no hay mapeo, usar los datos tal cual (por si ya vienen con el nombre correcto)
+            if (Object.keys(fixtures).length === 0) {
+                fixtures = data.fixtures;
+            }
+            
             actualizarDetallesCategorias();
-            cambiarCategoria('4ta'); // Mostrar 4ta por defecto
+            cambiarCategoria(currentCategoria || '4ta'); // Mantener categoría actual o mostrar 4ta
         }
     } catch (error) {
         console.error('Error al cargar fixtures:', error);
@@ -650,122 +847,122 @@ function actualizarDetallesCategorias() {
 }
 
 // Cambiar categoría
-function cambiarCategoria(categoria) {
+function cambiarCategoria(categoria, event = null) {
     currentCategoria = categoria;
     
     // Actualizar botones activos
     document.querySelectorAll('.categoria-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.closest('.categoria-btn').classList.add('active');
+    
+    if (event && event.target) {
+        event.target.closest('.categoria-btn').classList.add('active');
+    } else {
+        // Si no hay evento (llamada programática), activar el botón correspondiente
+        const button = Array.from(document.querySelectorAll('.categoria-btn')).find(
+            btn => btn.textContent.includes(categoria)
+        );
+        if (button) button.classList.add('active');
+    }
     
     // Renderizar fixture
     renderizarFixture(categoria);
 }
 
-// Renderizar fixture estilo ITF
+// Renderizar fixture estilo ITF (horizontal)
 function renderizarFixture(categoria) {
     const container = document.getElementById('drawContainer');
     const fixture = fixtures[categoria];
     
     // Si no existe el fixture en absoluto, crear estructura vacía
     if (!fixture) {
-        // Crear estructura de llaves vacías por defecto (depende de la categoría)
-        const partidosVacios = crearPartidosVacios(categoria);
-        container.innerHTML = partidosVacios;
+        container.innerHTML = crearPartidosVacios(categoria);
         return;
     }
     
-    let html = '';
     let hasAnyRound = false;
+    let columns = [];
     
-    // Octavos
+    // Octavos (si hay más de 4 grupos)
     if (fixture.octavos && fixture.octavos.length > 0) {
         hasAnyRound = true;
-        html += renderizarRonda('Octavos de Final', fixture.octavos);
-        html += `<div class="rounds-connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
-                    <div class="connector-line"></div>
-                </div>`;
+        columns.push(renderizarColumnaITF('Octavos de Final', fixture.octavos, categoria, true));
     }
     
-    // Cuartos
+    // Cuartos (siempre mostrar como mínimo)
     if (fixture.cuartos && fixture.cuartos.length > 0) {
         hasAnyRound = true;
-        html += renderizarRonda('Cuartos de Final', fixture.cuartos);
-        html += `<div class="rounds-connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
-                    <div class="connector-line"></div>
-                </div>`;
+        columns.push(renderizarColumnaITF('Cuartos de Final', fixture.cuartos, categoria, true));
     }
     
     // Semifinales
     if (fixture.semifinales && fixture.semifinales.length > 0) {
         hasAnyRound = true;
-        html += renderizarRonda('Semifinales', fixture.semifinales);
-        html += `<div class="rounds-connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
-                    <div class="connector-line"></div>
-                </div>`;
+        columns.push(renderizarColumnaITF('Semifinales', fixture.semifinales, categoria, true));
     }
     
-    // Final - siempre mostrar
+    // Final
     if (fixture.final) {
         hasAnyRound = true;
-        html += renderizarRonda('Final', [fixture.final]);
+        columns.push(renderizarColumnaITF('Final', [fixture.final], categoria, false));
     }
     
-    // Si no hay ninguna ronda configurada, mostrar llaves vacías
+    // Si no hay ninguna ronda configurada, mostrar llaves vacías (mínimo cuartos)
     if (!hasAnyRound) {
-        html = crearPartidosVacios(categoria);
+        container.innerHTML = crearPartidosVacios(categoria);
+    } else {
+        container.innerHTML = `<div class="draw-grid">${columns.join('')}</div>`;
     }
-    
-    container.innerHTML = html;
 }
 
-// Crear estructura de partidos vacíos
+// Crear estructura de partidos vacíos estilo ITF (mínimo cuartos)
 function crearPartidosVacios(categoria) {
-    // Todas las categorías tienen semifinal y final
+    // Por defecto mostramos cuartos, semifinal y final (mínimo)
     return `
-        <div class="round-section">
-            <div class="round-header">
-                <h2 class="round-title">SEMIFINALES</h2>
+        <div class="draw-grid">
+            <!-- Cuartos -->
+            <div class="round-column">
+                <div class="round-header-itf">Cuartos de Final</div>
+                <div class="matches-column">
+                    ${renderizarPartidoVacioITF()}
+                    ${renderizarPartidoVacioITF()}
+                    ${renderizarPartidoVacioITF()}
+                    ${renderizarPartidoVacioITF()}
+                </div>
             </div>
-            <div class="matches-grid">
-                ${renderizarPartidoVacio(1)}
-                ${renderizarPartidoVacio(2)}
+            
+            <!-- Semifinales -->
+            <div class="round-column">
+                <div class="round-header-itf">Semifinales</div>
+                <div class="matches-column">
+                    ${renderizarPartidoVacioITF()}
+                    ${renderizarPartidoVacioITF()}
+                </div>
             </div>
-        </div>
-        <div class="rounds-connector">
-            <div class="connector-line"></div>
-            <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
-            <div class="connector-line"></div>
-        </div>
-        <div class="round-section">
-            <div class="round-header">
-                <h2 class="round-title">FINAL</h2>
-            </div>
-            <div class="matches-grid">
-                ${renderizarPartidoVacio(1)}
+            
+            <!-- Final -->
+            <div class="round-column">
+                <div class="round-header-itf">Final</div>
+                <div class="matches-column">
+                    ${renderizarPartidoVacioITF()}
+                </div>
             </div>
         </div>
     `;
 }
 
-// Renderizar un partido vacío
-function renderizarPartidoVacio(numero) {
+// Renderizar un partido vacío estilo ITF
+function renderizarPartidoVacioITF() {
     return `
-        <div class="match-card">
-            <div class="match-header">Partido ${numero}</div>
-            <div class="match-players">
-                <div class="player-row por-definir">
-                    <div class="player-position">1</div>
-                    <div class="player-name">— Por definir —</div>
+        <div class="match-wrapper">
+            <div class="match-card-itf" style="cursor: default;">
+                <div class="player-row-itf por-definir">
+                    <span class="player-name-itf">— Por definir —</span>
+                    <span></span>
+                    <div class="player-scores"></div>
                 </div>
-                <div class="player-row por-definir">
-                    <div class="player-position">2</div>
-                    <div class="player-name">— Por definir —</div>
+                <div class="player-row-itf por-definir">
+                    <span class="player-name-itf">— Por definir —</span>
+                    <span></span>
+                    <div class="player-scores"></div>
                 </div>
             </div>
         </div>
@@ -773,17 +970,17 @@ function renderizarPartidoVacio(numero) {
 }
 
 // Renderizar una ronda completa
-function renderizarRonda(titulo, partidos) {
+// Renderizar columna ITF (una ronda con sus partidos)
+function renderizarColumnaITF(titulo, partidos, categoria, tieneSiguienteRonda = false) {
+    const hasNextClass = tieneSiguienteRonda ? 'has-next' : '';
     let html = `
-        <div class="round-section">
-            <div class="round-header">
-                <h2 class="round-title">${titulo}</h2>
-            </div>
-            <div class="matches-grid">
+        <div class="round-column ${hasNextClass}">
+            <div class="round-header-itf">${titulo}</div>
+            <div class="matches-column">
     `;
     
     partidos.forEach((partido, idx) => {
-        html += renderizarPartido(partido, idx + 1);
+        html += renderizarPartidoITF(partido, categoria, tieneSiguienteRonda, idx);
     });
     
     html += `
@@ -794,56 +991,142 @@ function renderizarRonda(titulo, partidos) {
     return html;
 }
 
-// Renderizar un partido individual
-function renderizarPartido(partido, numero) {
-    const pareja1 = partido.pareja1 ? partido.pareja1.nombre : '— Por definir —';
-    const pareja2 = partido.pareja2 ? partido.pareja2.nombre : '— Por definir —';
+// Renderizar un partido individual estilo ITF
+function renderizarPartidoITF(partido, categoria, tieneSiguienteRonda = false, idx = 0) {
+    // Usar slot_info si no hay pareja definida
+    const pareja1 = partido.pareja1 ? partido.pareja1.nombre : (partido.slot1_info || '— Por definir —');
+    const pareja2 = partido.pareja2 ? partido.pareja2.nombre : (partido.slot2_info || '— Por definir —');
     const ganador = partido.ganador ? partido.ganador.id : null;
     
-    const pareja1Class = ganador === (partido.pareja1 ? partido.pareja1.id : null) ? 'winner' : '';
-    const pareja2Class = ganador === (partido.pareja2 ? partido.pareja2.id : null) ? 'winner' : '';
+    const pareja1Id = partido.pareja1 ? partido.pareja1.id : null;
+    const pareja2Id = partido.pareja2 ? partido.pareja2.id : null;
+    
+    const pareja1Class = ganador === pareja1Id ? 'winner' : '';
+    const pareja2Class = ganador === pareja2Id ? 'winner' : '';
     const porDefinir1 = !partido.pareja1 ? 'por-definir' : '';
     const porDefinir2 = !partido.pareja2 ? 'por-definir' : '';
     
+    // Sets para mostrar (si hay resultado)
+    const sets = partido.sets || [];
+    
+    // Generar HTML para sets - mostrar solo el número de games de cada pareja en cada set
+    let setsHTML1 = '';
+    let setsHTML2 = '';
+    
+    if (sets.length > 0) {
+        sets.forEach(set => {
+            setsHTML1 += `<div class="score-set">${set.pareja1 || '-'}</div>`;
+            setsHTML2 += `<div class="score-set">${set.pareja2 || '-'}</div>`;
+        });
+    }
+    
+    // Click para abrir modal de resultado (solo si ambas parejas están definidas y no hay ganador)
+    const clickHandler = partido.pareja1 && partido.pareja2 && !ganador 
+        ? `onclick="abrirModalResultadoFinal('${partido.id}', '${categoria}', '${pareja1}', '${pareja2}')"` 
+        : '';
+    
+    const cursorStyle = partido.pareja1 && partido.pareja2 && !ganador ? 'cursor: pointer;' : 'cursor: default;';
+    
     return `
-        <div class="match-card">
-            <div class="match-header">Partido ${numero}</div>
-            <div class="match-players">
-                <div class="player-row ${pareja1Class} ${porDefinir1}" 
-                     onclick="${partido.pareja1 && !ganador ? `marcarGanador('${partido.id}', ${partido.pareja1.id})` : ''}"
-                     style="${!partido.pareja1 || ganador ? 'cursor: default;' : ''}">
-                    <div class="player-position">1</div>
-                    <div class="player-name">${pareja1}</div>
-                    ${pareja1Class ? '<i class="bi bi-check-circle-fill winner-check"></i>' : ''}
+        <div class="match-wrapper">
+            <div class="match-card-itf" ${clickHandler} style="${cursorStyle}">
+                <div class="player-row-itf ${pareja1Class} ${porDefinir1}">
+                    <span class="player-name-itf">${pareja1}</span>
+                    ${(partido.pareja1 && ganador === pareja1Id) ? '<i class="bi bi-check-circle-fill player-check"></i>' : ''}
+                    <div class="player-scores">
+                        ${setsHTML1}
+                    </div>
                 </div>
-                <div class="player-row ${pareja2Class} ${porDefinir2}"
-                     onclick="${partido.pareja2 && !ganador ? `marcarGanador('${partido.id}', ${partido.pareja2.id})` : ''}"
-                     style="${!partido.pareja2 || ganador ? 'cursor: default;' : ''}">
-                    <div class="player-position">2</div>
-                    <div class="player-name">${pareja2}</div>
-                    ${pareja2Class ? '<i class="bi bi-check-circle-fill winner-check"></i>' : ''}
+                <div class="player-row-itf ${pareja2Class} ${porDefinir2}">
+                    <span class="player-name-itf">${pareja2}</span>
+                    ${(partido.pareja2 && ganador === pareja2Id) ? '<i class="bi bi-check-circle-fill player-check"></i>' : ''}
+                    <div class="player-scores">
+                        ${setsHTML2}
+                    </div>
                 </div>
             </div>
         </div>
     `;
 }
 
-// Marcar ganador
-async function marcarGanador(partidoId, ganadorId) {
+// Abrir modal para ingresar resultado de final
+function abrirModalResultadoFinal(partidoId, categoria, pareja1Nombre, pareja2Nombre) {
+    // Guardar datos en el modal
+    document.getElementById('resultadoPartidoId').value = partidoId;
+    document.getElementById('resultadoCategoria').value = categoria;
+    document.getElementById('resultadoFinalPareja1').textContent = pareja1Nombre;
+    document.getElementById('resultadoFinalPareja2').textContent = pareja2Nombre;
+    
+    // Limpiar sets
+    document.getElementById('gamesSet1P1').value = '';
+    document.getElementById('gamesSet1P2').value = '';
+    document.getElementById('gamesSet2P1').value = '';
+    document.getElementById('gamesSet2P2').value = '';
+    document.getElementById('tiebreakP1').value = '';
+    document.getElementById('tiebreakP2').value = '';
+    
+    // Ocultar tiebreak inicialmente
+    document.getElementById('tiebreakCardFinal').style.display = 'none';
+    
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalResultadoFinal'));
+    modal.show();
+}
+
+// Guardar resultado de final
+async function guardarResultadoFinal() {
+    const partidoId = document.getElementById('resultadoPartidoId').value;
+    const categoria = document.getElementById('resultadoCategoria').value;
+    
+    const set1P1 = parseInt(document.getElementById('gamesSet1P1').value) || 0;
+    const set1P2 = parseInt(document.getElementById('gamesSet1P2').value) || 0;
+    const set2P1 = parseInt(document.getElementById('gamesSet2P1').value) || 0;
+    const set2P2 = parseInt(document.getElementById('gamesSet2P2').value) || 0;
+    
+    // Validar que hay sets ingresados
+    if (set1P1 === 0 && set1P2 === 0 && set2P1 === 0 && set2P2 === 0) {
+        showToast('Debes ingresar al menos los resultados de 2 sets', 'warning');
+        return;
+    }
+    
+    const sets = [
+        { pareja1: set1P1, pareja2: set1P2 },
+        { pareja1: set2P1, pareja2: set2P2 }
+    ];
+    
+    // Verificar si hay tiebreak (1-1 en sets)
+    const setsP1 = (set1P1 > set1P2 ? 1 : 0) + (set2P1 > set2P2 ? 1 : 0);
+    const setsP2 = (set1P2 > set1P1 ? 1 : 0) + (set2P2 > set2P1 ? 1 : 0);
+    
+    if (setsP1 === 1 && setsP2 === 1) {
+        // Requiere super tiebreak
+        const tieP1 = parseInt(document.getElementById('tiebreakP1').value) || 0;
+        const tieP2 = parseInt(document.getElementById('tiebreakP2').value) || 0;
+        
+        if (tieP1 === 0 && tieP2 === 0) {
+            showToast('Debes ingresar el resultado del super tie-break', 'warning');
+            document.getElementById('tiebreakCardFinal').style.display = 'block';
+            return;
+        }
+        
+        sets.push({ pareja1: tieP1, pareja2: tieP2 });
+    }
+    
     try {
-        const response = await fetch(`/api/finales/partido/${partidoId}/ganador`, {
+        const response = await fetch(`/api/finales/partido/${partidoId}/resultado`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ganador_id: ganadorId })
+            body: JSON.stringify({ sets: sets })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showToast('Ganador actualizado correctamente', 'success');
+            showToast('Resultado guardado correctamente', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalResultadoFinal')).hide();
             await cargarFixtures(); // Recargar fixtures
         } else {
-            showToast('Error al actualizar ganador: ' + data.message, 'danger');
+            showToast('Error al guardar resultado: ' + data.message, 'danger');
         }
     } catch (error) {
         console.error('Error:', error);

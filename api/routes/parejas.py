@@ -1417,6 +1417,27 @@ def guardar_resultado_partido():
         # Guardar en storage
         datos = obtener_datos_desde_token()
         datos['resultado_algoritmo'] = resultado_data
+        
+        # Si los resultados del grupo están completos, regenerar fixtures de finales
+        if grupo_encontrado.get('resultados_completos', False):
+            from core.fixture_finales_generator import GeneradorFixtureFinales
+            try:
+                # Obtener todos los grupos de la categoría
+                grupos_data = resultado_data['grupos_por_categoria'].get(categoria, [])
+                grupos_obj = [Grupo.from_dict(g) for g in grupos_data]
+                
+                # Regenerar fixture para esta categoría
+                fixture = GeneradorFixtureFinales.generar_fixture(categoria, grupos_obj)
+                
+                if fixture:
+                    # Actualizar fixtures guardados
+                    if 'fixtures_finales' not in datos:
+                        datos['fixtures_finales'] = {}
+                    datos['fixtures_finales'][categoria] = fixture.to_dict()
+                    logger.info(f"Fixtures de finales regenerados automáticamente para {categoria}")
+            except Exception as e:
+                logger.error(f"Error al regenerar fixtures: {str(e)}")
+        
         sincronizar_con_storage_y_token(datos)
         
         return jsonify({
