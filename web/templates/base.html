@@ -54,12 +54,19 @@
                             <i class="bi bi-table me-2"></i>Datos
                         </a>
                     </li>
-                    {% if session.get('resultado_algoritmo') %}
+                    {% if resultado %}
                     <li class="nav-item">
                         <a class="nav-link text-white px-4 py-2 rounded-pill {{ 'active' if request.endpoint == 'resultados' else '' }}" 
                            href="{{ url_for('resultados') }}" 
                            style="font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; {{ 'background: rgba(255,255,255,0.2);' if request.endpoint == 'resultados' else '' }}">
                             <i class="bi bi-grid-3x3-gap-fill me-2"></i>Grupos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white px-4 py-2 rounded-pill {{ 'active' if request.endpoint == 'finales' else '' }}" 
+                           href="{{ url_for('finales') }}" 
+                           style="font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; {{ 'background: rgba(255,255,255,0.2);' if request.endpoint == 'finales' else '' }}">
+                            <i class="bi bi-trophy-fill me-2"></i>Finales
                         </a>
                     </li>
                     {% endif %}
@@ -104,6 +111,9 @@
     
     <!-- jQuery (opcional, para facilitar AJAX) -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- JWT Helper -->
+    <script src="{{ url_for('static', filename='js/jwt-helper.js', v=range(1, 10000)|random) }}"></script>
     
     <!-- Toast System -->
     <script src="{{ url_for('static', filename='js/toast.js', v=range(1, 10000)|random) }}"></script>

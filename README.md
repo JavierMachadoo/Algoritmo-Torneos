@@ -1,85 +1,128 @@
-# Algoritmo-Torneos
+# Algoritmo-Torneos 🎾
 
-proyecto Flask para generar grupos y calendario de partidos de pádel según disponibilidad y categoría.
+Aplicación web Flask para generar grupos y calendario de partidos de pádel según disponibilidad horaria y categoría.
 
-## ¿Qué es?
-Una pequeña aplicación web (Flask) que:
-- Administra parejas por categoría y franjas horarias.
-- Forma grupos optimizados (tripletas) según compatibilidad de horarios.
-- Genera un calendario asignando partidos por franja y canchas.
+## ¿Qué hace?
+
+- 📋 Administra parejas por categoría y franjas horarias
+- 🎯 Genera grupos optimizados (tripletas) según compatibilidad de horarios  
+- 📅 Crea calendario de partidos asignando franjas y canchas automáticamente
+- 🏆 Gestiona fixture de finales y resultados
 
 ## Tecnologías
-- Python
-- Flask
-- Flask-Session
-- pandas
-- gspread / Google Auth  (para exportar a Google Sheets)
 
-## Estructura principal
-- `main.py` — factory de la app Flask, rutas principales y arranque.
-- `api/` — endpoints (API) para manipular parejas y ejecutar acciones desde la UI.
-- `web/` — assets y templates (HTML, JS, CSS). Interfaz de usuario.
-- `core/algoritmo.py` — lógica central que forma grupos y genera el calendario.
-- `core/models.py` — modelos ligeros (Pareja, Grupo, Resultado).
-- `data/` — ejemplos y subidas.
-- `credentials.json` — credenciales de Google (si usas exportación a Sheets).
+- **Backend:** Python 3.13, Flask 3.1
+- **Autenticación:** JWT (stateless, compatible con serverless)
+- **Storage:** JSON (sistema de archivos)
+- **Frontend:** HTML5, Bootstrap 5, JavaScript vanilla
 
-## Cómo funciona el algoritmo (alto nivel)
-- Se separan las parejas por categoría.
-- Para cada categoría: se generan grupos de 3 iterando sobre combinaciones posibles.
-  - Se calcula una "compatibilidad" en base a franjas horarias:
-    - Score 3.0 = las 3 parejas comparten una franja (mejor caso).
-    - Score 2.0 = al menos una intersección entre dos parejas (caso parcial).
-    - Score 0.0 = sin intersección relevante.
-  - Se elige la combinación con mayor score, se crea el grupo y se elimina de la bolsa de disponibles.
-  - Se repite hasta que queden menos de 3 parejas.
-- Se generan los partidos por grupo y se arma un calendario asignando canchas de forma round-robin por franja.
+## Estructura del proyecto
 
-Resultado esperado: grupos con máxima compatibilidad horaria posible y un calendario por franja/cancha.
+```
+├── main.py                 # App Flask y rutas principales
+├── api/routes/            # Endpoints REST API
+│   ├── parejas.py         # Gestión de parejas y grupos
+│   └── finales.py         # Fixture de finales
+├── core/                  # Lógica de negocio
+│   ├── algoritmo.py       # Algoritmo de generación de grupos
+│   └── models.py          # Modelos de datos
+├── utils/                 # Utilidades
+│   ├── jwt_handler.py     # Manejo de tokens JWT
+│   ├── api_helpers.py     # Helpers para API
+│   └── torneo_storage.py  # Persistencia en JSON
+├── web/                   # Frontend
+│   ├── templates/         # HTML templates
+│   └── static/            # CSS, JS, imágenes
+└── data/torneos/          # Almacenamiento de datos
+```
 
-## Instalación y ejecución (Windows / PowerShell)
-1. Clona o copia el repositorio:
+## Instalación
 
-```powershell
-git clone <tu-repo-url>
+1. **Clonar repositorio:**
+```bash
+git clone <tu-repo>
 cd Algoritmo-Torneos
 ```
 
-2. Crea y activa un entorno virtual (recomendado):
-
-```powershell
+2. **Crear entorno virtual:**
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
 ```
-3. Instala dependencias:
 
-```powershell
+3. **Instalar dependencias:**
+```bash
 pip install -r requirements.txt
 ```
 
-4. Verifica que `credentials.json` esté en la raíz si quieres usar Google Sheets (opcional). Si no la tienes, la exportación quedará deshabilitada.
-
-5. Ejecuta la aplicación (modo desarrollo):
-
-```powershell
+4. **Ejecutar aplicación:**
+```bash
 python main.py
 ```
 
-6. Abre en navegador: http://127.0.0.1:5000
+5. **Abrir en navegador:** http://127.0.0.1:5000
 
-- Ve a `/datos` para cargar parejas y ejecutar el algoritmo desde la UI.
-- Luego `/resultados` para ver grupos y calendario.
+## Uso
 
-## Notas operativas y recomendaciones
-- El algoritmo es determinista respecto a la selección de combinaciones pero puede quedar con parejas sin asignar (cuando quedan <3 o no existe compatibilidad). Es intencional; esas parejas quedan pendientes para revisión manual.
-- Para producción: desplegar detrás de un servidor WSGI (gunicorn/uvicorn) y usar un almacenamiento de sesiones persistente si no quieres perder datos.
-- Google Sheets: necesitas `credentials.json` y habilitar la API en un proyecto de Google Cloud.
+1. **Cargar datos:** Sube un CSV con parejas desde la página inicio
+2. **Ver grupos:** Los grupos se generan automáticamente al cargar el CSV
+3. **Gestionar:** Drag & drop para reorganizar, crear grupos manuales
+4. **Finales:** Accede a la sección de finales para el fixture del domingo
 
-## Troubleshooting rápido
-- Si al abrir `/resultados` aparece vacío, asegúrate de haber ejecutado el algoritmo desde `/datos` y de que `session['resultado_algoritmo']` esté presente (la app guarda el resultado en sesión en memoria).
-- Errores de dependencias: revisa la versión de Python y reinstala el `requirements.txt` en un entorno limpio.
+### Formato CSV requerido
 
-## Licencia y contacto
-- Proyecto personal. Para dudas o mejoras, revisa el código en `core/algoritmo.py` o abre un issue en el repositorio.
+```csv
+Nombre,Teléfono,Categoría,Jueves 18:00,Jueves 20:00,Viernes 18:00,...
+Juan/Pedro,099123456,Cuarta,Sí,No,Sí,...
+```
 
-¡Listo! 🟢  (Archivo `README.md` creado en la raíz del proyecto.)
+## Cómo funciona el algoritmo
+
+1. **Separación por categoría:** Agrupa parejas por nivel
+2. **Generación de grupos:** Crea tripletas optimizadas
+   - **Score 3.0:** Las 3 parejas comparten una franja (ideal)
+   - **Score 2.0:** Al menos 2 parejas tienen intersección
+   - **Score 0.0:** Sin compatibilidad horaria
+3. **Asignación de canchas:** Round-robin por franja horaria
+4. **Calendario:** Genera partidos automáticamente
+
+## Deployment en Vercel
+
+La aplicación usa JWT stateless, perfecta para serverless:
+
+1. Instala Vercel CLI: `npm i -g vercel`
+2. Crea `vercel.json` en la raíz
+3. Despliega: `vercel --prod`
+
+**Variables de entorno requeridas:**
+- `SECRET_KEY`: Clave para firmar tokens JWT
+
+## Características técnicas
+
+- ✅ **Stateless:** Sin sesiones de servidor, compatible con serverless
+- ✅ **JWT tokens:** Autenticación mínima (<200 bytes)
+- ✅ **Storage JSON:** Persistencia simple en archivos
+- ✅ **Sin dependencias externas:** No requiere DB ni Redis
+- ✅ **Drag & drop:** Interfaz intuitiva para reorganizar grupos
+
+## Troubleshooting
+
+**No se generan grupos:**
+- Verifica que el CSV tenga al menos 3 parejas
+- Revisa que las franjas horarias coincidan
+
+**Errores de permisos:**
+- Asegúrate que `data/torneos/` sea escribible
+
+**Token muy grande:**
+- El JWT solo almacena validación de sesión
+- Los datos vienen de `torneo_actual.json`
+
+## Licencia
+
+Proyecto personal - Código educativo
+
+---
+
+**¡Listo para generar torneos! 🎾**

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 import pandas as pd
 import os
 import logging
@@ -10,10 +10,15 @@ from core import (
     Pareja, AlgoritmoGrupos, ResultadoAlgoritmo, Grupo,
     PosicionGrupo, FixtureGenerator, FixtureFinales
 )
+from core.fixture_finales_generator import GeneradorFixtureFinales
 from utils import CSVProcessor, CalendarioBuilder
 from utils.calendario_finales_builder import CalendarioFinalesBuilder
-from utils.google_sheets_export_calendario import GoogleSheetsExportCalendario
 from utils.torneo_storage import storage
+from utils.api_helpers import (
+    obtener_datos_desde_token,
+    crear_respuesta_con_token_actualizado,
+    sincronizar_con_storage_y_token
+)
 from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -21,6 +26,60 @@ logger = logging.getLogger(__name__)
 
 
 # ==================== HELPERS ====================
+
+def regenerar_fixtures_categoria(categoria, resultado_data):
+    """Regenera los fixtures de finales para una categoría específica.
+    
+    Args:
+        categoria: String con el nombre de la categoría (ej: '4ta')
+        resultado_data: Dict con el estado del torneo
+    """
+    try:
+        # Obtener los grupos de la categoría
+        grupos_data = resultado_data.get('grupos_por_categoria', {}).get(categoria, [])
+        if not grupos_data:
+            logger.warning(f"No se encontraron grupos para la categoría {categoria}")
+            return
+        
+        # Reconstruir objetos Grupo desde el dict
+        grupos = []
+        for grupo_data in grupos_data:
+            try:
+                grupo = Grupo.from_dict(grupo_data)
+                grupos.append(grupo)
+            except Exception as e:
+                logger.error(f"Error al reconstruir grupo: {e}")
+                continue
+        
+        if not grupos:
+            logger.warning(f"No se pudieron reconstruir grupos para {categoria}")
+            return
+        
+        # Generar fixture para esta categoría
+        generador = GeneradorFixtureFinales()
+        fixture = generador.generar_fixture(grupos, NUM_CANCHAS_DEFAULT)
+        
+        # Guardar en el torneo
+        torneo = storage.cargar()
+        if not torneo:
+            torneo = {}
+        
+        if 'fixtures_finales' not in torneo:
+            torneo['fixtures_finales'] = {}
+        
+        # Convertir fixture a dict
+        if fixture:
+            torneo['fixtures_finales'][categoria] = fixture.to_dict()
+        else:
+            torneo['fixtures_finales'][categoria] = None
+        
+        storage.guardar(torneo)
+        logger.info(f"Fixtures regenerados exitosamente para categoría {categoria}")
+        
+    except Exception as e:
+        logger.error(f"Error al regenerar fixtures para {categoria}: {e}")
+        import traceback
+        traceback.print_exc()
 
 def recalcular_estadisticas(resultado_data):
     """Recalcula las estadísticas globales del torneo basándose en el estado actual."""
@@ -125,7 +184,8 @@ def regenerar_calendario(resultado_data):
         resultado_obj = deserializar_resultado(resultado_data)
         
         # Obtener número de canchas
-        num_canchas = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
+        datos_actuales = obtener_datos_desde_token()
+        num_canchas = datos_actuales.get('num_canchas', NUM_CANCHAS_DEFAULT)
         
         # Crear mapeo de grupo_id a cancha desde resultado_data
         canchas_por_grupo = {}
@@ -172,13 +232,23 @@ def regenerar_calendario(resultado_data):
 
 
 def guardar_estado_torneo():
-    """Guarda el estado actual del torneo en el almacenamiento JSON."""
+    """
+    DEPRECATED: Con JWT, los datos se sincronizan automáticamente.
+    Mantenida para compatibilidad temporal.
+    """
+    # Los datos ya se guardan con sincronizar_con_storage_y_token()
+    pass
+
+
+def guardar_estado_torneo_legacy():
+    """Versión legacy - Guarda el estado actual del torneo en el almacenamiento JSON."""
     torneo = storage.cargar()
     
-    # Actualizar datos del torneo con lo que está en sesión
-    torneo['parejas'] = session.get('parejas', [])
-    torneo['resultado_algoritmo'] = session.get('resultado_algoritmo')
-    torneo['num_canchas'] = session.get('num_canchas', NUM_CANCHAS_DEFAULT)
+    # Actualizar datos del torneo desde datos actuales
+    datos = obtener_datos_desde_token()
+    torneo['parejas'] = datos.get('parejas', [])
+    torneo['resultado_algoritmo'] = datos.get('resultado_algoritmo')
+    torneo['num_canchas'] = datos.get('num_canchas', NUM_CANCHAS_DEFAULT)
     
     # Determinar estado según el progreso
     if torneo['resultado_algoritmo']:
@@ -208,16 +278,18 @@ def cargar_csv():
         df = pd.read_csv(file)
         parejas = CSVProcessor.procesar_dataframe(df)
         
-        session['parejas'] = parejas
-        session['resultado_algoritmo'] = None  # Limpiar resultados anteriores
-        session.modified = True
-        guardar_estado_torneo()
+        datos_token = {
+            'parejas': parejas,
+            'resultado_algoritmo': None,
+            'num_canchas': NUM_CANCHAS_DEFAULT
+        }
+        sincronizar_con_storage_y_token(datos_token)
         
-        return jsonify({
+        return crear_respuesta_con_token_actualizado({
             'success': True,
             'mensaje': f'✅ {len(parejas)} parejas cargadas correctamente',
             'parejas': parejas
-        })
+        }, datos_token)
     except Exception as e:
         return jsonify({'error': f'Error al procesar CSV: {str(e)}'}), 500
 
@@ -239,7 +311,8 @@ def agregar_pareja():
     if not franjas:
         return jsonify({'error': 'Selecciona al menos una franja horaria'}), 400
     
-    parejas = session.get('parejas', [])
+    datos_actuales = obtener_datos_desde_token()
+    parejas = datos_actuales.get('parejas', [])
     
     # Generar nuevo ID único
     max_id = max([p['id'] for p in parejas], default=0)
@@ -252,11 +325,12 @@ def agregar_pareja():
     }
     
     parejas.append(nueva_pareja)
-    session['parejas'] = parejas
+    datos_actuales['parejas'] = parejas
     
     # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
+    estadisticas = None
     if desde_resultados:
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = datos_actuales.get('resultado_algoritmo')
         if resultado_data:
             # Agregar a parejas no asignadas
             parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
@@ -265,11 +339,9 @@ def agregar_pareja():
             
             # Recalcular estadísticas globales
             estadisticas = recalcular_estadisticas(resultado_data)
-            
-            session['resultado_algoritmo'] = resultado_data
+            datos_actuales['resultado_algoritmo'] = resultado_data
     
-    session.modified = True
-    guardar_estado_torneo()
+    sincronizar_con_storage_y_token(datos_actuales)
     
     response_data = {
         'success': True,
@@ -279,10 +351,10 @@ def agregar_pareja():
     }
     
     # Incluir estadísticas si estamos en resultados
-    if desde_resultados and resultado_data:
+    if desde_resultados and estadisticas:
         response_data['estadisticas'] = estadisticas
     
-    return jsonify(response_data)
+    return crear_respuesta_con_token_actualizado(response_data, datos_actuales)
 
 
 @api_bp.route('/eliminar-pareja', methods=['POST'])
@@ -291,12 +363,12 @@ def eliminar_pareja():
     data = request.json
     pareja_id = data.get('id')
     
-    parejas = session.get('parejas', [])
+    datos_actuales = obtener_datos_desde_token()
+    parejas = datos_actuales.get('parejas', [])
     parejas = [p for p in parejas if p['id'] != pareja_id]
     
-    session['parejas'] = parejas
-    session.modified = True
-    guardar_estado_torneo()
+    datos_actuales['parejas'] = parejas
+    sincronizar_con_storage_y_token(datos_actuales)
     
     return jsonify({
         'success': True,
@@ -313,7 +385,8 @@ def remover_pareja_de_grupo():
     if not pareja_id:
         return jsonify({'error': 'Falta pareja_id'}), 400
     
-    resultado_data = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    resultado_data = datos_actuales.get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -354,12 +427,12 @@ def remover_pareja_de_grupo():
     # Recalcular estadísticas globales
     estadisticas = recalcular_estadisticas(resultado_data)
     
-    # Actualizar session
-    session['resultado_algoritmo'] = resultado_data
-    session.modified = True
+    # Actualizar datos
+    datos_actuales['resultado_algoritmo'] = resultado_data
+    sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()
     
-    return jsonify({
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas',
         'estadisticas': estadisticas
@@ -369,24 +442,28 @@ def remover_pareja_de_grupo():
 @api_bp.route('/limpiar-datos', methods=['POST'])
 def limpiar_datos():
     """Limpia todos los datos del torneo actual."""
-    session['parejas'] = []
-    session['resultado_algoritmo'] = None
-    session.modified = True
-    
-    # Limpiar también en el almacenamiento
+    # Limpiar storage
     storage.limpiar()
     
-    return jsonify({
+    # Crear token con datos vacíos
+    datos_limpios = {
+        'parejas': [],
+        'resultado_algoritmo': None,
+        'num_canchas': NUM_CANCHAS_DEFAULT
+    }
+    
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': 'Datos limpiados correctamente'
-    })
+    }, datos_limpios)
 
 
 @api_bp.route('/obtener-parejas', methods=['GET'])
 def obtener_parejas():
     """Obtiene la lista actualizada de parejas con estadísticas y estado de asignación."""
-    parejas = session.get('parejas', [])
-    resultado = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    parejas = datos_actuales.get('parejas', [])
+    resultado = datos_actuales.get('resultado_algoritmo')
     
     # Enriquecer parejas con información de asignación
     parejas_enriquecidas = []
@@ -443,7 +520,8 @@ def obtener_parejas():
 @api_bp.route('/resultado_algoritmo', methods=['GET'])
 def obtener_resultado_algoritmo():
     """Obtiene el resultado completo del algoritmo con grupos y parejas."""
-    resultado_data = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    resultado_data = datos_actuales.get('resultado_algoritmo')
     
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
@@ -460,7 +538,8 @@ def intercambiar_pareja():
     grupo_destino_id = data.get('grupo_destino')
     slot_destino = data.get('slot_destino')  # 0, 1, o 2
     
-    resultado = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    resultado = datos_actuales.get('resultado_algoritmo')
     if not resultado:
         return jsonify({'error': 'No hay resultados cargados'}), 400
     
@@ -517,15 +596,15 @@ def intercambiar_pareja():
         # Recalcular estadísticas globales
         estadisticas = recalcular_estadisticas(resultado)
         
-        session['resultado_algoritmo'] = resultado
-        session.modified = True
+        datos_actuales['resultado_algoritmo'] = resultado
+        sincronizar_con_storage_y_token(datos_actuales)
         guardar_estado_torneo()  # Auto-guardar
         
-        return jsonify({
+        return crear_respuesta_con_token_actualizado({
             'success': True,
             'mensaje': mensaje,
             'estadisticas': estadisticas
-        })
+        }, datos_actuales)
     except Exception as e:
         logger.error(f"Error al intercambiar: {str(e)}", exc_info=True)
         return jsonify({'error': 'Error al intercambiar parejas. Por favor, intenta nuevamente.'}), 500
@@ -534,7 +613,8 @@ def intercambiar_pareja():
 @api_bp.route('/ejecutar-algoritmo', methods=['POST'])
 def ejecutar_algoritmo():
     """Ejecuta el algoritmo de generación de grupos para el torneo."""
-    parejas_data = session.get('parejas', [])
+    datos_actuales = obtener_datos_desde_token()
+    parejas_data = datos_actuales.get('parejas', [])
     
     if not parejas_data:
         return jsonify({'error': 'No hay parejas cargadas'}), 400
@@ -547,16 +627,16 @@ def ejecutar_algoritmo():
         
         resultado = serializar_resultado(resultado_obj, NUM_CANCHAS_DEFAULT)
         
-        session['resultado_algoritmo'] = resultado
-        session['num_canchas'] = NUM_CANCHAS_DEFAULT
-        session.modified = True
+        datos_actuales['resultado_algoritmo'] = resultado
+        datos_actuales['num_canchas'] = NUM_CANCHAS_DEFAULT
+        sincronizar_con_storage_y_token(datos_actuales)
         guardar_estado_torneo()  # Auto-guardar
         
-        return jsonify({
+        return crear_respuesta_con_token_actualizado({
             'success': True,
-            'mensaje': '✅ Grupos generados exitosamente',
+            'mensaje': f'✅ {len(parejas_data)} parejas cargadas y grupos generados exitosamente',
             'resultado': resultado
-        })
+        }, datos_actuales)
     except Exception as e:
         logger.error(f"Error al ejecutar algoritmo: {str(e)}", exc_info=True)
         return jsonify({
@@ -620,7 +700,8 @@ def serializar_resultado(resultado, num_canchas):
 @api_bp.route('/parejas-no-asignadas/<categoria>', methods=['GET'])
 def obtener_parejas_no_asignadas(categoria):
     """Obtiene las parejas no asignadas de una categoría específica."""
-    resultado_data = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    resultado_data = datos_actuales.get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -652,7 +733,7 @@ def asignar_pareja_a_grupo():
     if not all([pareja_id, grupo_id, categoria]):
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
-    resultado_data = session.get('resultado_algoritmo')
+    resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -717,16 +798,17 @@ def asignar_pareja_a_grupo():
     # Recalcular estadísticas globales
     estadisticas = recalcular_estadisticas(resultado_data)
     
-    # Actualizar session
-    session['resultado_algoritmo'] = resultado_data
-    session.modified = True
+    # Actualizar datos
+    datos_actuales = obtener_datos_desde_token()
+    datos_actuales['resultado_algoritmo'] = resultado_data
+    sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()  # Auto-guardar
     
-    return jsonify({
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': f'✓ Pareja asignada al grupo correctamente',
         'estadisticas': estadisticas
-    })
+    }, datos_actuales)
 
 
 @api_bp.route('/franjas-disponibles', methods=['GET'])
@@ -734,12 +816,12 @@ def obtener_franjas_disponibles():
     """Obtiene las franjas disponibles para cada cancha."""
     from config.settings import FRANJAS_HORARIAS
     
-    resultado_data = session.get('resultado_algoritmo')
+    resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
     grupos_dict = resultado_data['grupos_por_categoria']
-    num_canchas = session.get('num_canchas', 2)
+    num_canchas = obtener_datos_desde_token().get('num_canchas', 2)
     
     # Mapeo de franjas a horas que ocupan
     franjas_a_horas_mapa = {
@@ -815,7 +897,7 @@ def crear_grupo_manual():
     if not all([categoria, franja_horaria, cancha]):
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
-    resultado_data = session.get('resultado_algoritmo')
+    resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -886,16 +968,17 @@ def crear_grupo_manual():
     # Regenerar calendario completo
     regenerar_calendario(resultado_data)
     
-    # Actualizar session
-    session['resultado_algoritmo'] = resultado_data
-    session.modified = True
+    # Actualizar datos
+    datos_actuales = obtener_datos_desde_token()
+    datos_actuales['resultado_algoritmo'] = resultado_data
+    sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()  # Auto-guardar
     
-    return jsonify({
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': '✓ Grupo creado correctamente',
         'grupo': nuevo_grupo
-    })
+    }, datos_actuales)
 
 
 @api_bp.route('/editar-grupo', methods=['POST'])
@@ -910,7 +993,7 @@ def editar_grupo():
     if not all([grupo_id, categoria, franja_horaria, cancha]):
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
-    resultado_data = session.get('resultado_algoritmo')
+    resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -950,15 +1033,15 @@ def editar_grupo():
     # Regenerar calendario completo
     regenerar_calendario(resultado_data)
     
-    # Actualizar session
-    session['resultado_algoritmo'] = resultado_data
-    session.modified = True
+    # Actualizar datos
+    datos_actuales['resultado_algoritmo'] = resultado_data
+    sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()  # Auto-guardar
     
-    return jsonify({
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': '✓ Grupo actualizado correctamente'
-    })
+    }, datos_actuales)
 
 
 @api_bp.route('/editar-pareja', methods=['POST'])
@@ -977,7 +1060,8 @@ def editar_pareja():
     if not franjas or len(franjas) == 0:
         return jsonify({'error': 'Debes seleccionar al menos una franja horaria'}), 400
     
-    resultado_data = session.get('resultado_algoritmo')
+    datos_actuales = obtener_datos_desde_token()
+    resultado_data = datos_actuales.get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados del algoritmo'}), 404
     
@@ -1036,7 +1120,8 @@ def editar_pareja():
     pareja_encontrada['franjas_disponibles'] = franjas
     
     # IMPORTANTE: También actualizar en la lista base de parejas
-    parejas_base = session.get('parejas', [])
+    datos = obtener_datos_desde_token()
+    parejas_base = datos.get('parejas', [])
     for pareja_base in parejas_base:
         if pareja_base['id'] == pareja_id:
             pareja_base['nombre'] = nombre
@@ -1044,7 +1129,8 @@ def editar_pareja():
             pareja_base['categoria'] = categoria
             pareja_base['franjas_disponibles'] = franjas
             break
-    session['parejas'] = parejas_base
+    datos['parejas'] = parejas_base
+    sincronizar_con_storage_y_token(datos)
     
     # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
     if grupo_contenedor and not cambio_categoria:
@@ -1053,59 +1139,19 @@ def editar_pareja():
     # Regenerar calendario completo
     regenerar_calendario(resultado_data)
     
-    # Actualizar session
-    session['resultado_algoritmo'] = resultado_data
-    session.modified = True
+    # Actualizar datos
+    datos_actuales['resultado_algoritmo'] = resultado_data
+    sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()  # Auto-guardar
     
     mensaje = '✓ Pareja actualizada correctamente'
     if cambio_categoria:
         mensaje += ' (movida a parejas no asignadas por cambio de categoría)'
     
-    return jsonify({
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': mensaje
-    })
-
-
-@api_bp.route('/exportar-google-sheets', methods=['POST'])
-def exportar_google_sheets():
-    """Exporta el calendario de partidos a Google Sheets."""
-    data = request.json
-    spreadsheet_id = data.get('spreadsheet_id', '').strip()
-    
-    if not spreadsheet_id:
-        return jsonify({'error': 'Falta el ID del Google Sheet'}), 400
-    
-    resultado_data = session.get('resultado_algoritmo')
-    if not resultado_data:
-        return jsonify({'error': 'No hay resultados del algoritmo para exportar'}), 400
-    
-    credentials_path = os.path.join(os.path.dirname(__file__), '..', '..', 'credentials.json')
-    if not os.path.exists(credentials_path):
-        return jsonify({'error': 'No se encontraron las credenciales de Google Sheets'}), 500
-    
-    try:
-        resultado = deserializar_resultado(resultado_data)
-        
-        google_sheets = GoogleSheetsExportCalendario(credentials_path)
-        url = google_sheets.exportar_calendario(spreadsheet_id, resultado)
-        
-        return jsonify({
-            'success': True,
-            'mensaje': '✅ Calendario exportado exitosamente a Google Sheets',
-            'url': url
-        })
-    except KeyError as e:
-        logger.error(f"Error en la estructura de datos: clave faltante {str(e)}", exc_info=True)
-        return jsonify({
-            'error': 'Error en la estructura de datos. Por favor, verifica que todos los datos estén completos.'
-        }), 500
-    except Exception as e:
-        logger.error(f"Error al exportar: {str(e)}", exc_info=True)
-        return jsonify({
-            'error': 'Error al exportar a Google Sheets. Por favor, intenta nuevamente.'
-        }), 500
+    }, datos_actuales)
 
 
 def deserializar_resultado(resultado_data):
@@ -1172,7 +1218,7 @@ def asignar_posicion():
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
     try:
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
         if not resultado_data:
             return jsonify({'error': 'No hay resultados cargados'}), 400
         
@@ -1200,13 +1246,16 @@ def asignar_posicion():
         if not pareja_encontrada:
             return jsonify({'error': 'Pareja no encontrada'}), 404
         
-        # Guardar cambios en sesión
-        session['resultado_algoritmo'] = resultado_data
-        session.modified = True
-        guardar_estado_torneo()  # Auto-guardar
+        # Guardar cambios en storage
+        datos = obtener_datos_desde_token()
+        datos['resultado_algoritmo'] = resultado_data
+        sincronizar_con_storage_y_token(datos)
         
         # Verificar si ya se pueden generar las finales
         puede_generar = verificar_posiciones_completas(grupos_categoria)
+        
+        # REGENERAR FIXTURES cuando se asignan posiciones
+        regenerar_fixtures_categoria(categoria, resultado_data)
         
         # Preparar mensaje según la acción
         if posicion == 0:
@@ -1255,7 +1304,7 @@ def guardar_resultado_partido():
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
     try:
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
         if not resultado_data:
             return jsonify({'error': 'No hay resultados cargados'}), 400
         
@@ -1355,10 +1404,10 @@ def guardar_resultado_partido():
                 if pareja_id in posiciones:
                     pareja_dict['posicion_grupo'] = posiciones[pareja_id].value
         
-        # Guardar en sesión
-        session['resultado_algoritmo'] = resultado_data
-        session.modified = True
-        guardar_estado_torneo()
+        # Guardar en storage
+        datos = obtener_datos_desde_token()
+        datos['resultado_algoritmo'] = resultado_data
+        sincronizar_con_storage_y_token(datos)
         
         return jsonify({
             'success': True,
@@ -1381,7 +1430,7 @@ def obtener_tabla_posiciones(categoria, grupo_id):
     from core.clasificacion import CalculadorClasificacion
     
     try:
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
         if not resultado_data:
             return jsonify({'error': 'No hay resultados cargados'}), 400
         
@@ -1441,7 +1490,7 @@ def obtener_tabla_posiciones(categoria, grupo_id):
 def generar_fixture(categoria):
     """Genera el fixture de finales para una categoría."""
     try:
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
         if not resultado_data:
             return jsonify({'error': 'No hay resultados cargados'}), 400
         
@@ -1479,11 +1528,12 @@ def generar_fixture(categoria):
         generator = FixtureGenerator(grupos_obj)
         fixture = generator.generar_fixture()
         
-        # Guardar fixture en sesión
-        if 'fixtures' not in session:
-            session['fixtures'] = {}
-        session['fixtures'][categoria] = fixture.to_dict()
-        session.modified = True
+        # Guardar fixture en storage (no en session)
+        torneo = storage.cargar()
+        if 'fixtures' not in torneo:
+            torneo['fixtures'] = {}
+        torneo['fixtures'][categoria] = fixture.to_dict()
+        storage.guardar(torneo)
         guardar_estado_torneo()  # Auto-guardar
         
         return jsonify({
@@ -1503,7 +1553,7 @@ def generar_fixture(categoria):
 def obtener_fixture(categoria):
     """Obtiene el fixture de finales para una categoría."""
     try:
-        fixtures = session.get('fixtures', {})
+        fixtures = storage.cargar().get('fixtures', {})
         fixture = fixtures.get(categoria)
         
         if not fixture:
@@ -1532,14 +1582,15 @@ def marcar_ganador():
         return jsonify({'error': 'Faltan parámetros requeridos'}), 400
     
     try:
-        fixtures = session.get('fixtures', {})
+        torneo = storage.cargar()
+        fixtures = torneo.get('fixtures', {})
         if categoria not in fixtures:
             return jsonify({'error': 'Fixture no encontrado'}), 404
         
         fixture_data = fixtures[categoria]
         
         # Reconstruir objetos para usar el método de actualización
-        resultado_data = session.get('resultado_algoritmo')
+        resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
         grupos_data = resultado_data['grupos_por_categoria'].get(categoria, [])
         
         # Reconstruir grupos
@@ -1577,11 +1628,10 @@ def marcar_ganador():
             ganador_id
         )
         
-        # Guardar en sesión
+        # Guardar en storage
         fixtures[categoria] = fixture.to_dict()
-        session['fixtures'] = fixtures
-        session.modified = True
-        guardar_estado_torneo()  # Auto-guardar
+        torneo['fixtures'] = fixtures
+        storage.guardar(torneo)
         
         return jsonify({
             'success': True,
@@ -1600,7 +1650,7 @@ def marcar_ganador():
 def obtener_calendario_finales():
     """Obtiene el calendario de finales del domingo con los partidos asignados."""
     try:
-        fixtures = session.get('fixtures', {})
+        fixtures = storage.cargar().get('fixtures', {})
         
         if not fixtures:
             # Si no hay fixtures, devolver calendario vacío con estructura
@@ -1643,7 +1693,7 @@ def verificar_posiciones_completas(grupos: list) -> bool:
 @api_bp.route('/estadisticas', methods=['GET'])
 def obtener_estadisticas():
     """Obtiene las estadísticas actualizadas del torneo."""
-    resultado_data = session.get('resultado_algoritmo')
+    resultado_data = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_data:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
@@ -1661,7 +1711,7 @@ def obtener_categoria(categoria):
     """Devuelve solo el HTML de una categoría específica para actualización parcial."""
     from flask import render_template_string
     
-    resultado_dict = session.get('resultado_algoritmo')
+    resultado_dict = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
@@ -1681,7 +1731,7 @@ def obtener_categoria(categoria):
 @api_bp.route('/obtener-grupo/<categoria>/<int:grupo_id>', methods=['GET'])
 def obtener_grupo(categoria, grupo_id):
     """Devuelve el HTML de un grupo específico."""
-    resultado_dict = session.get('resultado_algoritmo')
+    resultado_dict = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
@@ -1702,7 +1752,7 @@ def obtener_grupo(categoria, grupo_id):
 @api_bp.route('/obtener-no-asignadas/<categoria>', methods=['GET'])
 def obtener_no_asignadas(categoria):
     """Devuelve las parejas no asignadas de una categoría."""
-    resultado_dict = session.get('resultado_algoritmo')
+    resultado_dict = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
@@ -1719,7 +1769,7 @@ def obtener_no_asignadas(categoria):
 @api_bp.route('/obtener-datos-categoria/<categoria>', methods=['GET'])
 def obtener_datos_categoria(categoria):
     """Devuelve todos los datos actualizados de una categoría para actualización dinámica."""
-    resultado_dict = session.get('resultado_algoritmo')
+    resultado_dict = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     
@@ -1750,7 +1800,7 @@ def obtener_datos_categoria(categoria):
 @api_bp.route('/obtener-calendario', methods=['GET'])
 def obtener_calendario():
     """Devuelve el calendario general actualizado."""
-    resultado_dict = session.get('resultado_algoritmo')
+    resultado_dict = obtener_datos_desde_token().get('resultado_algoritmo')
     if not resultado_dict:
         return jsonify({'error': 'No hay resultados disponibles'}), 404
     

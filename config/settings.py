@@ -49,8 +49,3 @@ HORARIOS_POR_DIA = {
     'Sábado': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
                '16:00', '17:00', '18:00', '19:00', '20:00', '21:00']
 }
-
-GOOGLE_SHEETS_SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
-]

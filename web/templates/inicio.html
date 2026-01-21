@@ -741,21 +741,30 @@ document.getElementById('formCargarCSV').addEventListener('submit', function(e) 
     btnUpload.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
     btnUpload.disabled = true;
     
-    $.ajax({
-        url: '/api/cargar-csv',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            Toast.success(response.mensaje);
-            setTimeout(() => location.reload(), 800);
-        },
-        error: function(xhr) {
-            Toast.error(xhr.responseJSON?.error || 'Error al cargar CSV');
+    fetch('/api/cargar-csv', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Si hay suficientes parejas, ejecutar algoritmo automáticamente sin mostrar toast intermedio
+            if (data.parejas && data.parejas.length >= 3) {
+                ejecutarAlgoritmoAutomatico();
+            } else {
+                Toast.success(data.mensaje);
+                setTimeout(() => location.reload(), 800);
+            }
+        } else {
+            Toast.error(data.error || 'Error al cargar CSV');
             btnUpload.innerHTML = originalText;
             btnUpload.disabled = false;
         }
+    })
+    .catch(error => {
+        Toast.error('Error al cargar CSV');
+        btnUpload.innerHTML = originalText;
+        btnUpload.disabled = false;
     });
 });
 
@@ -779,23 +788,29 @@ document.getElementById('formAgregarPareja').addEventListener('submit', function
         return;
     }
     
-    $.ajax({
-        url: '/api/agregar-pareja',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
+    fetch('/api/agregar-pareja', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
             nombre: nombre,
             telefono: telefono || 'Sin teléfono',
             categoria: categoria,
             franjas: franjas
-        }),
-        success: function(response) {
-            Toast.success(response.mensaje);
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.mensaje) {
+            Toast.success(data.mensaje);
             setTimeout(() => location.reload(), 500);
-        },
-        error: function(xhr) {
-            Toast.error(xhr.responseJSON?.error || 'Error al agregar pareja');
+        } else {
+            Toast.error(data.error || 'Error al agregar pareja');
         }
+    })
+    .catch(error => {
+        Toast.error('Error al agregar pareja');
     });
 });
 
@@ -815,18 +830,24 @@ function confirmarEliminarPareja() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar'));
     modal.hide();
     
-    $.ajax({
-        url: '/api/eliminar-pareja',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ id: parejaIdAEliminar }),
-        success: function(response) {
-            Toast.success(response.mensaje);
-            setTimeout(() => location.reload(), 500);
+    fetch('/api/eliminar-pareja', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         },
-        error: function(xhr) {
-            Toast.error(xhr.responseJSON?.error || 'Error al eliminar pareja');
+        body: JSON.stringify({ id: parejaIdAEliminar })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.mensaje) {
+            Toast.success(data.mensaje);
+            setTimeout(() => location.reload(), 500);
+        } else {
+            Toast.error(data.error || 'Error al eliminar pareja');
         }
+    })
+    .catch(error => {
+        Toast.error('Error al eliminar pareja');
     });
     
     parejaIdAEliminar = null;
@@ -843,16 +864,16 @@ function confirmarLimpiarDatos() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarLimpiar'));
     modal.hide();
     
-    $.ajax({
-        url: '/api/limpiar-datos',
-        type: 'POST',
-        success: function(response) {
-            Toast.success(response.mensaje || 'Datos eliminados');
-            setTimeout(() => location.reload(), 500);
-        },
-        error: function(xhr) {
-            Toast.error(xhr.responseJSON?.error || 'Error al limpiar datos');
-        }
+    fetch('/api/limpiar-datos', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        Toast.success(data.mensaje || 'Datos eliminados');
+        setTimeout(() => location.reload(), 500);
+    })
+    .catch(error => {
+        Toast.error('Error al limpiar datos');
     });
 }
 
@@ -860,6 +881,31 @@ function confirmarLimpiarDatos() {
 function ejecutarAlgoritmo() {
     const modal = new bootstrap.Modal(document.getElementById('modalConfirmarGenerar'));
     modal.show();
+}
+
+function ejecutarAlgoritmoAutomatico() {
+    // Ejecutar sin confirmación (llamado después de cargar CSV)
+    fetch('/api/ejecutar-algoritmo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ num_canchas: 2 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Toast.success(data.mensaje);
+            setTimeout(() => window.location.href = '/resultados', 800);
+        } else {
+            Toast.error(data.error || 'Error al ejecutar algoritmo');
+            setTimeout(() => location.reload(), 500);
+        }
+    })
+    .catch(error => {
+        Toast.error('Error al ejecutar algoritmo');
+        setTimeout(() => location.reload(), 500);
+    });
 }
 
 function confirmarGenerarGrupos() {
@@ -871,20 +917,22 @@ function confirmarGenerarGrupos() {
     const modalLoading = new bootstrap.Modal(document.getElementById('loadingModal'));
     modalLoading.show();
     
-    $.ajax({
-        url: '/api/ejecutar-algoritmo',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ num_canchas: 2 }),
-        success: function(response) {
-            modalLoading.hide();
-            Toast.success(response.mensaje);
-            setTimeout(() => window.location.href = '/resultados', 800);
+    fetch('/api/ejecutar-algoritmo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         },
-        error: function(xhr) {
-            modalLoading.hide();
-            Toast.error(xhr.responseJSON?.error || 'Error al ejecutar algoritmo');
-        }
+        body: JSON.stringify({ num_canchas: 2 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        modalLoading.hide();
+        Toast.success(data.mensaje);
+        setTimeout(() => window.location.href = '/resultados', 800);
+    })
+    .catch(error => {
+        modalLoading.hide();
+        Toast.error('Error al ejecutar algoritmo');
     });
 }
 
@@ -893,24 +941,22 @@ let ultimoNumParejas = {{ parejas|length }};
 let tieneResultado = {{ 'true' if resultado else 'false' }};
 
 function actualizarTablaParejas() {
-    $.ajax({
-        url: '/api/obtener-parejas',
-        type: 'GET',
-        success: function(response) {
-            if (response.success) {
-                const parejas = response.parejas;
-                
-                // Solo actualizar si hay cambios
-                if (parejas.length !== ultimoNumParejas || detectarCambiosEstado(parejas)) {
-                    ultimoNumParejas = parejas.length;
-                    renderizarTablaParejas(parejas);
-                    actualizarHeader(parejas);
-                }
+    fetch('/api/obtener-parejas')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const parejas = data.parejas;
+            
+            // Solo actualizar si hay cambios
+            if (parejas.length !== ultimoNumParejas || detectarCambiosEstado(parejas)) {
+                ultimoNumParejas = parejas.length;
+                renderizarTablaParejas(parejas);
+                actualizarHeader(parejas);
             }
-        },
-        error: function() {
-            // Silenciosamente ignorar errores de actualización
         }
+    })
+    .catch(error => {
+        // Silenciosamente ignorar errores de actualización
     });
 }
 
