@@ -6,8 +6,18 @@
 <style>
     /* ========== ESTILOS GENERALES ========== */
     .finales-page {
-        padding: 2rem 0 3rem;
+        padding: 2rem 0;
         min-height: 100vh;
+        background: #f8f9fa;
+    }
+    
+    .page-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
     }
     
     .page-title {
@@ -20,491 +30,555 @@
     .page-subtitle {
         font-size: 1.1rem;
         color: #718096;
+        margin: 0.5rem 0 0 0;
     }
-
-    /* ========== TABS ========== */
-    .finales-tabs {
-        border-bottom: 2px solid #e2e8f0;
-        margin-bottom: 2rem;
+    
+    /* ========== TABS PRINCIPALES ========== */
+    #mainTabs {
+        max-width: 900px;
+        margin: 0 auto;
     }
-
-    .finales-tabs .nav-link {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #718096;
-        padding: 1rem 2rem;
-        border: none;
-        border-bottom: 3px solid transparent;
+    
+    #mainTabs .nav-link {
+        border-radius: 15px;
+        padding: 0.7rem 4rem;
+        font-size: 1.1rem;
+        color: #4a5568;
         transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin: 0 0.5rem;
     }
-
-    .finales-tabs .nav-link:hover {
-        color: #667eea;
-        border-bottom-color: #667eea;
-        background: transparent;
+    
+    #mainTabs .nav-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        color: #2d3748;
     }
-
-    .finales-tabs .nav-link.active {
-        color: #667eea;
-        border-bottom-color: #667eea;
-        background: transparent;
+    
+    #mainTabs .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: 2px solid #667eea;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
-
-    /* ========== CATEGORÍAS GRID ========== */
-    .categorias-grid {
+    
+    #mainTabs .nav-link small {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    
+    /* ========== SELECTOR DE CATEGORÍA ========== */
+    .categorias-selector {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
         margin-bottom: 2rem;
     }
     
-    .categoria-card {
+    .categoria-btn {
+        padding: 1.5rem;
+        border-radius: 16px;
         background: white;
-        border-radius: 20px;
-        padding: 2rem;
+        border: 3px solid transparent;
         cursor: pointer;
         transition: all 0.3s ease;
+        text-align: center;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .categoria-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .categoria-btn.active {
+        border-color: currentColor;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .categoria-btn-cuarta { color: #28a745; }
+    .categoria-btn-quinta { color: #ffc107; }
+    .categoria-btn-sexta { color: #17a2b8; }
+    .categoria-btn-septima { color: #9b7fed; }
+    
+    .categoria-btn .categoria-emoji {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .categoria-btn .categoria-nombre {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .categoria-btn .categoria-fases {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+    }
+    
+    /* ========== ESTILOS ESTILO ITF ========== */
+    .draw-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .round-section {
+        margin-bottom: 3rem;
+    }
+    
+    .round-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #e9ecef;
+    }
+    
+    .round-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .matches-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    /* ========== PARTIDO (MATCH) ========== */
+    .match-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .match-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .match-header {
+        background: #e9ecef;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-align: center;
+    }
+    
+    .match-players {
+        padding: 0;
+    }
+    
+    .player-row {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
-        position: relative;
-        overflow: hidden;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
     
-    .categoria-card::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 6px;
-        transition: width 0.3s ease;
+    .player-row:last-child {
+        border-bottom: none;
     }
     
-    .categoria-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    .player-row:hover:not(.winner):not(.por-definir) {
+        background: #f1f3f5;
     }
     
-    .categoria-card:hover::before {
-        width: 100%;
-        opacity: 0.1;
+    .player-row.winner {
+        background: linear-gradient(90deg, #e7f5ff 0%, #d0ebff 100%);
+        font-weight: 700;
     }
     
-    /* Colores por Categoría */
-    .categoria-cuarta::before, .categoria-4ta::before { background: #28a745; }
-    .categoria-cuarta .categoria-icon, .categoria-4ta .categoria-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+    .player-row.por-definir {
+        opacity: 0.5;
+        cursor: not-allowed;
+        font-style: italic;
+        color: #adb5bd;
+    }
     
-    .categoria-quinta::before, .categoria-5ta::before { background: #ffc107; }
-    .categoria-quinta .categoria-icon, .categoria-5ta .categoria-icon { background: linear-gradient(135deg, #ffc107, #ffb700); }
-    
-    .categoria-sexta::before, .categoria-6ta::before { background: #17a2b8; }
-    .categoria-sexta .categoria-icon, .categoria-6ta .categoria-icon { background: linear-gradient(135deg, #17a2b8, #138496); }
-    
-    .categoria-septima::before, .categoria-7ma::before { background: #9b7fed; }
-    .categoria-septima .categoria-icon, .categoria-7ma .categoria-icon { background: linear-gradient(135deg, #9b7fed, #7c3aed); }
-    
-    .categoria-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 16px;
+    .player-position {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #6c757d;
+        color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 2rem;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 1rem;
         flex-shrink: 0;
     }
     
-    .categoria-info {
-        flex: 1;
+    .player-row.winner .player-position {
+        background: #4c6ef5;
     }
     
-    .categoria-nombre {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin: 0 0 0.25rem 0;
-    }
-
-    .categoria-detalle {
-        font-size: 0.9rem;
-        color: #718096;
-        margin: 0;
-    }
-
-    /* ========== BRACKET / LLAVE ========== */
-    .bracket-container {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        overflow-x: auto;
-        margin-bottom: 2rem;
-    }
-
-    .bracket {
-        display: flex;
-        gap: 3rem;
-        min-width: fit-content;
-        padding: 2rem 1rem;
-    }
-
-    .bracket-round {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        gap: 2rem;
-    }
-
-    .round-title {
-        text-align: center;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 1rem;
-    }
-
-    .bracket-match {
-        background: white;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        min-width: 220px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .bracket-match:hover {
-        border-color: #667eea;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-    }
-
-    .bracket-team {
-        padding: 0.75rem 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .bracket-team:first-child {
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .bracket-team:hover {
-        background: #f7fafc;
-    }
-
-    .bracket-team.ganador {
-        background: #f0f9ff;
-        font-weight: 700;
-        color: #0369a1;
-    }
-
-    .bracket-team.ganador::before {
-        content: '✓';
-        position: absolute;
-        left: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #0369a1;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-
-    .team-name {
-        font-size: 0.95rem;
-        color: #2d3748;
+    .player-name {
         flex: 1;
-        padding-left: 1.5rem;
+        font-size: 1rem;
     }
-
-    .bracket-team.empty .team-name {
-        color: #cbd5e0;
-        font-style: italic;
+    
+    .player-score {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
     }
-
-    .match-badge {
-        font-size: 0.75rem;
-        background: #e2e8f0;
-        color: #4a5568;
-        padding: 0.25rem 0.5rem;
+    
+    .score-set {
+        width: 32px;
+        height: 32px;
         border-radius: 6px;
-        font-weight: 600;
+        background: white;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #495057;
     }
-
-    /* Líneas conectoras del bracket */
-    .bracket-round {
+    
+    .player-row.winner .score-set {
+        border-color: #4c6ef5;
+        color: #4c6ef5;
+    }
+    
+    .winner-check {
+        margin-left: 0.75rem;
+        color: #4c6ef5;
+        font-size: 1.25rem;
+    }
+    
+    /* ========== LÍNEAS CONECTORAS ========== */
+    .rounds-connector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+    
+    .connector-line {
+        flex: 1;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, #667eea 50%, transparent 100%);
         position: relative;
     }
-
-    /* ========== CALENDARIO ========== */
-    .calendario-container {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .calendario-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .calendario-titulo {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
-    }
-
-    .calendario-subtitulo {
-        color: #718096;
-        font-size: 1rem;
-    }
-
-    /* horario-info: removed per user request */
-
-    .cancha-section {
-        margin-bottom: 3rem;
-    }
-
-    .cancha-titulo {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .partido-row {
-        display: flex;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        margin-bottom: 0.75rem;
-        transition: all 0.3s ease;
-    }
-
-    .partido-row:hover {
-        border-color: #667eea;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    /* partido-hora: removed per user request */
-
-    .partido-info {
-        flex: 1;
-        padding: 0 1.5rem;
-    }
-
-    .partido-categoria {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #718096;
-        margin-bottom: 0.25rem;
-    }
-
-    .partido-fase {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 0.25rem;
-    }
-
-    .partido-parejas {
-        font-size: 0.9rem;
-        color: #4a5568;
-    }
-
-    .break-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        border-radius: 12px;
-        margin: 1.5rem 0;
-    }
-
-    .break-text {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #92400e;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    /* Estados */
-    .no-fixtures {
-        text-align: center;
-        padding: 3rem;
-        color: #718096;
-    }
-
-    .no-fixtures i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-    }
-
-    /* Loading */
-    .loading-spinner {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 3rem;
-    }
-
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-        border-width: 0.3rem;
-        color: #667eea;
-    }
-
-    /* Botón regenerar */
-    .btn-regenerar {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+    
+    .connector-arrow {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #667eea;
         color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 1rem;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
-
+    
+    /* ========== BOTONES FLOTANTES ========== */
+    .floating-actions {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        z-index: 1000;
+    }
+    
+    .btn-float {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-float:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    
+    .btn-float-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* ========== BOTONES DE ACCIÓN ========== */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-regenerar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
     .btn-regenerar:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
     }
-
-    /* Empty state */
-    .empty-bracket {
+    
+    /* ========== CALENDARIO DOMINGO ========== */
+    .calendario-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .horario-section {
+        margin-bottom: 2rem;
+    }
+    
+    .horario-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .canchas-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .cancha-column {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .cancha-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #667eea;
+    }
+    
+    .partido-calendario {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .partido-calendario:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .partido-cuarta { border-left-color: #28a745; }
+    .partido-quinta { border-left-color: #ffc107; }
+    .partido-sexta { border-left-color: #17a2b8; }
+    .partido-septima { border-left-color: #9b7fed; }
+    
+    .partido-hora {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+    
+    .partido-info {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .partido-parejas {
+        font-size: 0.95rem;
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .pausa-section {
         text-align: center;
-        padding: 3rem;
-        color: #718096;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        border-radius: 12px;
+        margin: 2rem 0;
+        border: 2px dashed #ffc107;
     }
-
-    .empty-bracket i {
-        font-size: 3rem;
-        color: #cbd5e0;
+    
+    .pausa-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pausa-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #856404;
+        margin: 0;
+    }
+    
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #adb5bd;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
         margin-bottom: 1rem;
     }
-
-    .empty-bracket p {
-        font-size: 1.1rem;
-        margin: 0.5rem 0;
+    
+    .empty-state-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+        .matches-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .canchas-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .categorias-selector {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="finales-page">
-    <div class="container-fluid px-4">
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <h1 class="page-title">
-                <i class="bi bi-trophy-fill text-warning me-3"></i>
-                Finales del Torneo
-            </h1>
-            <p class="page-subtitle">Llaves de eliminación directa y calendario del domingo</p>
-        </div>
-
-        <!-- Tabs -->
-        <ul class="nav nav-tabs finales-tabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#tab-llaves" role="tab">
-                    <i class="bi bi-diagram-3 me-2"></i>Llaves
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab-calendario" role="tab">
-                    <i class="bi bi-calendar-event me-2"></i>Calendario Domingo
-                </a>
-            </li>
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content">
-            <!-- TAB: LLAVES -->
-            <div class="tab-pane fade show active" id="tab-llaves" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="h4 mb-0">Selecciona una categoría</h2>
-                    <button class="btn btn-regenerar" onclick="regenerarFixtures()">
-                        <i class="bi bi-arrow-clockwise me-2"></i>Regenerar Llaves
-                    </button>
-                </div>
-
-                <!-- Grid de Categorías -->
-                <div class="categorias-grid">
-                    {% for categoria in categorias %}
-                    <div class="categoria-card categoria-{{ categoria.lower() }}" 
-                         onclick="mostrarBracket('{{ categoria }}')">
-                        <div class="categoria-icon">
-                            {{ emojis.get(categoria, '🎾') }}
-                        </div>
-                        <div class="categoria-info">
-                            <h3 class="categoria-nombre">{{ categoria|capitalize }}</h3>
-                            <p class="categoria-detalle" id="detalle-{{ categoria }}">
-                                Cargando...
-                            </p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <!-- Bracket Container -->
-                <div id="bracket-container" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="h4 mb-0">
-                            <span id="bracket-categoria-titulo"></span>
-                        </h3>
-                        <button class="btn btn-outline-secondary" onclick="ocultarBracket()">
-                            <i class="bi bi-x-lg me-2"></i>Cerrar
-                        </button>
-                    </div>
-                    <div class="bracket-container">
-                        <div id="bracket-content" class="bracket">
-                            <!-- Bracket dinámico -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Estado vacío -->
-                <div id="empty-state" class="empty-bracket" style="display: none;">
-                    <i class="bi bi-info-circle"></i>
-                    <p>Selecciona una categoría para ver su llave de finales</p>
+<div class="container-fluid finales-page">
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+            <!-- Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="bi bi-trophy-fill me-3"></i>FINALES
+                </h1>
+                <p class="page-subtitle">Llaves eliminatorias y calendario del domingo</p>
+            </div>
+            
+            <!-- Tabs Principales -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <ul class="nav nav-pills nav-fill mb-2 justify-content-center" id="mainTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="llaves-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#llaves-content" type="button" role="tab" 
+                                    aria-controls="llaves-content" aria-selected="true">
+                                <i class="bi bi-diagram-3 me-2" style="font-size: 1.3rem;"></i>
+                                <strong>LLAVES</strong>
+                                <small class="d-block">Sistema Eliminatorio</small>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="calendario-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#calendario-content" type="button" role="tab" 
+                                    aria-controls="calendario-content" aria-selected="false"
+                                    onclick="cargarCalendario()">
+                                <i class="bi bi-calendar-week me-2" style="font-size: 1.3rem;"></i>
+                                <strong>CALENDARIO DOMINGO</strong>
+                                <small class="d-block">Horarios y Canchas</small>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
-
-            <!-- TAB: CALENDARIO -->
-            <div class="tab-pane fade" id="tab-calendario" role="tabpanel">
-                <div class="calendario-container">
-                    <div class="calendario-header">
-                        <h2 class="calendario-titulo">
-                            <i class="bi bi-calendar-event text-primary me-2"></i>
-                            Calendario del Domingo
-                        </h2>
-                        <p class="calendario-subtitulo">Todos los partidos de finales</p>
+            
+            <!-- Contenido de Tabs -->
+            <div class="tab-content">
+                <!-- TAB: LLAVES -->
+                <div class="tab-pane fade show active" id="llaves-content" role="tabpanel">
+                    <!-- Botones de Acción -->
+                    <div class="action-buttons">
+                        <button class="btn btn-regenerar" onclick="regenerarFixtures()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Regenerar Llaves
+                        </button>
                     </div>
-
-                    <div id="calendario-content">
-                        <div class="loading-spinner">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
+                    
+                    <!-- Selector de Categoría -->
+                    <div class="categorias-selector" id="categoriasSelector">
+                        <div class="categoria-btn categoria-btn-cuarta active" onclick="cambiarCategoria('4ta')">
+                            <span class="categoria-emoji">🟢</span>
+                            <h3 class="categoria-nombre">4ta</h3>
+                            <p class="categoria-fases mb-0" id="fases-4ta">Cargando...</p>
+                        </div>
+                        <div class="categoria-btn categoria-btn-quinta" onclick="cambiarCategoria('5ta')">
+                            <span class="categoria-emoji">🟡</span>
+                            <h3 class="categoria-nombre">5ta</h3>
+                            <p class="categoria-fases mb-0" id="fases-5ta">Cargando...</p>
+                        </div>
+                        <div class="categoria-btn categoria-btn-sexta" onclick="cambiarCategoria('6ta')">
+                            <span class="categoria-emoji">🔵</span>
+                            <h3 class="categoria-nombre">6ta</h3>
+                            <p class="categoria-fases mb-0" id="fases-6ta">Cargando...</p>
+                        </div>
+                        <div class="categoria-btn categoria-btn-septima" onclick="cambiarCategoria('7ma')">
+                            <span class="categoria-emoji">🟣</span>
+                            <h3 class="categoria-nombre">7ma</h3>
+                            <p class="categoria-fases mb-0" id="fases-7ma">Cargando...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de Llaves -->
+                    <div id="drawContainer" class="draw-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🏆</div>
+                            <p class="empty-state-text">Selecciona una categoría para ver las llaves</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TAB: CALENDARIO DOMINGO -->
+                <div class="tab-pane fade" id="calendario-content" role="tabpanel">
+                    <div id="calendarioContainer" class="calendario-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <p class="empty-state-text">Cargando calendario...</p>
                         </div>
                     </div>
                 </div>
@@ -512,220 +586,274 @@
         </div>
     </div>
 </div>
+
+<!-- Botón de Acción Flotante -->
+<div class="floating-actions">
+    <a href="{{ url_for('resultados') }}" class="btn-float btn-float-primary" title="Volver a Grupos">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999"></div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let fixturesData = {};
-let calendarioData = {};
+let currentCategoria = '4ta';
+let fixtures = {};
 
 // Cargar fixtures al inicio
 document.addEventListener('DOMContentLoaded', function() {
     cargarFixtures();
-    actualizarDetallesCategorias();
+    
+    // Auto-actualizar cada 30 segundos
+    setInterval(() => {
+        cargarFixtures();
+    }, 30000);
 });
 
-// Cargar fixtures de todas las categorías
+// Cargar todos los fixtures
 async function cargarFixtures() {
     try {
         const response = await fetch('/api/finales/fixtures');
         const data = await response.json();
         
         if (data.success) {
-            fixturesData = data.fixtures;
+            fixtures = data.fixtures;
             actualizarDetallesCategorias();
-        } else {
-            console.error('Error al cargar fixtures:', data.message);
+            cambiarCategoria('4ta'); // Mostrar 4ta por defecto
         }
     } catch (error) {
-        console.error('Error en cargarFixtures:', error);
+        console.error('Error al cargar fixtures:', error);
     }
 }
 
-// Actualizar detalles en las tarjetas de categorías
+// Actualizar detalles de categorías (fases disponibles)
 function actualizarDetallesCategorias() {
-    const categorias = {{ categorias|tojson }};
+    const categorias = ['4ta', '5ta', '6ta', '7ma'];
     
-    categorias.forEach(categoria => {
-        const detalle = document.getElementById(`detalle-${categoria}`);
-        if (!detalle) return;
+    categorias.forEach(cat => {
+        const fixture = fixtures[cat];
+        let fases = [];
         
-        if (!fixturesData[categoria]) {
-            detalle.textContent = 'Sin datos disponibles';
-            return;
+        if (fixture) {
+            if (fixture.octavos && fixture.octavos.length > 0) fases.push('Octavos');
+            if (fixture.cuartos && fixture.cuartos.length > 0) fases.push('Cuartos');
+            if (fixture.semifinales && fixture.semifinales.length > 0) fases.push('Semis');
+            if (fixture.final) fases.push('Final');
         }
         
-        const fixture = fixturesData[categoria];
-        let texto = '';
-        
-        // Contar partidos por fase
-        const numOctavos = fixture.octavos?.length || 0;
-        const numCuartos = fixture.cuartos?.length || 0;
-        const numSemis = fixture.semifinales?.length || 0;
-        const tieneFinal = fixture.final ? 1 : 0;
-        
-        if (numOctavos > 0) {
-            texto = `${numOctavos} octavos • ${numCuartos} cuartos • ${numSemis} semis`;
-        } else if (numCuartos > 0) {
-            texto = `${numCuartos} cuartos • ${numSemis} semis • ${tieneFinal} final`;
-        } else if (numSemis > 0) {
-            texto = `${numSemis} semifinales • ${tieneFinal} final`;
-        } else {
-            texto = 'Esperando resultados de grupos';
-        }
-        
-        detalle.textContent = texto;
+        const fasesText = fases.length > 0 ? fases.join(' • ') : 'Sin fases';
+        document.getElementById(`fases-${cat}`).textContent = fasesText;
     });
 }
 
-// Mostrar bracket de una categoría
-function mostrarBracket(categoria) {
-    const container = document.getElementById('bracket-container');
-    const content = document.getElementById('bracket-content');
-    const titulo = document.getElementById('bracket-categoria-titulo');
-    const emptyState = document.getElementById('empty-state');
+// Cambiar categoría
+function cambiarCategoria(categoria) {
+    currentCategoria = categoria;
     
-    if (!fixturesData[categoria]) {
-        mostrarToast('No hay datos para esta categoría', 'warning');
+    // Actualizar botones activos
+    document.querySelectorAll('.categoria-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.categoria-btn').classList.add('active');
+    
+    // Renderizar fixture
+    renderizarFixture(categoria);
+}
+
+// Renderizar fixture estilo ITF
+function renderizarFixture(categoria) {
+    const container = document.getElementById('drawContainer');
+    const fixture = fixtures[categoria];
+    
+    // Si no existe el fixture en absoluto, crear estructura vacía
+    if (!fixture) {
+        // Crear estructura de llaves vacías por defecto (depende de la categoría)
+        const partidosVacios = crearPartidosVacios(categoria);
+        container.innerHTML = partidosVacios;
         return;
     }
     
-    const fixture = fixturesData[categoria];
-    
-    // Actualizar título
-    titulo.innerHTML = `<i class="bi bi-trophy-fill text-warning me-2"></i>${categoria.toUpperCase()}`;
-    
-    // Generar bracket HTML
-    const bracketHTML = generarBracketHTML(fixture);
-    content.innerHTML = bracketHTML;
-    
-    // Mostrar container
-    emptyState.style.display = 'none';
-    container.style.display = 'block';
-    
-    // Scroll suave al bracket
-    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// Ocultar bracket
-function ocultarBracket() {
-    const container = document.getElementById('bracket-container');
-    const emptyState = document.getElementById('empty-state');
-    
-    container.style.display = 'none';
-    emptyState.style.display = 'block';
-}
-
-// Generar HTML del bracket
-function generarBracketHTML(fixture) {
     let html = '';
+    let hasAnyRound = false;
     
-    // Octavos (si existen)
+    // Octavos
     if (fixture.octavos && fixture.octavos.length > 0) {
-        html += generarRondaHTML('Octavos', fixture.octavos);
+        hasAnyRound = true;
+        html += renderizarRonda('Octavos de Final', fixture.octavos);
+        html += `<div class="rounds-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
+                    <div class="connector-line"></div>
+                </div>`;
     }
     
-    // Cuartos (si existen)
+    // Cuartos
     if (fixture.cuartos && fixture.cuartos.length > 0) {
-        html += generarRondaHTML('Cuartos', fixture.cuartos);
+        hasAnyRound = true;
+        html += renderizarRonda('Cuartos de Final', fixture.cuartos);
+        html += `<div class="rounds-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
+                    <div class="connector-line"></div>
+                </div>`;
     }
     
     // Semifinales
     if (fixture.semifinales && fixture.semifinales.length > 0) {
-        html += generarRondaHTML('Semifinales', fixture.semifinales);
+        hasAnyRound = true;
+        html += renderizarRonda('Semifinales', fixture.semifinales);
+        html += `<div class="rounds-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
+                    <div class="connector-line"></div>
+                </div>`;
     }
     
-    // Final
+    // Final - siempre mostrar
     if (fixture.final) {
-        html += generarRondaHTML('Final', [fixture.final]);
+        hasAnyRound = true;
+        html += renderizarRonda('Final', [fixture.final]);
     }
     
-    return html || '<p class="text-muted text-center">No hay partidos generados aún</p>';
+    // Si no hay ninguna ronda configurada, mostrar llaves vacías
+    if (!hasAnyRound) {
+        html = crearPartidosVacios(categoria);
+    }
+    
+    container.innerHTML = html;
 }
 
-// Generar HTML de una ronda
-function generarRondaHTML(nombreRonda, partidos) {
-    let html = `
-        <div class="bracket-round">
-            <div class="round-title">${nombreRonda}</div>
-    `;
-    
-    partidos.forEach(partido => {
-        html += generarPartidoHTML(partido);
-    });
-    
-    html += '</div>';
-    return html;
-}
-
-// Generar HTML de un partido
-function generarPartidoHTML(partido) {
-    const pareja1 = partido.pareja1 ? partido.pareja1.nombre : 'Por definir';
-    const pareja2 = partido.pareja2 ? partido.pareja2.nombre : 'Por definir';
-    const ganadorId = partido.ganador ? partido.ganador.id : null;
-    
-    const pareja1Class = ganadorId && partido.pareja1 && ganadorId === partido.pareja1.id ? 'ganador' : '';
-    const pareja2Class = ganadorId && partido.pareja2 && ganadorId === partido.pareja2.id ? 'ganador' : '';
-    
-    const pareja1Empty = !partido.pareja1 ? 'empty' : '';
-    const pareja2Empty = !partido.pareja2 ? 'empty' : '';
-    
+// Crear estructura de partidos vacíos
+function crearPartidosVacios(categoria) {
+    // Todas las categorías tienen semifinal y final
     return `
-        <div class="bracket-match" data-partido-id="${partido.id}">
-            <div class="bracket-team ${pareja1Class} ${pareja1Empty}" 
-                 onclick="seleccionarGanador('${partido.id}', ${partido.pareja1 ? partido.pareja1.id : 'null'})">
-                <span class="team-name">${pareja1}</span>
+        <div class="round-section">
+            <div class="round-header">
+                <h2 class="round-title">SEMIFINALES</h2>
             </div>
-            <div class="bracket-team ${pareja2Class} ${pareja2Empty}"
-                 onclick="seleccionarGanador('${partido.id}', ${partido.pareja2 ? partido.pareja2.id : 'null'})">
-                <span class="team-name">${pareja2}</span>
+            <div class="matches-grid">
+                ${renderizarPartidoVacio(1)}
+                ${renderizarPartidoVacio(2)}
+            </div>
+        </div>
+        <div class="rounds-connector">
+            <div class="connector-line"></div>
+            <div class="connector-arrow"><i class="bi bi-arrow-down"></i></div>
+            <div class="connector-line"></div>
+        </div>
+        <div class="round-section">
+            <div class="round-header">
+                <h2 class="round-title">FINAL</h2>
+            </div>
+            <div class="matches-grid">
+                ${renderizarPartidoVacio(1)}
             </div>
         </div>
     `;
 }
 
-// Seleccionar ganador de un partido
-async function seleccionarGanador(partidoId, parejaId) {
-    if (!parejaId) {
-        mostrarToast('Esta pareja aún no está definida', 'warning');
-        return;
-    }
+// Renderizar un partido vacío
+function renderizarPartidoVacio(numero) {
+    return `
+        <div class="match-card">
+            <div class="match-header">Partido ${numero}</div>
+            <div class="match-players">
+                <div class="player-row por-definir">
+                    <div class="player-position">1</div>
+                    <div class="player-name">— Por definir —</div>
+                </div>
+                <div class="player-row por-definir">
+                    <div class="player-position">2</div>
+                    <div class="player-name">— Por definir —</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Renderizar una ronda completa
+function renderizarRonda(titulo, partidos) {
+    let html = `
+        <div class="round-section">
+            <div class="round-header">
+                <h2 class="round-title">${titulo}</h2>
+            </div>
+            <div class="matches-grid">
+    `;
     
+    partidos.forEach((partido, idx) => {
+        html += renderizarPartido(partido, idx + 1);
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+// Renderizar un partido individual
+function renderizarPartido(partido, numero) {
+    const pareja1 = partido.pareja1 ? partido.pareja1.nombre : '— Por definir —';
+    const pareja2 = partido.pareja2 ? partido.pareja2.nombre : '— Por definir —';
+    const ganador = partido.ganador ? partido.ganador.id : null;
+    
+    const pareja1Class = ganador === (partido.pareja1 ? partido.pareja1.id : null) ? 'winner' : '';
+    const pareja2Class = ganador === (partido.pareja2 ? partido.pareja2.id : null) ? 'winner' : '';
+    const porDefinir1 = !partido.pareja1 ? 'por-definir' : '';
+    const porDefinir2 = !partido.pareja2 ? 'por-definir' : '';
+    
+    return `
+        <div class="match-card">
+            <div class="match-header">Partido ${numero}</div>
+            <div class="match-players">
+                <div class="player-row ${pareja1Class} ${porDefinir1}" 
+                     onclick="${partido.pareja1 && !ganador ? `marcarGanador('${partido.id}', ${partido.pareja1.id})` : ''}"
+                     style="${!partido.pareja1 || ganador ? 'cursor: default;' : ''}">
+                    <div class="player-position">1</div>
+                    <div class="player-name">${pareja1}</div>
+                    ${pareja1Class ? '<i class="bi bi-check-circle-fill winner-check"></i>' : ''}
+                </div>
+                <div class="player-row ${pareja2Class} ${porDefinir2}"
+                     onclick="${partido.pareja2 && !ganador ? `marcarGanador('${partido.id}', ${partido.pareja2.id})` : ''}"
+                     style="${!partido.pareja2 || ganador ? 'cursor: default;' : ''}">
+                    <div class="player-position">2</div>
+                    <div class="player-name">${pareja2}</div>
+                    ${pareja2Class ? '<i class="bi bi-check-circle-fill winner-check"></i>' : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Marcar ganador
+async function marcarGanador(partidoId, ganadorId) {
     try {
         const response = await fetch(`/api/finales/partido/${partidoId}/ganador`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ ganador_id: parejaId })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ganador_id: ganadorId })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            mostrarToast('Ganador actualizado correctamente', 'success');
-            await cargarFixtures();
-            
-            // Recargar el bracket actual
-            const titulo = document.getElementById('bracket-categoria-titulo');
-            if (titulo) {
-                const categoria = titulo.textContent.trim().replace(/[^a-zA-Z0-9]/g, '');
-                if (categoria) {
-                    mostrarBracket(categoria);
-                }
-            }
+            showToast('Ganador actualizado correctamente', 'success');
+            await cargarFixtures(); // Recargar fixtures
         } else {
-            mostrarToast(data.message || 'Error al actualizar ganador', 'error');
+            showToast('Error al actualizar ganador: ' + data.message, 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarToast('Error al actualizar ganador', 'error');
+        showToast('Error de conexión', 'danger');
     }
 }
 
-// Regenerar todos los fixtures
+// Regenerar fixtures
 async function regenerarFixtures() {
-    if (!confirm('¿Estás seguro de regenerar las llaves? Esto actualizará todas las clasificaciones basándose en los resultados actuales de los grupos.')) {
+    if (!confirm('¿Estás seguro de regenerar las llaves? Esto actualizará las parejas clasificadas basándose en las posiciones actuales de los grupos.')) {
         return;
     }
     
@@ -737,142 +865,167 @@ async function regenerarFixtures() {
         const data = await response.json();
         
         if (data.success) {
-            mostrarToast('Llaves regeneradas exitosamente', 'success');
-            fixturesData = data.fixtures;
-            actualizarDetallesCategorias();
-            ocultarBracket();
+            showToast('Llaves regeneradas correctamente', 'success');
+            await cargarFixtures();
         } else {
-            mostrarToast(data.message || 'Error al regenerar llaves', 'error');
+            showToast('Error al regenerar: ' + data.message, 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarToast('Error al regenerar llaves', 'error');
+        showToast('Error de conexión', 'danger');
     }
 }
 
-// Cargar calendario cuando se muestra el tab
-document.querySelector('a[href="#tab-calendario"]').addEventListener('shown.bs.tab', function() {
-    cargarCalendario();
-});
-
 // Cargar calendario
 async function cargarCalendario() {
+    const container = document.getElementById('calendarioContainer');
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    
     try {
-        const content = document.getElementById('calendario-content');
-        content.innerHTML = '<div class="loading-spinner"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
-        
         const response = await fetch('/api/finales/calendario');
         const data = await response.json();
         
         if (data.success) {
-            calendarioData = data.calendario;
             renderizarCalendario(data.calendario);
         } else {
-            content.innerHTML = `<div class="text-center text-muted p-5">${data.message}</div>`;
+            container.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
         }
     } catch (error) {
-        console.error('Error al cargar calendario:', error);
-        document.getElementById('calendario-content').innerHTML = '<div class="text-center text-danger p-5">Error al cargar el calendario</div>';
+        console.error('Error:', error);
+        container.innerHTML = '<div class="alert alert-danger">Error al cargar el calendario</div>';
     }
 }
 
 // Renderizar calendario
 function renderizarCalendario(calendario) {
-    const content = document.getElementById('calendario-content');
+    const container = document.getElementById('calendarioContainer');
+    
+    // Agrupar por bloques horarios (mañana y tarde)
+    const cancha1 = calendario.cancha_1 || [];
+    const cancha2 = calendario.cancha_2 || [];
+    
+    // Si no hay partidos, mostrar mensaje
+    if (cancha1.length === 0 && cancha2.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <p class="empty-state-text">El calendario se generará automáticamente</p>
+                <p class="text-muted mt-2">Una vez que las llaves estén definidas</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Separar en bloques
+    const mananaC1 = cancha1.filter(p => parseInt(p.hora_inicio.split(':')[0]) < 15);
+    const tardeC1 = cancha1.filter(p => parseInt(p.hora_inicio.split(':')[0]) >= 16);
+    const mananaC2 = cancha2.filter(p => parseInt(p.hora_inicio.split(':')[0]) < 15);
+    const tardeC2 = cancha2.filter(p => parseInt(p.hora_inicio.split(':')[0]) >= 16);
+    
     let html = '';
     
-    // Cancha 1
-    if (calendario.cancha_1 && calendario.cancha_1.length > 0) {
+    // Bloque Mañana
+    if (mananaC1.length > 0 || mananaC2.length > 0) {
         html += `
-            <div class="cancha-section">
-                <h3 class="cancha-titulo">
-                    <i class="bi bi-layout-text-sidebar-reverse"></i>
-                    Cancha 1
+            <div class="horario-section">
+                <h3 class="horario-title">
+                    <i class="bi bi-sunrise"></i>
+                    Bloque Mañana
                 </h3>
-        `;
-        
-        let horaAnterior = '';
-        calendario.cancha_1.forEach((partido, index) => {
-            // Insertar break si es necesario
-            if (partido.hora_inicio === '16:00' && horaAnterior < '16:00') {
-                html += `
-                    <div class="break-row">
-                        <span class="break-text">
-                            <i class="bi bi-pause-circle-fill"></i>
-                            PAUSA - 15:00 a 16:00
-                        </span>
+                <div class="canchas-row">
+                    <div class="cancha-column">
+                        <div class="cancha-header"><i class="bi bi-1-circle-fill me-2"></i>Cancha 1</div>
+                        ${renderizarPartidosCalendario(mananaC1)}
                     </div>
-                `;
-            }
-            
-            html += generarPartidoCalendarioHTML(partido);
-            horaAnterior = partido.hora_inicio;
-        });
-        
-        html += '</div>';
+                    <div class="cancha-column">
+                        <div class="cancha-header"><i class="bi bi-2-circle-fill me-2"></i>Cancha 2</div>
+                        ${renderizarPartidosCalendario(mananaC2)}
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
-    // Cancha 2
-    if (calendario.cancha_2 && calendario.cancha_2.length > 0) {
+    // Solo mostrar pausa si hay partidos en mañana Y en tarde
+    if ((mananaC1.length > 0 || mananaC2.length > 0) && (tardeC1.length > 0 || tardeC2.length > 0)) {
         html += `
-            <div class="cancha-section">
-                <h3 class="cancha-titulo">
-                    <i class="bi bi-layout-text-sidebar-reverse"></i>
-                    Cancha 2
-                </h3>
+            <div class="pausa-section">
+                <div class="pausa-icon">⏸️</div>
+                <p class="pausa-text">PAUSA</p>
+                <small class="text-muted">No se juega en ninguna cancha</small>
+            </div>
         `;
-        
-        let horaAnterior = '';
-        calendario.cancha_2.forEach((partido, index) => {
-            // Insertar break si es necesario
-            if (partido.hora_inicio === '16:00' && horaAnterior < '16:00') {
-                html += `
-                    <div class="break-row">
-                        <span class="break-text">
-                            <i class="bi bi-pause-circle-fill"></i>
-                            PAUSA - 15:00 a 16:00
-                        </span>
+    }
+    
+    // Bloque Tarde
+    if (tardeC1.length > 0 || tardeC2.length > 0) {
+        html += `
+            <div class="horario-section">
+                <h3 class="horario-title">
+                    <i class="bi bi-sunset"></i>
+                    Bloque Tarde
+                </h3>
+                <div class="canchas-row">
+                    <div class="cancha-column">
+                        <div class="cancha-header"><i class="bi bi-1-circle-fill me-2"></i>Cancha 1</div>
+                        ${renderizarPartidosCalendario(tardeC1)}
                     </div>
-                `;
-            }
-            
-            html += generarPartidoCalendarioHTML(partido);
-            horaAnterior = partido.hora_inicio;
-        });
-        
-        html += '</div>';
+                    <div class="cancha-column">
+                        <div class="cancha-header"><i class="bi bi-2-circle-fill me-2"></i>Cancha 2</div>
+                        ${renderizarPartidosCalendario(tardeC2)}
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
-    if (!html) {
-        html = '<div class="text-center text-muted p-5">No hay partidos programados</div>';
-    }
-    
-    content.innerHTML = html;
+    container.innerHTML = html;
 }
 
-// Generar HTML de un partido en el calendario
-function generarPartidoCalendarioHTML(partido) {
-    const pareja1 = partido.pareja1 || 'Por definir';
-    const pareja2 = partido.pareja2 || 'Por definir';
+// Renderizar partidos del calendario
+function renderizarPartidosCalendario(partidos) {
+    if (partidos.length === 0) {
+        return '<p class="text-muted text-center py-3">Sin partidos asignados</p>';
+    }
     
-    return `
-        <div class="partido-row">
-            <div class="partido-info">
-                <div class="partido-categoria">${partido.categoria.toUpperCase()}</div>
-                <div class="partido-fase">${partido.fase}</div>
-                <div class="partido-parejas">${pareja1} <strong>vs</strong> ${pareja2}</div>
+    return partidos.map(p => {
+        const categoriaClass = `partido-${p.categoria.toLowerCase()}`;
+        const pareja1 = p.pareja1 || 'Por definir';
+        const pareja2 = p.pareja2 || 'Por definir';
+        
+        return `
+            <div class="partido-calendario ${categoriaClass}">
+                <div class="partido-hora">${p.hora_inicio}</div>
+                <div class="partido-info">
+                    <strong>${p.categoria}</strong> - ${p.fase}
+                </div>
+                <div class="partido-parejas">
+                    ${pareja1} <strong>vs</strong> ${pareja2}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Toast helper
+function showToast(message, type = 'info') {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     `;
-}
-
-// Helper: Mostrar toast
-function mostrarToast(mensaje, tipo = 'info') {
-    if (typeof showToast === 'function') {
-        showToast(mensaje, tipo);
-    } else {
-        alert(mensaje);
-    }
+    
+    const container = document.querySelector('.toast-container');
+    container.insertAdjacentHTML('beforeend', toastHtml);
+    
+    const toastEl = container.lastElementChild;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 </script>
 {% endblock %}

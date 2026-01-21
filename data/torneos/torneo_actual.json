@@ -724,6 +724,19 @@
               "tiebreak_pareja1": null,
               "tiebreak_pareja2": null,
               "ganador_id": 6
+            },
+            "12-23": {
+              "pareja1_id": 12,
+              "pareja2_id": 23,
+              "sets_pareja1": 2,
+              "sets_pareja2": 0,
+              "games_set1_pareja1": 6,
+              "games_set1_pareja2": 3,
+              "games_set2_pareja1": 6,
+              "games_set2_pareja2": 3,
+              "tiebreak_pareja1": null,
+              "tiebreak_pareja2": null,
+              "ganador_id": 12
             }
           },
           "franja_horaria": "Viernes 18:00",
@@ -751,10 +764,10 @@
                 "Sábado 09:00",
                 "Sábado 12:00"
               ],
-              "id": 17,
-              "nombre": "Santi Olivera y Carlos Di Peta",
-              "telefono": "099034734",
-              "grupo_asignado": 423,
+              "id": 21,
+              "nombre": "Agustín Bonilla / Facundo Silva",
+              "telefono": "092055305",
+              "grupo_asignado": 424,
               "posicion_grupo": null
             },
             {
@@ -763,14 +776,20 @@
                 "Sábado 09:00",
                 "Sábado 12:00"
               ],
-              "id": 21,
-              "nombre": "Agustín Bonilla / Facundo Silva",
-              "telefono": "092055305",
-              "grupo_asignado": 424,
+              "id": 17,
+              "nombre": "Santi Olivera y Carlos Di Peta",
+              "telefono": "099034734",
+              "grupo_asignado": 423,
               "posicion_grupo": null
             }
           ],
           "partidos": [
+            {
+              "pareja1": "Augusto y Pablito",
+              "pareja2": "Agustín Bonilla / Facundo Silva",
+              "pareja1_id": 7,
+              "pareja2_id": 21
+            },
             {
               "pareja1": "Augusto y Pablito",
               "pareja2": "Santi Olivera y Carlos Di Peta",
@@ -778,23 +797,18 @@
               "pareja2_id": 17
             },
             {
-              "pareja1": "Augusto y Pablito",
-              "pareja2": "Agustín Bonilla / Facundo Silva",
-              "pareja1_id": 7,
-              "pareja2_id": 21
-            },
-            {
-              "pareja1": "Santi Olivera y Carlos Di Peta",
-              "pareja2": "Agustín Bonilla / Facundo Silva",
-              "pareja1_id": 17,
-              "pareja2_id": 21
+              "pareja1": "Agustín Bonilla / Facundo Silva",
+              "pareja2": "Santi Olivera y Carlos Di Peta",
+              "pareja1_id": 21,
+              "pareja2_id": 17
             }
           ],
           "resultados": {},
           "franja_horaria": "Sábado 12:00",
           "cancha": 1,
           "score": 3.0,
-          "resultados_completos": false
+          "resultados_completos": false,
+          "score_compatibilidad": 3.0
         },
         {
           "id": 372,
@@ -814,18 +828,6 @@
               "categoria": "Sexta",
               "franjas_disponibles": [
                 "Jueves 20:00",
-                "Viernes 21:00"
-              ],
-              "id": 16,
-              "nombre": "Diego sacarelo",
-              "telefono": "099449583",
-              "grupo_asignado": 421,
-              "posicion_grupo": null
-            },
-            {
-              "categoria": "Sexta",
-              "franjas_disponibles": [
-                "Jueves 20:00",
                 "Viernes 21:00",
                 "Sábado 09:00"
               ],
@@ -834,9 +836,27 @@
               "telefono": "092035657",
               "grupo_asignado": 422,
               "posicion_grupo": null
+            },
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Jueves 20:00",
+                "Viernes 21:00"
+              ],
+              "id": 16,
+              "nombre": "Diego sacarelo",
+              "telefono": "099449583",
+              "grupo_asignado": 421,
+              "posicion_grupo": null
             }
           ],
           "partidos": [
+            {
+              "pareja1": "Daniel Fedorczuk y Marcelo",
+              "pareja2": "Stella San Martin . Franco",
+              "pareja1_id": 10,
+              "pareja2_id": 24
+            },
             {
               "pareja1": "Daniel Fedorczuk y Marcelo",
               "pareja2": "Diego sacarelo",
@@ -844,22 +864,41 @@
               "pareja2_id": 16
             },
             {
-              "pareja1": "Daniel Fedorczuk y Marcelo",
-              "pareja2": "Stella San Martin . Franco",
-              "pareja1_id": 10,
-              "pareja2_id": 24
-            },
-            {
-              "pareja1": "Diego sacarelo",
-              "pareja2": "Stella San Martin . Franco",
-              "pareja1_id": 16,
-              "pareja2_id": 24
+              "pareja1": "Stella San Martin . Franco",
+              "pareja2": "Diego sacarelo",
+              "pareja1_id": 24,
+              "pareja2_id": 16
             }
           ],
           "resultados": {},
           "franja_horaria": "Jueves 20:00",
           "cancha": 2,
           "score": 3.0,
+          "resultados_completos": false,
+          "score_compatibilidad": 3.0
+        },
+        {
+          "id": 427,
+          "franja_horaria": "Sábado 09:00",
+          "cancha": "2",
+          "score": 0.5,
+          "score_compatibilidad": 0.5,
+          "parejas": [
+            {
+              "categoria": "Sexta",
+              "franjas_disponibles": [
+                "Sábado 16:00",
+                "Sábado 19:00"
+              ],
+              "id": 15,
+              "nombre": "Mateo Rodriguez  Matias barenchi",
+              "telefono": "092226274",
+              "grupo_asignado": 425,
+              "posicion_grupo": null
+            }
+          ],
+          "partidos": [],
+          "resultados": {},
           "resultados_completos": false
         }
       ],
@@ -935,41 +974,14 @@
       ]
     },
     "estadisticas": {
+      "parejas_asignadas": 28,
       "total_parejas": 28,
-      "parejas_asignadas": 27,
-      "parejas_sin_asignar": 1,
-      "porcentaje_asignacion": 96.42857142857143,
-      "total_grupos": 9,
-      "grupos_por_categoria": {
-        "Cuarta": 1,
-        "Séptima": 4,
-        "Sexta": 3,
-        "Quinta": 1
-      },
-      "parejas_por_categoria": {
-        "Cuarta": 3,
-        "Séptima": 12,
-        "Sexta": 9,
-        "Quinta": 3
-      },
-      "score_compatibilidad_promedio": 2.9444444444444446,
-      "grupos_compatibilidad_perfecta": 8,
-      "grupos_compatibilidad_parcial": 1
+      "parejas_sin_asignar": 0,
+      "porcentaje_asignacion": 100.0,
+      "total_grupos": 10,
+      "score_compatibilidad_promedio": 2.7
     },
-    "parejas_sin_asignar": [
-      {
-        "categoria": "Sexta",
-        "franjas_disponibles": [
-          "Sábado 16:00",
-          "Sábado 19:00"
-        ],
-        "id": 15,
-        "nombre": "Mateo Rodriguez  Matias barenchi",
-        "telefono": "092226274",
-        "grupo_asignado": 425,
-        "posicion_grupo": null
-      }
-    ],
+    "parejas_sin_asignar": [],
     "calendario": {
       "Jueves": {
         "18:00": [
@@ -1005,7 +1017,7 @@
             "grupo_id": 372,
             "grupo_letra": "C",
             "pareja1": "Daniel Fedorczuk y Marcelo",
-            "pareja2": "Diego sacarelo"
+            "pareja2": "Stella San Martin . Franco"
           }
         ],
         "21:00": [
@@ -1021,7 +1033,7 @@
             "grupo_id": 372,
             "grupo_letra": "C",
             "pareja1": "Daniel Fedorczuk y Marcelo",
-            "pareja2": "Stella San Martin . Franco"
+            "pareja2": "Diego sacarelo"
           }
         ],
         "22:00": [
@@ -1036,8 +1048,8 @@
             "categoria": "Sexta",
             "grupo_id": 372,
             "grupo_letra": "C",
-            "pareja1": "Diego sacarelo",
-            "pareja2": "Stella San Martin . Franco"
+            "pareja1": "Stella San Martin . Franco",
+            "pareja2": "Diego sacarelo"
           }
         ]
       },
@@ -1158,7 +1170,7 @@
             "grupo_id": 371,
             "grupo_letra": "B",
             "pareja1": "Augusto y Pablito",
-            "pareja2": "Santi Olivera y Carlos Di Peta"
+            "pareja2": "Agustín Bonilla / Facundo Silva"
           },
           null
         ],
@@ -1168,7 +1180,7 @@
             "grupo_id": 371,
             "grupo_letra": "B",
             "pareja1": "Augusto y Pablito",
-            "pareja2": "Agustín Bonilla / Facundo Silva"
+            "pareja2": "Santi Olivera y Carlos Di Peta"
           },
           null
         ],
@@ -1177,8 +1189,8 @@
             "categoria": "Sexta",
             "grupo_id": 371,
             "grupo_letra": "B",
-            "pareja1": "Santi Olivera y Carlos Di Peta",
-            "pareja2": "Agustín Bonilla / Facundo Silva"
+            "pareja1": "Agustín Bonilla / Facundo Silva",
+            "pareja2": "Santi Olivera y Carlos Di Peta"
           },
           null
         ],
@@ -1228,5 +1240,237 @@
     }
   },
   "num_canchas": 2,
-  "fecha_modificacion": "2026-01-21T01:58:52.328651"
+  "fecha_modificacion": "2026-01-21T15:13:53.147248",
+  "fixtures_finales": {
+    "Cuarta": {
+      "categoria": "Cuarta",
+      "octavos": [],
+      "cuartos": [],
+      "semifinales": [
+        {
+          "id": "Cuarta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Cuarta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Cuarta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Séptima": {
+      "categoria": "Séptima",
+      "octavos": [],
+      "cuartos": [
+        {
+          "id": "Séptima_cuartos_1",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_2",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_3",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 3,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_cuartos_4",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 4,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "semifinales": [
+        {
+          "id": "Séptima_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Séptima_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Séptima_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Sexta": {
+      "categoria": "Sexta",
+      "octavos": [],
+      "cuartos": [
+        {
+          "id": "Sexta_cuartos_1",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Sexta_cuartos_2",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Sexta_cuartos_3",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 3,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Sexta_cuartos_4",
+          "fase": "Cuartos de Final",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 4,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "semifinales": [
+        {
+          "id": "Sexta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Sexta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Sexta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    },
+    "Quinta": {
+      "categoria": "Quinta",
+      "octavos": [],
+      "cuartos": [],
+      "semifinales": [
+        {
+          "id": "Quinta_semi_1",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 1,
+          "esta_completo": false,
+          "tiene_ganador": false
+        },
+        {
+          "id": "Quinta_semi_2",
+          "fase": "Semifinal",
+          "pareja1": null,
+          "pareja2": null,
+          "ganador": null,
+          "numero_partido": 2,
+          "esta_completo": false,
+          "tiene_ganador": false
+        }
+      ],
+      "final": {
+        "id": "Quinta_final",
+        "fase": "Final",
+        "pareja1": null,
+        "pareja2": null,
+        "ganador": null,
+        "numero_partido": 1,
+        "esta_completo": false,
+        "tiene_ganador": false
+      }
+    }
+  }
 }
