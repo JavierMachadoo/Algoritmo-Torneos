@@ -1,56 +1,35 @@
-.states
-assets/external/
-*.db
-.web
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+dist/
+build/
 
 # Virtual Environment
+.venv/
 venv/
-env/
 ENV/
-.venv
-
-# Google Credentials
-credentials.json
-data/credentials.json
-data/*.json
-!data/.gitkeep
+env/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Streamlit
-.streamlit/secrets.toml
+# Project specific
+*.log
+app.log
+data/torneos/*.json
+!data/torneos/.gitkeep
+flask_session/
+
+# Environment variables
+.env
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Temporary files
-*.log
-*.tmp
-temp/

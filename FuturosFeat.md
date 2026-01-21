@@ -1,1 +1,0 @@
-- en el tab finales poder elegir una franja horaria donde no se juega, (clasicos, etc.)

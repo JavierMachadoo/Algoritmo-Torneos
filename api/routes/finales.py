@@ -2,7 +2,7 @@
 API Routes para manejo de finales
 """
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 import logging
 from core.fixture_finales_generator import GeneradorFixtureFinales
 from core.models import Grupo, FixtureFinales

@@ -3,8 +3,7 @@ Aplicación Flask para gestión de torneos de pádel.
 Genera grupos optimizados según categorías y disponibilidad horaria.
 """
 
-from flask import Flask, render_template, session, redirect, url_for, flash
-from flask_session import Session
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response
 import os
 import logging
 
@@ -19,17 +18,16 @@ from config.settings import BASE_DIR
 from api import api_bp
 from api.routes.finales import finales_bp
 from utils.torneo_storage import storage
+from utils.jwt_handler import JWTHandler
 
 
 def crear_app():
     """Factory para crear y configurar la aplicación Flask."""
-    # Configure logging
-    log_file = os.path.join(BASE_DIR, 'app.log')
+    # Configure logging - solo consola, sin archivo
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_file),
             logging.StreamHandler()
         ]
     )
@@ -40,42 +38,55 @@ def crear_app():
     
     # Configuración básica
     app.secret_key = SECRET_KEY
-    
-    # Configuración de sesiones del lado del servidor
-    app.config['SESSION_TYPE'] = 'filesystem'  # Guardar sesiones en archivos
-    app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(__file__), 'flask_session')
-    app.config['SESSION_PERMANENT'] = False
-    app.config['SESSION_USE_SIGNER'] = True  # Firmar cookies de sesión para seguridad
-    app.config['SESSION_KEY_PREFIX'] = 'torneo_'
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     
-    # Crear directorio de sesiones si no existe
-    os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
-    
-    # Inicializar Flask-Session
-    Session(app)
+    # Inicializar JWT handler
+    jwt_handler = JWTHandler(SECRET_KEY, expiration_hours=24)
+    app.jwt_handler = jwt_handler  # Hacer accesible en toda la app
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
     app.register_blueprint(finales_bp)
     
-    # Middleware: Sincronizar sesión con almacenamiento
+    # Helper para obtener datos del token o storage
+    def obtener_datos_torneo():
+        """Obtiene datos del torneo desde storage.
+        El token JWT solo valida la sesión, no almacena datos."""
+        # Siempre cargar desde storage
+        torneo = storage.cargar()
+        return {
+            'parejas': torneo.get('parejas', []),
+            'resultado_algoritmo': torneo.get('resultado_algoritmo'),
+            'num_canchas': torneo.get('num_canchas', 2)
+        }
+    
+    # Middleware: Asegurar que siempre haya un token
     @app.before_request
-    def cargar_torneo():
-        """Carga el torneo actual en la sesión si no está cargado."""
-        if 'parejas' not in session:
-            torneo = storage.cargar()
-            session['parejas'] = torneo.get('parejas', [])
-            session['resultado_algoritmo'] = torneo.get('resultado_algoritmo')
-            session['num_canchas'] = torneo.get('num_canchas', 2)
-            session.modified = True
+    def asegurar_token():
+        """Asegura que cada request tenga un token válido."""
+        # Skip para archivos estáticos
+        if request.path.startswith('/static/'):
+            return
+        
+        token = jwt_handler.obtener_token_desde_request()
+        
+        # Si no hay token o es inválido, crear uno nuevo
+        if not token or not jwt_handler.verificar_token(token):
+            import time
+            data = {
+                'session_id': 'torneo_session',
+                'timestamp': int(time.time())
+            }
+            # El token se enviará en la respuesta
+            request.token_data = data
     
     # Rutas principales
     @app.route('/')
     def inicio():
         """Página de inicio - Carga de datos."""
-        parejas = session.get('parejas', [])
-        resultado = session.get('resultado_algoritmo')
+        datos = obtener_datos_torneo()
+        parejas = datos.get('parejas', [])
+        resultado = datos.get('resultado_algoritmo')
         torneo = storage.cargar()
         
         # Enriquecer parejas con información de asignación
@@ -116,22 +127,32 @@ def crear_app():
         parejas_ordenadas = sorted(parejas_enriquecidas, 
                                   key=lambda p: orden_categorias.index(p.get('categoria', 'Cuarta')))
         
-        return render_template('inicio.html', 
+        # Obtener datos actuales para el header
+        datos_actuales = obtener_datos_torneo()
+        resultado_actual = datos_actuales.get('resultado_algoritmo')
+        
+        response = make_response(render_template('inicio.html', 
                              parejas=parejas_ordenadas,
                              resultado=resultado,
                              torneo=torneo,
                              categorias=CATEGORIAS,
-                             franjas=FRANJAS_HORARIAS)
-    
-    @app.route('/datos')
-    def datos():
-        """Redirige a inicio - ya no se usa esta página."""
-        return redirect(url_for('inicio'))
+                             franjas=FRANJAS_HORARIAS))
+        
+        # Si hay datos nuevos del token, actualizar la cookie
+        if hasattr(request, 'token_data'):
+            nuevo_token = jwt_handler.generar_token(request.token_data)
+            response.set_cookie('token', nuevo_token, 
+                              httponly=True, 
+                              samesite='Lax',
+                              max_age=60*60*24)
+        
+        return response
     
     @app.route('/resultados')
     def resultados():
-        """Página de visualización de grupos generados."""
-        resultado = session.get('resultado_algoritmo')
+        """Página de resultados - Visualización de grupos generados."""
+        datos = obtener_datos_torneo()
+        resultado = datos.get('resultado_algoritmo')
         
         if not resultado:
             flash('Primero debes generar los grupos', 'warning')
@@ -139,17 +160,28 @@ def crear_app():
         
         torneo = storage.cargar()
         
-        return render_template('resultados.html', 
+        response = make_response(render_template('resultados.html', 
                              resultado=resultado,
                              categorias=CATEGORIAS,
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,
-                             torneo=torneo)
+                             torneo=torneo))
+        
+        # Actualizar token si es necesario
+        if hasattr(request, 'token_data'):
+            nuevo_token = jwt_handler.generar_token(request.token_data)
+            response.set_cookie('token', nuevo_token, 
+                              httponly=True, 
+                              samesite='Lax',
+                              max_age=60*60*24)
+        
+        return response
     
     @app.route('/finales')
     def finales():
         """Página de visualización de finales y calendario del domingo."""
-        resultado = session.get('resultado_algoritmo')
+        datos = obtener_datos_torneo()
+        resultado = datos.get('resultado_algoritmo')
         
         if not resultado:
             flash('Primero debes generar los grupos', 'warning')
@@ -158,12 +190,23 @@ def crear_app():
         torneo = storage.cargar()
         fixtures = torneo.get('fixtures_finales', {})
         
-        return render_template('finales.html',
+        response = make_response(render_template('finales.html',
                              fixtures=fixtures,
                              categorias=CATEGORIAS,
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,
-                             torneo=torneo)
+                             resultado=resultado,
+                             torneo=torneo))
+        
+        # Actualizar token si es necesario
+        if hasattr(request, 'token_data'):
+            nuevo_token = jwt_handler.generar_token(request.token_data)
+            response.set_cookie('token', nuevo_token, 
+                              httponly=True, 
+                              samesite='Lax',
+                              max_age=60*60*24)
+        
+        return response
     
     return app
 
