@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>{% block title %}Torneo de Pádel{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
@@ -13,6 +16,9 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=range(1, 10000)|random) }}">
+    
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=range(1, 10000)|random) }}">
     
     {% block extra_css %}{% endblock %}
     

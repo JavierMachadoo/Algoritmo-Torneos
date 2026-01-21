@@ -1091,14 +1091,56 @@
                             <h2 class="section-title mb-0">
                                 <i class="bi bi-calendar-week me-2"></i>Calendario General
                             </h2>
-                            <button class="btn btn-success" onclick="exportarGoogleSheets()">
-                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar a Google Sheets
-                            </button>
                         </div>
                         
                         <!-- JUEVES -->
                         <div class="mb-5">
                             <h3 class="fw-bold text-primary mb-3">📆 JUEVES</h3>
+                            
+                            <!-- Vista Móvil -->
+                            <div class="calendario-mobile d-none">
+                                <div class="dia-card">
+                                    <div class="dia-header">
+                                        <div class="dia-nombre">
+                                            <i class="bi bi-calendar-day"></i>
+                                            Jueves
+                                        </div>
+                                        {% if resultado.calendario.Jueves %}
+                                        <span class="dia-badge">{{ resultado.calendario.Jueves.keys()|length }} horarios</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if resultado.calendario.Jueves %}
+                                        {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00'] %}
+                                            {% if hora in resultado.calendario.Jueves %}
+                                            <div class="horario-bloque">
+                                                <div class="horario-titulo">
+                                                    <i class="bi bi-clock"></i>{{ hora }}
+                                                </div>
+                                                
+                                                {% if resultado.calendario.Jueves[hora][0] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 1</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario.Jueves[hora][0]) }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if resultado.calendario.Jueves[hora][1] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 2</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario.Jueves[hora][1]) }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="sin-partidos">No hay partidos programados</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Vista Desktop (Tabla) -->
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover calendario-table">
                                     <thead class="table-dark">
@@ -1138,6 +1180,51 @@
                         <!-- VIERNES -->
                         <div class="mb-5">
                             <h3 class="fw-bold text-success mb-3">📆 VIERNES</h3>
+                            
+                            <!-- Vista Móvil -->
+                            <div class="calendario-mobile d-none">
+                                <div class="dia-card">
+                                    <div class="dia-header">
+                                        <div class="dia-nombre">
+                                            <i class="bi bi-calendar-day"></i>
+                                            Viernes
+                                        </div>
+                                        {% if resultado.calendario.Viernes %}
+                                        <span class="dia-badge">{{ resultado.calendario.Viernes.keys()|length }} horarios</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if resultado.calendario.Viernes %}
+                                        {% for hora in ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'] %}
+                                            {% if hora in resultado.calendario.Viernes %}
+                                            <div class="horario-bloque">
+                                                <div class="horario-titulo">
+                                                    <i class="bi bi-clock"></i>{{ hora }}
+                                                </div>
+                                                
+                                                {% if resultado.calendario.Viernes[hora][0] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 1</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario.Viernes[hora][0]) }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if resultado.calendario.Viernes[hora][1] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 2</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario.Viernes[hora][1]) }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="sin-partidos">No hay partidos programados</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Vista Desktop (Tabla) -->
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover calendario-table">
                                     <thead class="table-dark">
@@ -1177,6 +1264,51 @@
                         <!-- SÁBADO -->
                         <div class="mb-5">
                             <h3 class="fw-bold text-warning mb-3">📆 SÁBADO</h3>
+                            
+                            <!-- Vista Móvil -->
+                            <div class="calendario-mobile d-none">
+                                <div class="dia-card">
+                                    <div class="dia-header">
+                                        <div class="dia-nombre">
+                                            <i class="bi bi-calendar-day"></i>
+                                            Sábado
+                                        </div>
+                                        {% if resultado.calendario['Sábado'] %}
+                                        <span class="dia-badge">{{ resultado.calendario['Sábado'].keys()|length }} horarios</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if resultado.calendario['Sábado'] %}
+                                        {% for hora in ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'] %}
+                                            {% if hora in resultado.calendario['Sábado'] %}
+                                            <div class="horario-bloque">
+                                                <div class="horario-titulo">
+                                                    <i class="bi bi-clock"></i>{{ hora }}
+                                                </div>
+                                                
+                                                {% if resultado.calendario['Sábado'][hora][0] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 1</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario['Sábado'][hora][0]) }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if resultado.calendario['Sábado'][hora][1] %}
+                                                <div class="cancha-group">
+                                                    <div class="cancha-label"><i class="bi bi-square"></i> Cancha 2</div>
+                                                    {{ mostrar_partido_mobile(resultado.calendario['Sábado'][hora][1]) }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="sin-partidos">No hay partidos programados</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Vista Desktop (Tabla) -->
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover calendario-table">
                                     <thead class="table-dark">
@@ -1956,6 +2088,15 @@
     </div>
 {% endmacro %}
 
+{% macro mostrar_partido_mobile(partido) %}
+    {% set cat_lower = partido.categoria.lower() %}
+    <div class="partido-mobile {{ cat_lower }}">
+        <span class="partido-categoria {{ cat_lower }}">{{ partido.categoria }}</span>
+        <div class="partido-vs">{{ partido.pareja1 }} <strong>VS</strong> {{ partido.pareja2 }}</div>
+        <div class="partido-grupo">Grupo {{ partido.grupo_letra | default('A') }}</div>
+    </div>
+{% endmacro %}
+
 {% block extra_js %}
 <script>
 // ==================== NAVEGACIÓN ENTRE VISTAS ====================
@@ -2088,54 +2229,6 @@ function intercambiarParejaEnSlot(parejaId, grupoOrigen, grupoDestino, slotDesti
     })
     .catch(error => {
         console.error('Error:', error);
-    });
-}
-
-function exportarGoogleSheets() {
-    let input = prompt('Pega la URL del Google Sheet:\n\n(Copia directamente desde la barra del navegador)');
-    
-    if (!input || input.trim() === '') {
-        Toast.warning('Exportación cancelada');
-        return;
-    }
-    
-    // Extraer el ID del spreadsheet desde cualquier formato de URL
-    let spreadsheetId = input.trim();
-    
-    // Buscar patrón: /spreadsheets/d/[ID]
-    const urlMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    if (urlMatch) {
-        spreadsheetId = urlMatch[1];
-    } else {
-        // Si no es URL, asumir que es solo el ID
-        spreadsheetId = input.replace(/[^a-zA-Z0-9-_]/g, '');
-    }
-    
-    Toast.info('📤 Exportando a Google Sheets...');
-    
-    fetch('/api/exportar-google-sheets', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            spreadsheet_id: spreadsheetId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Toast.success(data.mensaje);
-            if (data.url) {
-                setTimeout(() => window.open(data.url, '_blank'), 1000);
-            }
-        } else {
-            Toast.error('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toast.error('Error al exportar a Google Sheets');
     });
 }
 

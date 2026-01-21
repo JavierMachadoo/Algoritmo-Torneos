@@ -1,0 +1,722 @@
+/* ========================================
+   MOBILE-FIRST CSS - TORNEO DE PÁDEL
+   Optimizado para dispositivos móviles
+======================================== */
+
+/* ===== BASE MOBILE ===== */
+@media (max-width: 768px) {
+    
+    /* Espaciado general reducido */
+    body {
+        font-size: 14px;
+        overflow-x: hidden;
+    }
+    
+    .container, .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    /* ===== NAVBAR MÓVIL ===== */
+    .navbar {
+        padding: 0.5rem 0 !important;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem !important;
+    }
+    
+    .navbar-brand i {
+        font-size: 1.3rem !important;
+    }
+    
+    .navbar-nav {
+        gap: 0.5rem !important;
+        padding: 0.5rem 0;
+    }
+    
+    .navbar .nav-link {
+        padding: 0.6rem 1rem !important;
+        font-size: 0.95rem !important;
+        margin: 0.25rem 0 !important;
+    }
+    
+    /* ===== TÍTULOS MÓVIL ===== */
+    .page-title {
+        font-size: 1.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .page-subtitle {
+        font-size: 0.9rem !important;
+    }
+    
+    .section-title {
+        font-size: 1.25rem !important;
+    }
+    
+    /* ===== CARDS DE CATEGORÍAS ===== */
+    .categorias-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .categoria-card {
+        padding: 1.25rem !important;
+        border-radius: 15px !important;
+    }
+    
+    .categoria-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .categoria-info h3 {
+        font-size: 1.1rem !important;
+    }
+    
+    .categoria-info p {
+        font-size: 0.85rem !important;
+    }
+    
+    /* ===== CALENDARIO MÓVIL - REDISEÑO COMPLETO ===== */
+    .calendario-section {
+        padding: 1rem !important;
+        border-radius: 15px !important;
+        margin-bottom: 1rem;
+    }
+    
+    /* Ocultar tabla en móvil, mostrar cards */
+    .table-responsive {
+        display: none !important;
+    }
+    
+    /* Contenedor de calendario móvil */
+    .calendario-mobile {
+        display: block !important;
+    }
+    
+    .dia-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-left: 4px solid #667eea;
+    }
+    
+    .dia-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+        margin-bottom: 1rem;
+    }
+    
+    .dia-nombre {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .dia-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .horario-bloque {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 3px solid #dee2e6;
+    }
+    
+    .horario-titulo {
+        font-weight: 700;
+        color: #495057;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .cancha-group {
+        background: white;
+        border-radius: 10px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+    
+    .cancha-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .partido-mobile {
+        background: white;
+        border-radius: 10px;
+        padding: 0.875rem;
+        border-left: 4px solid;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: transform 0.2s;
+    }
+    
+    .partido-mobile:active {
+        transform: scale(0.98);
+    }
+    
+    /* Colores de categorías en partidos móvil */
+    .partido-mobile.cuarta {
+        border-left-color: #28a745;
+        background: linear-gradient(90deg, #d4edda 0%, white 20%);
+    }
+    
+    .partido-mobile.quinta {
+        border-left-color: #ffc107;
+        background: linear-gradient(90deg, #fff3cd 0%, white 20%);
+    }
+    
+    .partido-mobile.sexta {
+        border-left-color: #17a2b8;
+        background: linear-gradient(90deg, #d1ecf1 0%, white 20%);
+    }
+    
+    .partido-mobile.septima {
+        border-left-color: #9b7fed;
+        background: linear-gradient(90deg, #e7e3ff 0%, white 20%);
+    }
+    
+    .partido-categoria {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .partido-categoria.cuarta {
+        background: #28a745;
+        color: white;
+    }
+    
+    .partido-categoria.quinta {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .partido-categoria.sexta {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .partido-categoria.septima {
+        background: #9b7fed;
+        color: white;
+    }
+    
+    .partido-vs {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #2d3748;
+        line-height: 1.5;
+        margin-bottom: 0.25rem;
+    }
+    
+    .partido-grupo {
+        font-size: 0.75rem;
+        color: #718096;
+        font-weight: 500;
+    }
+    
+    /* Sin partidos */
+    .sin-partidos {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #9ca3af;
+        font-style: italic;
+    }
+    
+    /* ===== TABS MÓVIL ===== */
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 2px solid #e5e7eb;
+        margin-bottom: 1rem;
+    }
+    
+    .nav-tabs::-webkit-scrollbar {
+        height: 3px;
+    }
+    
+    .nav-tabs::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 3px;
+    }
+    
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+        font-size: 0.9rem !important;
+        padding: 0.75rem 1.25rem !important;
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    /* ===== BOTONES MÓVIL ===== */
+    .btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.95rem;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .btn-lg {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    /* Botones flotantes móvil */
+    .floating-actions {
+        bottom: 1rem !important;
+        right: 1rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    .btn-float {
+        width: 55px !important;
+        height: 55px !important;
+        font-size: 1.25rem !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    }
+    
+    /* ===== MODALES MÓVIL ===== */
+    .modal-dialog {
+        margin: 0.5rem !important;
+    }
+    
+    .modal-content {
+        border-radius: 20px !important;
+    }
+    
+    .modal-header, .modal-body, .modal-footer {
+        padding: 1rem !important;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem !important;
+    }
+    
+    /* ===== GRUPOS LISTA MÓVIL ===== */
+    .grupo-item {
+        padding: 1rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .pareja-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+    }
+    
+    /* ===== TABLA DE PAREJAS MÓVIL ===== */
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.75rem 0.5rem !important;
+    }
+    
+    /* Hacer scroll horizontal en tablas */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Vista móvil de parejas con cards */
+    .parejas-mobile-list {
+        display: block !important;
+        padding: 1rem;
+    }
+    
+    .table-responsive:has(#tablaParejas) {
+        display: none !important;
+    }
+    
+    .pareja-card-mobile {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .pareja-card-mobile:active {
+        transform: scale(0.98);
+    }
+    
+    .pareja-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 0.875rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pareja-numero {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+    }
+    
+    .pareja-card-header .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        font-weight: 600;
+    }
+    
+    .pareja-card-body {
+        padding: 1rem;
+    }
+    
+    .pareja-alert {
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pareja-alert.alert-danger {
+        background: #fee;
+        color: #dc3545;
+        border: 1px solid #fcc;
+    }
+    
+    .pareja-alert.alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .pareja-nombre {
+        font-size: 1.05rem;
+        color: #2d3748;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pareja-nombre i {
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+    
+    .pareja-info-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .pareja-info-item {
+        flex: 1;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .pareja-info-item i {
+        color: #6c757d;
+        font-size: 1rem;
+    }
+    
+    .pareja-card-footer {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .pareja-card-footer .btn {
+        font-size: 0.9rem;
+        padding: 0.625rem;
+    }
+    
+    /* ===== FORMULARIOS MÓVIL ===== */
+    .form-control, .form-select {
+        font-size: 1rem !important; /* Evita zoom en iOS */
+        padding: 0.75rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .form-label {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .form-check-input {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        margin-top: 0.15rem !important;
+    }
+    
+    .form-check-label {
+        font-size: 0.95rem !important;
+        margin-left: 0.5rem !important;
+    }
+    
+    /* ===== ALERTS Y TOASTS MÓVIL ===== */
+    .alert {
+        font-size: 0.9rem !important;
+        padding: 0.875rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .toast {
+        font-size: 0.9rem !important;
+        max-width: calc(100vw - 2rem) !important;
+    }
+    
+    /* ===== ESTADÍSTICAS MÓVIL ===== */
+    .stat-cuarta, .stat-quinta, .stat-sexta, .stat-septima {
+        padding: 1rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+    
+    /* ===== BADGES Y PILLS ===== */
+    .badge {
+        font-size: 0.8rem !important;
+        padding: 0.35rem 0.65rem !important;
+    }
+    
+    /* ===== SCROLLBAR PERSONALIZADO MÓVIL ===== */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+    
+    /* ===== LOGIN MÓVIL ===== */
+    .login-card {
+        border-radius: 20px !important;
+        margin: 1rem !important;
+    }
+    
+    .login-header {
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .login-header i {
+        font-size: 3rem !important;
+    }
+    
+    .login-header h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    .login-body {
+        padding: 1.5rem !important;
+    }
+    
+    /* ===== PÁGINA DE INICIO MÓVIL ===== */
+    .app-logo i {
+        font-size: 4rem !important;
+    }
+    
+    .app-title {
+        font-size: 2rem !important;
+    }
+    
+    .app-subtitle {
+        font-size: 1rem !important;
+    }
+    
+    .action-bar {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .btn-generar-grupos,
+    .btn-ver-resultados,
+    .btn-limpiar {
+        width: 100% !important;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+    }
+    
+    .upload-card,
+    .manual-card {
+        padding: 1.5rem !important;
+        border-radius: 15px !important;
+    }
+    
+    .upload-icon i {
+        font-size: 3rem !important;
+    }
+    
+    .file-label {
+        font-size: 0.95rem !important;
+        padding: 0.875rem 1.5rem !important;
+    }
+    
+    .btn-upload {
+        width: 100% !important;
+        padding: 0.875rem !important;
+    }
+    
+    .custom-tabs .nav-link {
+        font-size: 0.95rem !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    /* Cards de estadísticas en inicio */
+    .stat-card {
+        padding: 1rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .stat-card h3 {
+        font-size: 1.75rem !important;
+    }
+    
+    .stat-card p {
+        font-size: 0.85rem !important;
+    }
+    
+    /* ===== FINALES MÓVIL ===== */
+    .finales-categoria-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1rem !important;
+        border-radius: 15px !important;
+    }
+    
+    .finales-bracket {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 1rem;
+    }
+    
+    .finales-partido {
+        min-width: 250px;
+        margin-bottom: 1rem;
+        padding: 1rem !important;
+        border-radius: 12px !important;
+    }
+    
+    /* ===== DRAG & DROP MÓVIL ===== */
+    .grupo-item.drag-over {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* Mejorar área táctil de elementos draggables */
+    [draggable="true"] {
+        cursor: move;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+}
+
+/* ===== MÓVILES PEQUEÑOS (< 375px) ===== */
+@media (max-width: 375px) {
+    body {
+        font-size: 13px;
+    }
+    
+    .page-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .categoria-card {
+        padding: 1rem !important;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.65rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .app-logo i {
+        font-size: 3.5rem !important;
+    }
+    
+    .app-title {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* ===== TABLETS (769px - 1024px) ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .categorias-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .calendario-mobile {
+        display: none !important;
+    }
+    
+    .table-responsive {
+        display: block !important;
+    }
+    
+    .action-bar {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+    }
+}
+
+/* ===== DESKTOP (> 1024px) ===== */
+@media (min-width: 1025px) {
+    .calendario-mobile {
+        display: none !important;
+    }
+}

@@ -216,6 +216,55 @@
                     </h5>
                 </div>
                 <div class="card-body p-0">
+                    <!-- Vista Móvil: Cards -->
+                    <div class="parejas-mobile-list d-none">
+                        <div id="parejasCardsContainer">
+                            {% for pareja in parejas %}
+                            <div class="pareja-card-mobile" data-id="{{ pareja.id }}" data-categoria="{{ pareja.categoria }}">
+                                <div class="pareja-card-header">
+                                    <div class="pareja-numero">#{{ loop.index }}</div>
+                                    <span class="badge bg-{{ pareja.categoria|lower }}">{{ pareja.categoria }}</span>
+                                </div>
+                                
+                                <div class="pareja-card-body">
+                                    {% if not pareja.esta_asignada %}
+                                    <div class="pareja-alert alert-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Sin grupo asignado
+                                    </div>
+                                    {% elif pareja.fuera_de_horario %}
+                                    <div class="pareja-alert alert-warning">
+                                        <i class="bi bi-exclamation-circle-fill"></i> Fuera de horario preferido
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="pareja-nombre">
+                                        <i class="bi bi-people-fill"></i>
+                                        <strong>{{ pareja.nombre }}</strong>
+                                    </div>
+                                    
+                                    <div class="pareja-info-row">
+                                        <div class="pareja-info-item">
+                                            <i class="bi bi-telephone-fill"></i>
+                                            <span>{{ pareja.telefono }}</span>
+                                        </div>
+                                        <div class="pareja-info-item">
+                                            <i class="bi bi-clock-fill"></i>
+                                            <span>{{ pareja.franjas_disponibles|length }} franjas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="pareja-card-footer">
+                                    <button class="btn btn-danger btn-sm w-100" onclick="eliminarPareja({{ pareja.id }})">
+                                        <i class="bi bi-trash me-1"></i>Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Vista Desktop: Tabla -->
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
@@ -986,7 +1035,8 @@ function detectarCambiosEstado(parejas) {
 
 function renderizarTablaParejas(parejas) {
     const tbody = document.getElementById('tablaParejas');
-    if (!tbody) return;
+    const mobileContainer = document.getElementById('parejasCardsContainer');
+    if (!tbody && !mobileContainer) return;
     
     // Ordenar parejas por categoría
     const ordenCategorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
@@ -996,59 +1046,115 @@ function renderizarTablaParejas(parejas) {
         return indexA - indexB;
     });
     
-    // Limpiar tabla
-    tbody.innerHTML = '';
-    
     // Si no hay parejas
     if (parejas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay parejas cargadas</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay parejas cargadas</td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center text-muted py-4">No hay parejas cargadas</div>';
         return;
     }
     
-    // Agregar filas
-    parejasOrdenadas.forEach((pareja, index) => {
-        let claseEstado = '';
-        let iconoEstado = '';
-        
-        if (!pareja.esta_asignada) {
-            claseEstado = 'pareja-sin-asignar';
-            iconoEstado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>';
-        } else if (pareja.fuera_de_horario) {
-            claseEstado = 'pareja-fuera-horario';
-            iconoEstado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>';
-        }
-        
-        const tr = document.createElement('tr');
-        tr.className = claseEstado;
-        tr.setAttribute('data-id', pareja.id);
-        tr.setAttribute('data-categoria', pareja.categoria);
-        
-        const categoriaClass = pareja.categoria.toLowerCase();
-        
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td><strong>${iconoEstado}${escapeHtml(pareja.nombre)}</strong></td>
-            <td>${escapeHtml(pareja.telefono)}</td>
-            <td>
-                <span class="badge bg-${categoriaClass}">
-                    ${escapeHtml(pareja.categoria)}
-                </span>
-            </td>
-            <td>
-                <small class="text-muted">
-                    ${pareja.franjas_disponibles.length} disponibles
-                </small>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-danger" 
-                        onclick="eliminarPareja(${pareja.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
-        
-        tbody.appendChild(tr);
-    });
+    // Renderizar tabla desktop
+    if (tbody) {
+        tbody.innerHTML = '';
+        parejasOrdenadas.forEach((pareja, index) => {
+            let claseEstado = '';
+            let iconoEstado = '';
+            
+            if (!pareja.esta_asignada) {
+                claseEstado = 'pareja-sin-asignar';
+                iconoEstado = '<i class="bi bi-exclamation-triangle-fill text-danger me-2" title="Sin grupo asignado"></i>';
+            } else if (pareja.fuera_de_horario) {
+                claseEstado = 'pareja-fuera-horario';
+                iconoEstado = '<i class="bi bi-exclamation-circle-fill text-warning me-2" title="Fuera de horario preferido"></i>';
+            }
+            
+            const tr = document.createElement('tr');
+            tr.className = claseEstado;
+            tr.setAttribute('data-id', pareja.id);
+            tr.setAttribute('data-categoria', pareja.categoria);
+            
+            const categoriaClass = pareja.categoria.toLowerCase();
+            
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><strong>${iconoEstado}${escapeHtml(pareja.nombre)}</strong></td>
+                <td>${escapeHtml(pareja.telefono)}</td>
+                <td>
+                    <span class="badge bg-${categoriaClass}">
+                        ${escapeHtml(pareja.categoria)}
+                    </span>
+                </td>
+                <td>
+                    <small class="text-muted">
+                        ${pareja.franjas_disponibles.length} disponibles
+                    </small>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="eliminarPareja(${pareja.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Renderizar vista móvil
+    if (mobileContainer) {
+        mobileContainer.innerHTML = '';
+        parejasOrdenadas.forEach((pareja, index) => {
+            const categoriaClass = pareja.categoria.toLowerCase();
+            
+            let alertHtml = '';
+            if (!pareja.esta_asignada) {
+                alertHtml = '<div class="pareja-alert alert-danger"><i class="bi bi-exclamation-triangle-fill"></i> Sin grupo asignado</div>';
+            } else if (pareja.fuera_de_horario) {
+                alertHtml = '<div class="pareja-alert alert-warning"><i class="bi bi-exclamation-circle-fill"></i> Fuera de horario preferido</div>';
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'pareja-card-mobile';
+            card.setAttribute('data-id', pareja.id);
+            card.setAttribute('data-categoria', pareja.categoria);
+            
+            card.innerHTML = `
+                <div class="pareja-card-header">
+                    <div class="pareja-numero">#${index + 1}</div>
+                    <span class="badge bg-${categoriaClass}">${escapeHtml(pareja.categoria)}</span>
+                </div>
+                
+                <div class="pareja-card-body">
+                    ${alertHtml}
+                    
+                    <div class="pareja-nombre">
+                        <i class="bi bi-people-fill"></i>
+                        <strong>${escapeHtml(pareja.nombre)}</strong>
+                    </div>
+                    
+                    <div class="pareja-info-row">
+                        <div class="pareja-info-item">
+                            <i class="bi bi-telephone-fill"></i>
+                            <span>${escapeHtml(pareja.telefono)}</span>
+                        </div>
+                        <div class="pareja-info-item">
+                            <i class="bi bi-clock-fill"></i>
+                            <span>${pareja.franjas_disponibles.length} franjas</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pareja-card-footer">
+                    <button class="btn btn-danger btn-sm w-100" onclick="eliminarPareja(${pareja.id})">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </div>
+            `;
+            
+            mobileContainer.appendChild(card);
+        });
+    }
 }
 
 function actualizarHeader(parejas) {

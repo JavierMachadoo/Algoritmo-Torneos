@@ -5,11 +5,6 @@ PyJWT>=2.8.0
 # Data Processing
 pandas>=2.2.0
 
-# Google Sheets Integration
-gspread>=6.0.0
-google-auth>=2.23.0
-google-auth-oauthlib>=1.1.0
-
 # Utils
 python-dotenv>=1.0.0
 openpyxl>=3.1.0

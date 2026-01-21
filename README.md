@@ -15,6 +15,7 @@ Aplicación web Flask para generar grupos y calendario de partidos de pádel seg
 - **Autenticación:** JWT (stateless, compatible con serverless)
 - **Storage:** JSON (sistema de archivos)
 - **Frontend:** HTML5, Bootstrap 5, JavaScript vanilla
+- **Diseño:** Mobile-first, 100% responsive
 
 ## Estructura del proyecto
 
@@ -130,6 +131,23 @@ La aplicación usa JWT stateless con autenticación, perfecta para serverless:
 - ✅ **Storage JSON:** Persistencia simple en archivos
 - ✅ **Sin dependencias externas:** No requiere DB ni Redis
 - ✅ **Drag & drop:** Interfaz intuitiva para reorganizar grupos
+- ✅ **100% Mobile:** Diseño responsive optimizado para smartphones
+
+## 📱 Diseño Mobile-First
+
+La aplicación está completamente optimizada para dispositivos móviles:
+
+- **Calendario adaptativo:** Vista de cards en móvil, tablas en desktop
+- **Navegación touch-friendly:** Botones y áreas táctiles optimizadas
+- **Responsive en todo:** Todas las páginas se adaptan perfectamente
+- **PWA-ready:** Configuración para instalar como app móvil
+- **Optimizado iOS/Android:** Funciona perfecto en ambos sistemas
+
+### Breakpoints:
+- 📱 **< 768px:** Vista móvil completa
+- 📱 **< 375px:** Móviles pequeños
+- 💻 **769px - 1024px:** Tablets
+- 🖥️ **> 1024px:** Desktop
 
 ## Troubleshooting
 
