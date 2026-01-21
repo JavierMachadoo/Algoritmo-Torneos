@@ -58,7 +58,7 @@ def regenerar_fixtures_categoria(categoria, resultado_data):
         
         # Generar fixture para esta categoría
         generador = GeneradorFixtureFinales()
-        fixture = generador.generar_fixture(grupos)
+        fixture = generador.generar_fixture(grupos, NUM_CANCHAS_DEFAULT)
         
         # Guardar en el torneo
         torneo = storage.cargar()
