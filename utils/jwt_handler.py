@@ -151,6 +151,7 @@ def crear_respuesta_con_token(jwt_handler, data, mensaje='', status=200):
     # También establecer como cookie para facilitar acceso desde el navegador
     response.set_cookie('token', token, 
                        httponly=True,  # No accesible desde JavaScript
+                       secure=True,  # Solo transmitir sobre HTTPS
                        samesite='Lax',  # CSRF protection
                        max_age=60*60*2)  # 2 horas
     
