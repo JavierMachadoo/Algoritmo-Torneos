@@ -127,10 +127,6 @@ def crear_app():
         parejas_ordenadas = sorted(parejas_enriquecidas, 
                                   key=lambda p: orden_categorias.index(p.get('categoria', 'Cuarta')))
         
-        # Obtener datos actuales para el header
-        datos_actuales = obtener_datos_torneo()
-        resultado_actual = datos_actuales.get('resultado_algoritmo')
-        
         response = make_response(render_template('inicio.html', 
                              parejas=parejas_ordenadas,
                              resultado=resultado,
