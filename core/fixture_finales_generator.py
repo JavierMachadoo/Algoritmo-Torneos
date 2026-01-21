@@ -3,7 +3,7 @@ Módulo para generar el fixture de finales basado en las posiciones de grupo.
 """
 
 from typing import List, Dict, Optional
-from core.models import Grupo, FixtureFinales, PartidoFinal, FaseFinal, PosicionGrupo
+from core.models import Grupo, FixtureFinales, PartidoFinal, FaseFinal
 import logging
 
 logger = logging.getLogger(__name__)
