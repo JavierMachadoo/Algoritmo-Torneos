@@ -6,6 +6,8 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 from flask import Flask, render_template, request, redirect, url_for, flash, make_response
 import os
 import logging
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from config import (
     SECRET_KEY, 
@@ -45,6 +47,14 @@ def crear_app():
     # Inicializar JWT handler con expiración de 2 horas (seguridad)
     jwt_handler = JWTHandler(SECRET_KEY, expiration_hours=2)
     app.jwt_handler = jwt_handler  # Hacer accesible en toda la app
+    
+    # Configurar rate limiter para protección contra ataques de fuerza bruta
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
@@ -86,8 +96,9 @@ def crear_app():
     
     # Rutas de autenticación
     @app.route('/login', methods=['GET', 'POST'])
+    @limiter.limit("5 per minute")  # Máximo 5 intentos de login por minuto por IP
     def login():
-        """Página de login."""
+        """Página de login con protección contra ataques de fuerza bruta."""
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
