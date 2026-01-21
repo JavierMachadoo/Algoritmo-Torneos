@@ -61,11 +61,15 @@ const JWTHelper = (() => {
             
             // Verificar si la respuesta indica que la sesión expiró
             if (response.status === 401) {
-                const data = await response.json();
-                if (data.redirect) {
-                    // Redirigir al login
-                    window.location.href = data.redirect;
-                    return response;
+                try {
+                    const data = await response.json();
+                    if (data && data.redirect) {
+                        // Redirigir al login
+                        window.location.href = data.redirect;
+                        return response;
+                    }
+                } catch (parseError) {
+                    console.error('No se pudo parsear la respuesta 401 como JSON:', parseError);
                 }
             }
             
