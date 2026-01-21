@@ -78,8 +78,6 @@ class GeneradorFixtureFinales:
         # Obtener clasificados por posición (puede estar vacío)
         clasificados = GeneradorFixtureFinales.obtener_clasificados_por_posicion(grupos_categoria)
         
-        fixture = FixtureFinales(categoria=categoria)
-        
         # Generar fixture según número de grupos (SIEMPRE se genera la estructura)
         if num_grupos >= 8:
             fixture = GeneradorFixtureFinales._generar_con_octavos(categoria, clasificados)
