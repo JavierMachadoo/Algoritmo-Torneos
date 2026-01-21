@@ -200,6 +200,26 @@
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
     }
     
+    .position-badges {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .position-badges .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.7rem;
+        text-transform: none;
+        letter-spacing: 0.5px;
+    }
+    
+    .round-column.third-place {
+        opacity: 0.95;
+    }
+    
     .matches-column {
         display: grid;
         grid-auto-rows: minmax(100px, 1fr);
@@ -307,73 +327,39 @@
         margin-left: 0.25rem;
     }
     
-    /* Sistema simple de líneas conectoras */
-    /* Línea horizontal que sale de cada partido */
-    .round-column.has-next .match-wrapper::after {
-        content: '';
+    /* ========== SISTEMA DE CONEXIONES SVG ========== */
+    .bracket-connections {
         position: absolute;
-        left: 100%;
-        top: 50%;
-        width: 2.5rem;
-        height: 2px;
-        background: #94a3b8;
-        transform: translateY(-50%);
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
     }
     
-    /* Líneas verticales conectando cuartos a semis */
-    .round-column.has-next .match-wrapper:nth-child(1)::before,
-    .round-column.has-next .match-wrapper:nth-child(3)::before {
-        content: '';
-        position: absolute;
-        left: calc(100% + 2.5rem);
-        top: 50%;
-        width: 2px;
-        height: calc(100px + 2rem);
-        background: #94a3b8;
+    .bracket-connections svg {
+        width: 100%;
+        height: 100%;
     }
     
-    .round-column.has-next .match-wrapper:nth-child(2)::before,
-    .round-column.has-next .match-wrapper:nth-child(4)::before {
-        content: '';
-        position: absolute;
-        left: calc(100% + 2.5rem);
-        bottom: 50%;
-        width: 2px;
-        height: calc(100px + 2rem);
-        background: #94a3b8;
+    .bracket-line {
+        stroke: #94a3b8;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
     
-    /* Última pata horizontal que sale del medio de la línea vertical hacia la siguiente fase */
-    /* Sale del punto medio entre cuartos 1-2 hacia semi 1, y entre cuartos 3-4 hacia semi 2 */
-    .round-column.has-next .match-wrapper:nth-child(1)::after {
-        /* Extender la línea horizontal del cuarto 1 */
-        width: calc(2.5rem + 2px);
+    .bracket-line.winner-path {
+        stroke: #667eea;
+        stroke-width: 3;
     }
     
-    .round-column.has-next .match-wrapper:nth-child(3)::after {
-        /* Extender la línea horizontal del cuarto 3 */
-        width: calc(2.5rem + 2px);
-    }
-    
-    /* Línea horizontal que sale del medio de la vertical hacia la siguiente fase */
-    .round-column.has-next .matches-column::before {
-        content: '';
-        position: absolute;
-        left: calc(100% + 2.5rem);
-        top: calc(12.5% + 50px + 1rem);
-        width: 2.5rem;
-        height: 2px;
-        background: #94a3b8;
-    }
-    
-    .round-column.has-next .matches-column::after {
-        content: '';
-        position: absolute;
-        left: calc(100% + 2.5rem);
-        top: calc(62.5% + 50px + 1rem);
-        width: 2.5rem;
-        height: 2px;
-        background: #94a3b8;
+    /* Asegurar que las tarjetas estén sobre las líneas */
+    .match-card-itf {
+        position: relative;
+        z-index: 1;
     }
     
     /* ========== BOTONES FLOTANTES ========== */
@@ -910,17 +896,27 @@ function renderizarFixture(categoria) {
         container.innerHTML = crearPartidosVacios(categoria);
     } else {
         container.innerHTML = `<div class="draw-grid">${columns.join('')}</div>`;
+        
+        // Dibujar líneas conectoras después de renderizar
+        setTimeout(() => dibujarLineasConectoras(), 100);
     }
 }
 
 // Crear estructura de partidos vacíos estilo ITF (mínimo cuartos)
 function crearPartidosVacios(categoria) {
     // Por defecto mostramos cuartos, semifinal y final (mínimo)
-    return `
+    const html = `
         <div class="draw-grid">
             <!-- Cuartos -->
             <div class="round-column">
-                <div class="round-header-itf">Cuartos de Final</div>
+                <div class="round-header-itf">
+                    Cuartos de Final
+                    <div class="position-badges">
+                        <small style="opacity: 0.85; font-size: 0.7rem;">
+                            Perdedores: 5° - 8° Lugar
+                        </small>
+                    </div>
+                </div>
                 <div class="matches-column">
                     ${renderizarPartidoVacioITF()}
                     ${renderizarPartidoVacioITF()}
@@ -931,7 +927,14 @@ function crearPartidosVacios(categoria) {
             
             <!-- Semifinales -->
             <div class="round-column">
-                <div class="round-header-itf">Semifinales</div>
+                <div class="round-header-itf">
+                    Semifinales
+                    <div class="position-badges">
+                        <small style="opacity: 0.85; font-size: 0.7rem;">
+                            Perdedores: 3° - 4° Lugar
+                        </small>
+                    </div>
+                </div>
                 <div class="matches-column">
                     ${renderizarPartidoVacioITF()}
                     ${renderizarPartidoVacioITF()}
@@ -940,13 +943,24 @@ function crearPartidosVacios(categoria) {
             
             <!-- Final -->
             <div class="round-column">
-                <div class="round-header-itf">Final</div>
+                <div class="round-header-itf">
+                    Final
+                    <div class="position-badges">
+                        <span class="badge bg-warning text-dark">🥇 1° Lugar</span>
+                        <span class="badge bg-secondary">🥈 2° Lugar</span>
+                    </div>
+                </div>
                 <div class="matches-column">
                     ${renderizarPartidoVacioITF()}
                 </div>
             </div>
         </div>
     `;
+    
+    // Dibujar líneas después de un momento
+    setTimeout(() => dibujarLineasConectoras(), 100);
+    
+    return html;
 }
 
 // Renderizar un partido vacío estilo ITF
@@ -973,9 +987,41 @@ function renderizarPartidoVacioITF() {
 // Renderizar columna ITF (una ronda con sus partidos)
 function renderizarColumnaITF(titulo, partidos, categoria, tieneSiguienteRonda = false) {
     const hasNextClass = tieneSiguienteRonda ? 'has-next' : '';
+    
+    // Agregar badges de posición para diferentes fases
+    let headerExtra = '';
+    
+    if (titulo === 'Cuartos de Final') {
+        headerExtra = `
+            <div class="position-badges">
+                <small style="opacity: 0.85; font-size: 0.7rem;">
+                    Perdedores: 5° - 8° Lugar
+                </small>
+            </div>
+        `;
+    } else if (titulo === 'Semifinales') {
+        headerExtra = `
+            <div class="position-badges">
+                <small style="opacity: 0.9; font-size: 0.7rem;">
+                    Perdedores: 3° - 4° Lugar
+                </small>
+            </div>
+        `;
+    } else if (titulo === 'Final') {
+        headerExtra = `
+            <div class="position-badges">
+                <span class="badge bg-warning text-dark">🥇 1° Lugar</span>
+                <span class="badge bg-secondary">🥈 2° Lugar</span>
+            </div>
+        `;
+    }
+    
     let html = `
         <div class="round-column ${hasNextClass}">
-            <div class="round-header-itf">${titulo}</div>
+            <div class="round-header-itf">
+                ${titulo}
+                ${headerExtra}
+            </div>
             <div class="matches-column">
     `;
     
@@ -1048,6 +1094,103 @@ function renderizarPartidoITF(partido, categoria, tieneSiguienteRonda = false, i
         </div>
     `;
 }
+
+// ========== FUNCIÓN PARA DIBUJAR LÍNEAS CONECTORAS CON SVG ==========
+function dibujarLineasConectoras() {
+    const drawGrid = document.querySelector('.draw-grid');
+    if (!drawGrid) return;
+    
+    // Eliminar SVG anterior si existe
+    const existingSvg = drawGrid.querySelector('.bracket-connections');
+    if (existingSvg) existingSvg.remove();
+    
+    // Crear contenedor SVG
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute('class', 'bracket-connections');
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.pointerEvents = 'none';
+    svg.style.zIndex = '0';
+    
+    const columns = Array.from(drawGrid.querySelectorAll('.round-column'));
+    
+    // Conectar cada columna con la siguiente
+    for (let i = 0; i < columns.length - 1; i++) {
+        const currentColumn = columns[i];
+        const nextColumn = columns[i + 1];
+        
+        const currentMatches = Array.from(currentColumn.querySelectorAll('.match-wrapper'));
+        const nextMatches = Array.from(nextColumn.querySelectorAll('.match-wrapper'));
+        
+        // Conectar pares de partidos actuales con el siguiente
+        for (let j = 0; j < nextMatches.length; j++) {
+            const match1 = currentMatches[j * 2];
+            const match2 = currentMatches[j * 2 + 1];
+            const nextMatch = nextMatches[j];
+            
+            if (match1 && match2 && nextMatch) {
+                dibujarConexionBracket(svg, match1, match2, nextMatch, drawGrid);
+            }
+        }
+    }
+    
+    drawGrid.appendChild(svg);
+}
+
+function dibujarConexionBracket(svg, match1, match2, nextMatch, container) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    
+    // Obtener posiciones relativas al contenedor
+    const containerRect = container.getBoundingClientRect();
+    const rect1 = match1.getBoundingClientRect();
+    const rect2 = match2.getBoundingClientRect();
+    const rectNext = nextMatch.getBoundingClientRect();
+    
+    // Punto de salida del medio derecho de cada partido
+    const x1 = rect1.right - containerRect.left;
+    const y1 = rect1.top + rect1.height / 2 - containerRect.top;
+    
+    const x2 = rect2.right - containerRect.left;
+    const y2 = rect2.top + rect2.height / 2 - containerRect.top;
+    
+    // Punto de llegada en el medio izquierdo del siguiente partido
+    const xNext = rectNext.left - containerRect.left;
+    const yNext = rectNext.top + rectNext.height / 2 - containerRect.top;
+    
+    // Punto medio horizontal donde se unen las líneas verticales
+    const xMid = x1 + (xNext - x1) / 2;
+    
+    // Crear path con forma de bracket
+    const path = document.createElementNS(svgNS, "path");
+    
+    // Dibujar: horizontal desde match1, vertical hasta el medio, vertical desde match2, horizontal hasta medio, horizontal al siguiente
+    const pathData = `
+        M ${x1} ${y1}
+        L ${xMid} ${y1}
+        L ${xMid} ${yNext}
+        M ${x2} ${y2}
+        L ${xMid} ${y2}
+        L ${xMid} ${yNext}
+        M ${xMid} ${yNext}
+        L ${xNext} ${yNext}
+    `;
+    
+    path.setAttribute('d', pathData.trim());
+    path.setAttribute('class', 'bracket-line');
+    
+    svg.appendChild(path);
+}
+
+// Redibujar líneas cuando cambia el tamaño de ventana
+window.addEventListener('resize', () => {
+    if (document.querySelector('.draw-grid')) {
+        dibujarLineasConectoras();
+    }
+});
 
 // Abrir modal para ingresar resultado de final
 function abrirModalResultadoFinal(partidoId, categoria, pareja1Nombre, pareja2Nombre) {
