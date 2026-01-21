@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 @api_bp.before_request
 def verificar_auth():
     """Verifica que el usuario esté autenticado antes de acceder a la API."""
-    authenticated, error_response = verificar_autenticacion_api()
+    authenticated, error_response, _ = verificar_autenticacion_api()
     if not authenticated:
         return error_response
 
