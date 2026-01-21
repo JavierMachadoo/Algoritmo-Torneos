@@ -4,6 +4,7 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 """
 
 from flask import Flask, render_template, request, redirect, url_for, flash, make_response
+from werkzeug.security import check_password_hash
 import os
 import logging
 from flask_limiter import Limiter
@@ -106,8 +107,8 @@ def crear_app():
             username = request.form.get('username')
             password = request.form.get('password')
             
-            # Verificar credenciales
-            if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            # Verificar credenciales usando hash seguro
+            if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD, password):
                 # Crear token con autenticación exitosa
                 import time
                 data = {

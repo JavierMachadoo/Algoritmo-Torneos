@@ -16,9 +16,12 @@ if _default_secret and not os.getenv('DEBUG', 'True') == 'True':
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Credenciales de acceso - CAMBIAR EN PRODUCCIÓN
-# Para mayor seguridad, usa variables de entorno
+# ADMIN_PASSWORD debe ser un hash generado con werkzeug.security.generate_password_hash
+# Para generar (reemplaza 'tu_password' con tu contraseña deseada):
+#   python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password'))"
+# Valor por defecto es hash de 'torneopadel2026' (CAMBIAR EN PRODUCCIÓN)
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'torneopadel2026')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'scrypt:32768:8:1$9Z4jKkE6i36umt47$e7df026239aa63a6b09363d4f1a352ae053dcc3eed2bc2c5656a477a1369eef2544d8143c57149e977ce72d8e3547efc33ffd1a23db09934595bb4ce9393f0d2')
 
 UPLOAD_FOLDER = BASE_DIR / 'data' / 'uploads'
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
