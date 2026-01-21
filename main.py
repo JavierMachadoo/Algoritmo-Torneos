@@ -4,8 +4,11 @@ Genera grupos optimizados según categorías y disponibilidad horaria.
 """
 
 from flask import Flask, render_template, request, redirect, url_for, flash, make_response
+from werkzeug.security import check_password_hash
 import os
 import logging
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from config import (
     SECRET_KEY, 
@@ -45,6 +48,17 @@ def crear_app():
     # Inicializar JWT handler con expiración de 2 horas (seguridad)
     jwt_handler = JWTHandler(SECRET_KEY, expiration_hours=2)
     app.jwt_handler = jwt_handler  # Hacer accesible en toda la app
+    
+    # Configurar rate limiter para protección contra ataques de fuerza bruta
+    # Nota: Para producción, considerar usar Redis storage en lugar de memory://
+    # y configurar key_func para manejar correctamente X-Forwarded-For headers
+    # si la app está detrás de un proxy/load balancer
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
     
     # Registrar blueprints
     app.register_blueprint(api_bp)
@@ -86,14 +100,15 @@ def crear_app():
     
     # Rutas de autenticación
     @app.route('/login', methods=['GET', 'POST'])
+    @limiter.limit("5 per minute")  # Máximo 5 intentos de login por minuto por IP
     def login():
-        """Página de login."""
+        """Página de login con protección contra ataques de fuerza bruta."""
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
             
-            # Verificar credenciales
-            if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            # Verificar credenciales usando hash seguro
+            if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD, password):
                 # Crear token con autenticación exitosa
                 import time
                 data = {
@@ -119,6 +134,20 @@ def crear_app():
     @app.route('/logout')
     def logout():
         """Cerrar sesión."""
+        # Verificar que el usuario esté autenticado antes de cerrar sesión
+        token = jwt_handler.obtener_token_desde_request()
+        
+        if not token:
+            # Si no hay token, redirigir al login sin mensaje
+            return redirect(url_for('login'))
+        
+        # Verificar que el token sea válido
+        data = jwt_handler.verificar_token(token)
+        if not data or not data.get('authenticated'):
+            # Si el token no es válido, redirigir al login sin mensaje
+            return redirect(url_for('login'))
+        
+        # Token válido, proceder con el logout
         response = make_response(redirect(url_for('login')))
         response.set_cookie('token', '', expires=0)
         flash('Sesión cerrada', 'info')

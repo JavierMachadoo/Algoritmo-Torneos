@@ -66,7 +66,11 @@ cp .env.example .env
 # Especialmente para producción:
 # - SECRET_KEY: Usa una clave fuerte y aleatoria
 # - ADMIN_USERNAME: Usuario personalizado
-# - ADMIN_PASSWORD: Contraseña segura
+# - ADMIN_PASSWORD: Contraseña hasheada (ver abajo)
+
+# Para generar un hash seguro de tu contraseña:
+# (Reemplaza 'tu_password_aqui' con tu contraseña deseada)
+python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password_aqui'))"
 ```
 
 5. **Ejecutar aplicación:**
@@ -109,7 +113,7 @@ La aplicación usa JWT stateless con autenticación, perfecta para serverless:
 3. Configura variables de entorno en Vercel:
    - `SECRET_KEY`: Clave fuerte para firmar tokens JWT
    - `ADMIN_USERNAME`: Usuario de administrador
-   - `ADMIN_PASSWORD`: Contraseña segura
+   - `ADMIN_PASSWORD`: Hash de contraseña (genera con `python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('tu_password'))"`)
    - `DEBUG`: False
 4. Despliega: `vercel --prod`
 
@@ -121,6 +125,7 @@ La aplicación usa JWT stateless con autenticación, perfecta para serverless:
 - 🔒 **Sesiones seguras:** Tokens con expiración de 2 horas
 - 🛡️ **Rutas protegidas:** Todas las rutas y APIs requieren autenticación
 - 🚫 **HttpOnly cookies:** Tokens no accesibles desde JavaScript
+- 🔑 **Password hashing:** Contraseñas hasheadas con scrypt (werkzeug)
 - ⚙️ **Variables de entorno:** Credenciales configurables
 
 ## Características técnicas
