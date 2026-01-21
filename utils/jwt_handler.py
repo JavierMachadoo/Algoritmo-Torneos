@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -149,9 +150,11 @@ def crear_respuesta_con_token(jwt_handler, data, mensaje='', status=200):
     response = jsonify(response_data)
     
     # También establecer como cookie para facilitar acceso desde el navegador
+    # Solo usar secure=True en producción (cuando DEBUG=False)
+    is_production = os.getenv('DEBUG', 'True') != 'True'
     response.set_cookie('token', token, 
                        httponly=True,  # No accesible desde JavaScript
-                       secure=True,  # Solo transmitir sobre HTTPS
+                       secure=is_production,  # Solo transmitir sobre HTTPS en producción
                        samesite='Lax',  # CSRF protection
                        max_age=60*60*2)  # 2 horas
     
