@@ -119,6 +119,20 @@ def crear_app():
     @app.route('/logout')
     def logout():
         """Cerrar sesión."""
+        # Verificar que el usuario esté autenticado antes de cerrar sesión
+        token = jwt_handler.obtener_token_desde_request()
+        
+        if not token:
+            # Si no hay token, redirigir al login sin mensaje
+            return redirect(url_for('login'))
+        
+        # Verificar que el token sea válido
+        data = jwt_handler.verificar_token(token)
+        if not data or not data.get('authenticated'):
+            # Si el token no es válido, redirigir al login sin mensaje
+            return redirect(url_for('login'))
+        
+        # Token válido, proceder con el logout
         response = make_response(redirect(url_for('login')))
         response.set_cookie('token', '', expires=0)
         flash('Sesión cerrada', 'info')
