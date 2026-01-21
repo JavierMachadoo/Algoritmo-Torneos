@@ -68,8 +68,9 @@ const JWTHelper = (() => {
                         window.location.href = data.redirect;
                         return response;
                     }
-                } catch (parseError) {
-                    console.error('No se pudo parsear la respuesta 401 como JSON:', parseError);
+                } catch (e) {
+                    // Si no hay JSON válido en la respuesta 401, continuar normalmente
+                    console.warn('401 response without valid JSON:', e);
                 }
             }
             
