@@ -2,7 +2,7 @@
 Helper functions para trabajar con JWT en las rutas de la API.
 """
 
-from flask import current_app, request, jsonify, make_response
+from flask import current_app, jsonify, make_response
 from utils.torneo_storage import storage
 import logging
 
