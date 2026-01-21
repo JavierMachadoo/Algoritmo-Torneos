@@ -63,7 +63,7 @@ const JWTHelper = (() => {
             if (response.status === 401) {
                 try {
                     const data = await response.json();
-                    if (data.redirect) {
+                    if (data && data.redirect) {
                         // Redirigir al login
                         window.location.href = data.redirect;
                         return response;

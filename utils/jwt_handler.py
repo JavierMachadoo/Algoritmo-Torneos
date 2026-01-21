@@ -151,7 +151,8 @@ def crear_respuesta_con_token(jwt_handler, data, mensaje='', status=200):
     
     # También establecer como cookie para facilitar acceso desde el navegador
     # Solo usar secure=True en producción (cuando DEBUG=False)
-    is_production = os.getenv('DEBUG', 'True') != 'True'
+    debug_value = os.getenv('DEBUG', 'True').lower()
+    is_production = debug_value in ('false', '0', '')
     response.set_cookie('token', token, 
                        httponly=True,  # No accesible desde JavaScript
                        secure=is_production,  # Solo transmitir sobre HTTPS en producción
