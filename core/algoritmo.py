@@ -228,29 +228,89 @@ class AlgoritmoGrupos:
     
     def _generar_calendario(self, grupos_por_categoria: Dict[str, List[Grupo]]) -> Dict[str, List[Dict]]:
         calendario = defaultdict(list)
-        grupos_por_franja = defaultdict(list)
         
+        # Mapeo de franjas a horas (para detectar solapamientos)
+        franjas_a_horas = {
+            'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
+            'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
+            'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
+            'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
+            'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
+            'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
+            'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
+            'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
+        }
+        
+        # Recopilar todos los grupos con su información
+        grupos_con_info = []
         for categoria, grupos in grupos_por_categoria.items():
             for grupo in grupos:
                 if grupo.franja_horaria:
-                    grupos_por_franja[grupo.franja_horaria].append(grupo)
-        
-        for franja, grupos in grupos_por_franja.items():
-            for i, grupo in enumerate(grupos):
-                cancha = (i % self.num_canchas) + 1
-                
-                for idx_partido, (pareja1, pareja2) in enumerate(grupo.partidos):
-                    calendario[franja].append({
-                        "franja": franja,
-                        "categoria": grupo.categoria,
-                        "color": EMOJI_CATEGORIA.get(grupo.categoria, "⚪"),
-                        "grupo_id": grupo.id,
-                        "cancha": cancha,
-                        "partido_num": idx_partido + 1,
-                        "pareja1": pareja1.nombre,
-                        "pareja2": pareja2.nombre,
-                        "score_compatibilidad": grupo.score_compatibilidad
+                    grupos_con_info.append({
+                        'grupo': grupo,
+                        'franja': grupo.franja_horaria,
+                        'categoria': categoria,
+                        'horas': franjas_a_horas.get(grupo.franja_horaria, [grupo.franja_horaria])
                     })
+        
+        # Asignar canchas a cada grupo evitando solapamientos
+        canchas_ocupadas = {}  # {cancha: [lista de horas ocupadas]}
+        asignaciones = {}  # {grupo.id: cancha}
+        
+        for info in grupos_con_info:
+            grupo = info['grupo']
+            horas_franja = info['horas']
+            cancha_asignada = None
+            
+            # Buscar una cancha disponible sin solapamientos
+            for cancha_num in range(1, self.num_canchas + 1):
+                if cancha_num not in canchas_ocupadas:
+                    canchas_ocupadas[cancha_num] = []
+                
+                # Verificar si hay solapamiento de horas
+                horas_ocupadas = canchas_ocupadas[cancha_num]
+                solapamiento = any(hora in horas_ocupadas for hora in horas_franja)
+                
+                if not solapamiento:
+                    cancha_asignada = cancha_num
+                    # Marcar las horas como ocupadas
+                    canchas_ocupadas[cancha_num].extend(horas_franja)
+                    break
+            
+            # Si no se encontró cancha disponible, buscar la cancha con menos conflictos
+            if cancha_asignada is None:
+                mejor_cancha = 1
+                menor_conflictos = float('inf')
+                for cancha_num in range(1, self.num_canchas + 1):
+                    if cancha_num not in canchas_ocupadas:
+                        canchas_ocupadas[cancha_num] = []
+                    conflictos = sum(1 for hora in horas_franja if hora in canchas_ocupadas[cancha_num])
+                    if conflictos < menor_conflictos:
+                        menor_conflictos = conflictos
+                        mejor_cancha = cancha_num
+                cancha_asignada = mejor_cancha
+                canchas_ocupadas[cancha_asignada].extend(horas_franja)
+            
+            asignaciones[grupo.id] = cancha_asignada
+        
+        # Generar el calendario con las canchas asignadas
+        for info in grupos_con_info:
+            grupo = info['grupo']
+            franja = info['franja']
+            cancha_asignada = asignaciones[grupo.id]
+            
+            for idx_partido, (pareja1, pareja2) in enumerate(grupo.partidos):
+                calendario[franja].append({
+                    "franja": franja,
+                    "categoria": info['categoria'],
+                    "color": EMOJI_CATEGORIA.get(info['categoria'], "⚪"),
+                    "grupo_id": grupo.id,
+                    "cancha": cancha_asignada,
+                    "partido_num": idx_partido + 1,
+                    "pareja1": pareja1.nombre,
+                    "pareja2": pareja2.nombre,
+                    "score_compatibilidad": grupo.score_compatibilidad
+                })
         
         return dict(calendario)
     

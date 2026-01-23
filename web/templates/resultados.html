@@ -2513,26 +2513,6 @@ function confirmarAsignacionManual(parejaId, categoria) {
     });
 }
 
-// Función para cargar franjas horarias en el modal
-document.addEventListener('DOMContentLoaded', function() {
-    const franjasContainer = document.getElementById('franjasModalContainer');
-    const franjas = [
-        "Jueves 18:00", "Jueves 20:00",
-        "Viernes 18:00", "Viernes 21:00",
-        "Sábado 09:00", "Sábado 12:00", "Sábado 16:00", "Sábado 19:00"
-    ];
-    
-    franjas.forEach((franja, idx) => {
-        const div = document.createElement('div');
-        div.className = 'form-check';
-        div.innerHTML = `
-            <input class="form-check-input" type="checkbox" value="${franja}" id="franjaModal${idx}" name="franjas">
-            <label class="form-check-label" for="franjaModal${idx}">${franja}</label>
-        `;
-        franjasContainer.appendChild(div);
-    });
-});
-
 function agregarParejaDesdeModal() {
     const form = document.getElementById('formAgregarParejaModal');
     const nombre = document.getElementById('nombreModal').value.trim();
@@ -3055,12 +3035,21 @@ function confirmarEditarPareja() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal y actualizar
+            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPareja'));
             modal.hide();
             
+            // Guardar estado antes de recargar
+            sessionStorage.setItem('tabPrincipal', 'series-main');
             const categoriaActual = obtenerCategoriaActual();
-            actualizarCategoria(categoriaActual);
+            sessionStorage.setItem('tabCategoria', `series-${categoriaActual.toLowerCase()}`);
+            const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+            sessionStorage.setItem('scrollPos', scrollPos);
+            
+            // Recargar para actualizar marcadores y prevenir inconsistencias
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         } else {
             Toast.error('Error: ' + data.error);
         }
