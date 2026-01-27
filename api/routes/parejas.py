@@ -20,7 +20,9 @@ from utils.api_helpers import (
     sincronizar_con_storage_y_token,
     verificar_autenticacion_api
 )
-from config import CATEGORIAS, NUM_CANCHAS_DEFAULT
+from config import CATEGORIAS, NUM_CANCHAS_DEFAULT, FRANJAS_MAPPING
+from decorators import with_resultado_data, with_storage_sync, validate_categoria
+from validators import CanchaValidator
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
@@ -307,52 +309,24 @@ def cargar_csv():
 @api_bp.route('/agregar-pareja', methods=['POST'])
 def agregar_pareja():
     """Agrega una pareja manualmente al torneo."""
+    from services import ParejaService, ParejaValidationError
+    
     try:
         data = request.json
-        
         nombre = data.get('nombre', '').strip()
         telefono = data.get('telefono', '').strip()
         categoria = data.get('categoria', 'Cuarta')
         franjas = data.get('franjas', [])
         desde_resultados = data.get('desde_resultados', False)
         
-        if not nombre:
-            return jsonify({'error': 'El nombre es obligatorio'}), 400
-        
-        if not franjas:
-            return jsonify({'error': 'Selecciona al menos una franja horaria'}), 400
-        
         datos_actuales = obtener_datos_desde_token()
-        parejas = datos_actuales.get('parejas', [])
+        nueva_pareja = ParejaService.add(
+            datos_actuales, nombre, telefono, categoria, franjas, desde_resultados
+        )
         
-        # Generar nuevo ID único
-        max_id = max([p['id'] for p in parejas], default=0)
-        nueva_pareja = {
-            'categoria': categoria,
-            'franjas_disponibles': franjas,
-            'id': max_id + 1,
-            'nombre': nombre,
-            'telefono': telefono or 'Sin teléfono'
-        }
-        
-        parejas.append(nueva_pareja)
-        datos_actuales['parejas'] = parejas
-        
-        # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
-        estadisticas = None
-        if desde_resultados:
-            resultado_data = datos_actuales.get('resultado_algoritmo')
-            if resultado_data:
-                # Agregar a parejas no asignadas
-                parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
-                parejas_sin_asignar.append(nueva_pareja)
-                resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
-                
-                # Recalcular estadísticas globales
-                estadisticas = recalcular_estadisticas(resultado_data)
-                datos_actuales['resultado_algoritmo'] = resultado_data
-        
+        # Sync BEFORE returning response
         sincronizar_con_storage_y_token(datos_actuales)
+        guardar_estado_torneo()
         
         response_data = {
             'success': True,
@@ -361,9 +335,18 @@ def agregar_pareja():
             'desde_resultados': desde_resultados
         }
         
-        # Incluir estadísticas si estamos en resultados
-        if desde_resultados and estadisticas:
-            response_data['estadisticas'] = estadisticas
+        # Include statistics if in results view
+        if desde_resultados:
+            resultado_data = datos_actuales.get('resultado_algoritmo')
+            if resultado_data:
+                response_data['estadisticas'] = resultado_data.get('estadisticas')
+        
+        return crear_respuesta_con_token_actualizado(response_data, datos_actuales)
+    
+    except ParejaValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'Error al agregar pareja: {str(e)}'}), 500
         
         logger.info(f"Pareja agregada exitosamente: {nombre}")
         return crear_respuesta_con_token_actualizado(response_data, datos_actuales)
@@ -378,108 +361,55 @@ def agregar_pareja():
 @api_bp.route('/eliminar-pareja', methods=['POST'])
 def eliminar_pareja():
     """Elimina una pareja del torneo completamente."""
+    from services import ParejaService, ParejaValidationError
+    
     data = request.json
     pareja_id = data.get('id')
     
-    datos_actuales = obtener_datos_desde_token()
-    
-    # 1. Eliminar de la lista base de parejas
-    parejas = datos_actuales.get('parejas', [])
-    parejas = [p for p in parejas if p['id'] != pareja_id]
-    datos_actuales['parejas'] = parejas
-    
-    # 2. Si hay resultado del algoritmo, eliminar de grupos y no asignadas
-    resultado_data = datos_actuales.get('resultado_algoritmo')
-    if resultado_data:
-        # Eliminar de grupos
-        grupos_dict = resultado_data['grupos_por_categoria']
-        for cat, grupos in grupos_dict.items():
-            for grupo in grupos:
-                parejas_grupo = grupo.get('parejas', [])
-                grupo['parejas'] = [p for p in parejas_grupo if p.get('id') != pareja_id]
-                # Recalcular score si se eliminó del grupo
-                if len(grupo['parejas']) != len(parejas_grupo):
-                    recalcular_score_grupo(grupo)
+    try:
+        datos_actuales = obtener_datos_desde_token()
+        result = ParejaService.delete(datos_actuales, pareja_id)
         
-        # Eliminar de no asignadas
-        parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
-        resultado_data['parejas_sin_asignar'] = [p for p in parejas_sin_asignar if p.get('id') != pareja_id]
+        # Sync BEFORE returning response
+        sincronizar_con_storage_y_token(datos_actuales)
+        guardar_estado_torneo()
         
-        # Regenerar calendario y estadísticas
-        regenerar_calendario(resultado_data)
-        resultado_data['estadisticas'] = recalcular_estadisticas(resultado_data)
-        datos_actuales['resultado_algoritmo'] = resultado_data
+        return crear_respuesta_con_token_actualizado(result, datos_actuales)
     
-    sincronizar_con_storage_y_token(datos_actuales)
-    guardar_estado_torneo()
-    
-    return crear_respuesta_con_token_actualizado({
-        'success': True,
-        'mensaje': 'Pareja eliminada correctamente'
-    }, datos_actuales)
+    except ParejaValidationError as e:
+        return jsonify({'error': str(e)}), 400
 
 
 @api_bp.route('/remover-pareja-de-grupo', methods=['POST'])
 def remover_pareja_de_grupo():
     """Remueve una pareja de un grupo y la devuelve a parejas no asignadas."""
-    data = request.json
-    pareja_id = data.get('pareja_id')
+    from services import (
+        ParejaService, 
+        ParejaValidationError, 
+        ResultadoAlgoritmoNotFoundError,
+        ParejaNotFoundError
+    )
     
-    if not pareja_id:
-        return jsonify({'error': 'Falta pareja_id'}), 400
+    try:
+        data = request.json
+        pareja_id = data.get('pareja_id')
+        
+        datos_actuales = obtener_datos_desde_token()
+        result = ParejaService.remove_from_group(datos_actuales, pareja_id)
+        
+        sincronizar_con_storage_y_token(datos_actuales)
+        guardar_estado_torneo()
+        
+        return crear_respuesta_con_token_actualizado(result)
     
-    datos_actuales = obtener_datos_desde_token()
-    resultado_data = datos_actuales.get('resultado_algoritmo')
-    if not resultado_data:
-        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
-    
-    grupos_dict = resultado_data['grupos_por_categoria']
-    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
-    
-    # Buscar la pareja en los grupos
-    pareja_encontrada = None
-    grupo_contenedor = None
-    
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            for idx, pareja in enumerate(grupo.get('parejas', [])):
-                if pareja.get('id') == pareja_id:
-                    pareja_encontrada = grupo['parejas'].pop(idx)
-                    grupo_contenedor = grupo
-                    break
-            if pareja_encontrada:
-                break
-        if pareja_encontrada:
-            break
-    
-    if not pareja_encontrada:
-        return jsonify({'error': 'Pareja no encontrada en ningún grupo'}), 404
-    
-    # Limpiar la posición de grupo antes de agregar a no asignadas
-    pareja_encontrada['posicion_grupo'] = None
-    
-    # Agregar a parejas no asignadas
-    parejas_sin_asignar.append(pareja_encontrada)
-    
-    # Recalcular score del grupo afectado
-    recalcular_score_grupo(grupo_contenedor)
-    
-    # Regenerar calendario completo
-    regenerar_calendario(resultado_data)
-    
-    # Recalcular estadísticas globales
-    estadisticas = recalcular_estadisticas(resultado_data)
-    
-    # Actualizar datos
-    datos_actuales['resultado_algoritmo'] = resultado_data
-    sincronizar_con_storage_y_token(datos_actuales)
-    guardar_estado_torneo()
-    
-    return crear_respuesta_con_token_actualizado({
-        'success': True,
-        'mensaje': f'✓ Pareja removida del grupo y devuelta a no asignadas',
-        'estadisticas': estadisticas
-    })
+    except ParejaValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except ResultadoAlgoritmoNotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except ParejaNotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': f'Error al remover pareja: {str(e)}'}), 500
 
 
 @api_bp.route('/limpiar-datos', methods=['POST'])
@@ -573,7 +503,9 @@ def obtener_resultado_algoritmo():
 
 
 @api_bp.route('/intercambiar-pareja', methods=['POST'])
-def intercambiar_pareja():
+@with_resultado_data
+@with_storage_sync
+def intercambiar_pareja(resultado_data, datos_actuales):
     """Intercambia parejas entre slots específicos de grupos."""
     data = request.json
     pareja_id = data.get('pareja_id')
@@ -581,10 +513,8 @@ def intercambiar_pareja():
     grupo_destino_id = data.get('grupo_destino')
     slot_destino = data.get('slot_destino')  # 0, 1, o 2
     
-    datos_actuales = obtener_datos_desde_token()
-    resultado = datos_actuales.get('resultado_algoritmo')
-    if not resultado:
-        return jsonify({'error': 'No hay resultados cargados'}), 400
+    # datos_actuales y resultado_data injected by @with_resultado_data decorator
+    resultado = resultado_data
     
     try:
         pareja_movida = None
@@ -640,7 +570,7 @@ def intercambiar_pareja():
         estadisticas = recalcular_estadisticas(resultado)
         
         datos_actuales['resultado_algoritmo'] = resultado
-        sincronizar_con_storage_y_token(datos_actuales)
+        # sincronizar_con_storage_y_token handled by @with_storage_sync decorator
         guardar_estado_torneo()  # Auto-guardar
         
         return crear_respuesta_con_token_actualizado({
@@ -864,61 +794,11 @@ def obtener_franjas_disponibles():
     grupos_dict = resultado_data['grupos_por_categoria']
     num_canchas = obtener_datos_desde_token().get('num_canchas', 2)
     
-    # Mapeo de franjas a horas que ocupan (incluye día para detectar solapamientos correctamente)
-    franjas_a_horas_mapa = {
-        'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
-        'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
-        'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
-        'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
-        'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
-        'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
-        'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
-        'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
-    }
-    
-    # Crear un diccionario de franjas ocupadas por cancha con info detallada
-    franjas_ocupadas = {}
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            franja = grupo.get('franja_horaria')
-            cancha = str(grupo.get('cancha'))
-            if franja and cancha:
-                if franja not in franjas_ocupadas:
-                    franjas_ocupadas[franja] = {}
-                franjas_ocupadas[franja][cancha] = cat
-    
-    # Construir la respuesta con disponibilidad por franja y cancha
-    disponibilidad = {}
-    for franja in FRANJAS_HORARIAS:
-        disponibilidad[franja] = {}
-        for cancha_num in range(1, num_canchas + 1):
-            cancha_str = str(cancha_num)
-            
-            # Verificar si está ocupada directamente
-            ocupada_directa = franja in franjas_ocupadas and cancha_str in franjas_ocupadas[franja]
-            categoria_ocupante = franjas_ocupadas.get(franja, {}).get(cancha_str)
-            
-            # Verificar solapamientos (especialmente Jueves 18:00 y 20:00)
-            solapamiento = None
-            horas_franja = franjas_a_horas_mapa.get(franja, [])
-            
-            for otra_franja, cat_por_cancha in franjas_ocupadas.items():
-                if otra_franja != franja and cancha_str in cat_por_cancha:
-                    horas_otra = franjas_a_horas_mapa.get(otra_franja, [])
-                    horas_comunes = set(horas_franja) & set(horas_otra)
-                    if horas_comunes:
-                        solapamiento = {
-                            'franja': otra_franja,
-                            'categoria': cat_por_cancha[cancha_str],
-                            'horas_conflicto': sorted(list(horas_comunes))
-                        }
-                        break
-            
-            disponibilidad[franja][cancha_str] = {
-                'disponible': not ocupada_directa,
-                'ocupada_por': categoria_ocupante,
-                'solapamiento': solapamiento
-            }
+    # Use CanchaValidator to get availability - eliminates 50+ lines of duplicate logic
+    disponibilidad = CanchaValidator.get_disponibilidad_canchas(
+        grupos_dict, 
+        num_canchas
+    )
     
     return jsonify({
         'success': True,
@@ -944,39 +824,14 @@ def crear_grupo_manual():
     
     grupos_dict = resultado_data['grupos_por_categoria']
     
-    # Mapeo de franjas a horas (incluye día para detectar solapamientos correctamente)
-    franjas_a_horas_mapa = {
-        'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
-        'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
-        'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
-        'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
-        'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
-        'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
-        'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
-        'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
-    }
-    
-    # Validar que la cancha no esté ocupada directamente
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
-                return jsonify({
-                    'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por un grupo de {cat}'
-                }), 400
-    
-    # Validar solapamientos horarios
-    horas_nueva_franja = franjas_a_horas_mapa.get(franja_horaria, [])
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            if str(grupo.get('cancha')) == str(cancha):
-                franja_existente = grupo.get('franja_horaria')
-                horas_existente = franjas_a_horas_mapa.get(franja_existente, [])
-                horas_conflicto = set(horas_nueva_franja) & set(horas_existente)
-                
-                if horas_conflicto:
-                    return jsonify({
-                        'error': f'Conflicto: La Cancha {cancha} tiene un solapamiento horario con {franja_existente} (grupo de {cat}) en las horas: {", ".join(sorted(horas_conflicto))}'
-                    }), 400
+    # Use CanchaValidator with early returns - replaces 40+ lines of duplicate validation
+    is_valid, error_msg = CanchaValidator.validate_franja_cancha(
+        grupos_dict, 
+        franja_horaria, 
+        str(cancha)
+    )
+    if not is_valid:
+        return jsonify({'error': error_msg}), 400
     
     # Asegurar que existe la categoría
     if categoria not in grupos_dict:
@@ -1050,19 +905,15 @@ def editar_grupo():
     if not grupo_encontrado:
         return jsonify({'error': 'Grupo no encontrado'}), 404
     
-    # Validar que la combinación franja + cancha esté disponible
-    # (no debe estar ocupada por otro grupo)
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            # Saltar el grupo que estamos editando
-            if grupo['id'] == grupo_id:
-                continue
-            
-            # Verificar si ya existe un grupo con la misma franja y cancha
-            if grupo.get('franja_horaria') == franja_horaria and str(grupo.get('cancha')) == str(cancha):
-                return jsonify({
-                    'error': f'La Cancha {cancha} ya está ocupada en {franja_horaria} por otro grupo ({cat})'
-                }), 400
+    # Use CanchaValidator with exclude_grupo_id for edit operations
+    is_valid, error_msg = CanchaValidator.validate_franja_cancha(
+        grupos_dict, 
+        franja_horaria, 
+        str(cancha),
+        exclude_grupo_id=grupo_id
+    )
+    if not is_valid:
+        return jsonify({'error': error_msg}), 400
     
     # Actualizar datos del grupo
     grupo_encontrado['franja_horaria'] = franja_horaria
@@ -1089,122 +940,42 @@ def editar_grupo():
 @api_bp.route('/editar-pareja', methods=['POST'])
 def editar_pareja():
     """Edita los datos de una pareja (nombre, teléfono, categoría, franjas)."""
-    data = request.json
-    pareja_id = data.get('pareja_id')
-    nombre = data.get('nombre')
-    telefono = data.get('telefono')
-    categoria = data.get('categoria')
-    franjas = data.get('franjas', [])
+    from services import (
+        ParejaService,
+        ParejaValidationError,
+        ResultadoAlgoritmoNotFoundError,
+        ParejaNotFoundError
+    )
     
-    if not all([pareja_id, nombre, categoria]):
-        return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+    try:
+        data = request.json
+        pareja_id = data.get('pareja_id')
+        nombre = data.get('nombre')
+        telefono = data.get('telefono')
+        categoria = data.get('categoria')
+        franjas = data.get('franjas', [])
+        
+        if not all([pareja_id, nombre, categoria]):
+            return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+        
+        datos_actuales = obtener_datos_desde_token()
+        result = ParejaService.update(
+            datos_actuales, pareja_id, nombre, telefono, categoria, franjas
+        )
+        
+        sincronizar_con_storage_y_token(datos_actuales)
+        guardar_estado_torneo()
+        
+        return crear_respuesta_con_token_actualizado(result, datos_actuales)
     
-    if not franjas or len(franjas) == 0:
-        return jsonify({'error': 'Debes seleccionar al menos una franja horaria'}), 400
-    
-    datos_actuales = obtener_datos_desde_token()
-    resultado_data = datos_actuales.get('resultado_algoritmo')
-    if not resultado_data:
-        return jsonify({'error': 'No hay resultados del algoritmo'}), 404
-    
-    grupos_dict = resultado_data['grupos_por_categoria']
-    parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
-    
-    # Buscar la pareja en grupos o en no asignadas
-    pareja_encontrada = None
-    grupo_contenedor = None
-    categoria_original = None
-    en_no_asignadas = False
-    
-    # Buscar en grupos
-    for cat, grupos in grupos_dict.items():
-        for grupo in grupos:
-            for pareja in grupo.get('parejas', []):
-                if pareja.get('id') == pareja_id:
-                    pareja_encontrada = pareja
-                    grupo_contenedor = grupo
-                    categoria_original = cat
-                    break
-            if pareja_encontrada:
-                break
-        if pareja_encontrada:
-            break
-    
-    # Si no está en grupos, buscar en no asignadas
-    if not pareja_encontrada:
-        for pareja in parejas_sin_asignar:
-            if pareja.get('id') == pareja_id:
-                pareja_encontrada = pareja
-                categoria_original = pareja.get('categoria')
-                en_no_asignadas = True
-                break
-    
-    if not pareja_encontrada:
-        return jsonify({'error': 'Pareja no encontrada'}), 404
-    
-    # Si cambió de categoría, mover a parejas no asignadas de la nueva categoría
-    cambio_categoria = categoria != categoria_original
-    
-    if cambio_categoria and grupo_contenedor:
-        # Remover del grupo actual
-        grupo_contenedor['parejas'].remove(pareja_encontrada)
-        # Recalcular score del grupo afectado
-        recalcular_score_grupo(grupo_contenedor)
-        # Actualizar categoría
-        pareja_encontrada['categoria'] = categoria
-        # Agregar a no asignadas
-        parejas_sin_asignar.append(pareja_encontrada)
-    
-    # Actualizar datos de la pareja
-    pareja_encontrada['nombre'] = nombre
-    pareja_encontrada['telefono'] = telefono
-    pareja_encontrada['categoria'] = categoria
-    pareja_encontrada['franjas_disponibles'] = franjas
-    
-    # IMPORTANTE: También actualizar en la lista base de parejas
-    parejas_base = datos_actuales.get('parejas', [])
-    pareja_actualizada_en_base = False
-    for pareja_base in parejas_base:
-        if pareja_base['id'] == pareja_id:
-            pareja_base['nombre'] = nombre
-            pareja_base['telefono'] = telefono
-            pareja_base['categoria'] = categoria
-            pareja_base['franjas_disponibles'] = franjas
-            pareja_actualizada_en_base = True
-            break
-    
-    # Si no existe en la lista base, agregarla (prevenir inconsistencias)
-    if not pareja_actualizada_en_base:
-        parejas_base.append({
-            'id': pareja_id,
-            'nombre': nombre,
-            'telefono': telefono,
-            'categoria': categoria,
-            'franjas_disponibles': franjas
-        })
-    
-    datos_actuales['parejas'] = parejas_base
-    
-    # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
-    if grupo_contenedor and not cambio_categoria:
-        recalcular_score_grupo(grupo_contenedor)
-    
-    # Regenerar calendario completo
-    regenerar_calendario(resultado_data)
-    
-    # Actualizar datos
-    datos_actuales['resultado_algoritmo'] = resultado_data
-    sincronizar_con_storage_y_token(datos_actuales)
-    guardar_estado_torneo()  # Auto-guardar
-    
-    mensaje = '✓ Pareja actualizada correctamente'
-    if cambio_categoria:
-        mensaje += ' (movida a parejas no asignadas por cambio de categoría)'
-    
-    return crear_respuesta_con_token_actualizado({
-        'success': True,
-        'mensaje': mensaje
-    }, datos_actuales)
+    except ParejaValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except ResultadoAlgoritmoNotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except ParejaNotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': f'Error al editar pareja: {str(e)}'}), 500
 
 
 def deserializar_resultado(resultado_data):

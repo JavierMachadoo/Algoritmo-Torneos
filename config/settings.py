@@ -63,3 +63,16 @@ HORARIOS_POR_DIA = {
     'Sábado': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
                '16:00', '17:00', '18:00', '19:00', '20:00', '21:00']
 }
+
+# Mapeo de franjas a horas exactas que ocupan (incluye día para detectar solapamientos)
+# Cada partido dura 3 horas, por lo que ocupa 3 slots horarios consecutivos
+FRANJAS_MAPPING = {
+    'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
+    'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
+    'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
+    'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
+    'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
+    'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
+    'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
+    'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
+}
