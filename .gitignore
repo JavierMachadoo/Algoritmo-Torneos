@@ -33,3 +33,6 @@ flask_session/
 # OS
 .DS_Store
 Thumbs.db
+
+# Scripts temporales
+_sync_temp.ps1
