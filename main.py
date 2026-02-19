@@ -16,7 +16,7 @@ from config import (
     ADMIN_USERNAME,
     ADMIN_PASSWORD
 )
-from config.settings import BASE_DIR
+from config.settings import BASE_DIR, DEBUG
 from api import api_bp
 from api.routes.finales import finales_bp
 from utils.torneo_storage import storage
@@ -259,5 +259,5 @@ app = crear_app()
 _registrar_extras(app)
 
 if __name__ == '__main__':
-    app = crear_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.getenv('PORT', 5000))
+    app.run(debug=DEBUG, host='0.0.0.0', port=port)

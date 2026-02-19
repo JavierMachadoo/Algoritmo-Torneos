@@ -269,6 +269,8 @@ class PartidoFinal:
     pareja2: Optional[Pareja] = None
     ganador: Optional[Pareja] = None
     numero_partido: int = 1  # Número del partido dentro de la fase
+    slot1_info: Optional[str] = None  # Ej: "1° Grupo A"
+    slot2_info: Optional[str] = None  # Ej: "2° Grupo B"
     
     def to_dict(self):
         return {
@@ -278,6 +280,8 @@ class PartidoFinal:
             'pareja2': self.pareja2.to_dict() if self.pareja2 else None,
             'ganador': self.ganador.to_dict() if self.ganador else None,
             'numero_partido': self.numero_partido,
+            'slot1_info': self.slot1_info,
+            'slot2_info': self.slot2_info,
             'esta_completo': self.pareja1 is not None and self.pareja2 is not None,
             'tiene_ganador': self.ganador is not None
         }
@@ -303,7 +307,9 @@ class PartidoFinal:
             pareja1=encontrar_pareja(data.get('pareja1')),
             pareja2=encontrar_pareja(data.get('pareja2')),
             ganador=encontrar_pareja(data.get('ganador')),
-            numero_partido=data.get('numero_partido', 1)
+            numero_partido=data.get('numero_partido', 1),
+            slot1_info=data.get('slot1_info'),
+            slot2_info=data.get('slot2_info')
         )
 
 

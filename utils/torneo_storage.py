@@ -7,6 +7,14 @@ En desarrollo local, cae a JSON si no hay variables de Supabase configuradas.
 Variables de entorno requeridas para Supabase:
     SUPABASE_URL       → URL del proyecto Supabase
     SUPABASE_ANON_KEY  → clave anon/public del proyecto
+Sistema de almacenamiento persistente del torneo activo.
+
+En producción (Render, Railway, etc.) usa Supabase para persistencia real.
+En desarrollo local, cae a JSON si no hay variables de Supabase configuradas.
+
+Variables de entorno requeridas para Supabase:
+    SUPABASE_URL       → URL del proyecto Supabase
+    SUPABASE_ANON_KEY  → clave anon/public del proyecto
 """
 
 import json
@@ -15,7 +23,27 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
+from pathlib import Path
 from typing import Dict, Optional
+
+logger = logging.getLogger(__name__)
+
+# Directorio base del proyecto (dos niveles arriba de este archivo)
+_BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ── Detectar si Supabase está disponible ──────────────────────────────────────
+_SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip()
+_SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
+_USE_SUPABASE = bool(_SUPABASE_URL and _SUPABASE_KEY)
+
+if _USE_SUPABASE:
+    try:
+        from supabase import create_client, Client as SupabaseClient
+    except ImportError:
+        logger.warning('supabase package no instalado. Usando almacenamiento JSON.')
+        _USE_SUPABASE = False
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +107,20 @@ class TorneoStorage:
             'nombre': f"Torneo {datetime.now().strftime('%d/%m/%Y')}",
             'fecha_creacion': now,
             'fecha_modificacion': now,
+            'fecha_creacion': now,
+            'fecha_modificacion': now,
             'parejas': [],
             'resultado_algoritmo': None,
             'num_canchas': 2,
             'estado': 'creando',
+            'estado': 'creando',
         }
+
+    def _crear_torneo_default(self) -> None:
+        self.guardar(self._torneo_vacio())
+
+    # ── API pública ───────────────────────────────────────────────────────────
+
 
     def _crear_torneo_default(self) -> None:
         self.guardar(self._torneo_vacio())
@@ -142,6 +179,7 @@ class TorneoStorage:
         if not self._TORNEO_FILE.exists():
             self._crear_torneo_default()
 
+
         try:
             with open(self._TORNEO_FILE, encoding='utf-8') as f:
                 datos = json.load(f)
@@ -150,19 +188,25 @@ class TorneoStorage:
                 return datos
         except (json.JSONDecodeError, IOError) as e:
             logger.error('Error al cargar torneo JSON: %s', e)
+            logger.error('Error al cargar torneo JSON: %s', e)
             self._crear_torneo_default()
             return self.cargar()
 
+
     def limpiar(self) -> None:
+        """Reinicia el torneo manteniendo nombre y fecha de creación."""
         """Reinicia el torneo manteniendo nombre y fecha de creación."""
         torneo = self.cargar()
         torneo['parejas'] = []
         torneo['resultado_algoritmo'] = None
         torneo['fixtures_finales'] = {}
+        torneo['fixtures_finales'] = {}
         torneo['estado'] = 'creando'
         self.guardar(torneo)
 
+
     def actualizar_nombre(self, nuevo_nombre: str) -> bool:
+        """Actualiza el nombre del torneo. Devuelve True si tuvo éxito."""
         """Actualiza el nombre del torneo. Devuelve True si tuvo éxito."""
         try:
             torneo = self.cargar()
@@ -171,8 +215,10 @@ class TorneoStorage:
             return True
         except Exception as e:
             logger.error('Error al actualizar nombre: %s', e)
+            logger.error('Error al actualizar nombre: %s', e)
             return False
 
 
+# Instancia global compartida por todos los módulos
 # Instancia global compartida por todos los módulos
 storage = TorneoStorage()
