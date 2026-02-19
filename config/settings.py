@@ -1,8 +1,12 @@
 import os
 from pathlib import Path
 import secrets
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Cargar .env si existe (desarrollo local); en producción las vars vienen del entorno
+load_dotenv(BASE_DIR / '.env')
 
 # SECRET_KEY: DEBE estar en .env en producción
 # Si no existe, genera uno temporal (solo para desarrollo)
@@ -19,6 +23,11 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 # Para mayor seguridad, usa variables de entorno
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'torneopadel2026')
+
+# Supabase - requerido en producción para persistencia de datos
+# En desarrollo local, si no están definidas, se usa almacenamiento JSON
+SUPABASE_URL = os.getenv('SUPABASE_URL', '')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '')
 
 UPLOAD_FOLDER = BASE_DIR / 'data' / 'uploads'
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)

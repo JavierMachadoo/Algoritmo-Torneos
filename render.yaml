@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: algoritmo-torneos
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true        # Render genera una clave aleatoria segura
+      - key: ADMIN_USERNAME
+        sync: false                # Lo ponés a mano en el dashboard de Render
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false

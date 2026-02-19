@@ -525,7 +525,21 @@
               "pareja2_id": 34
             }
           ],
-          "resultados": {},
+          "resultados": {
+            "35-36": {
+              "pareja1_id": 35,
+              "pareja2_id": 36,
+              "sets_pareja1": 2,
+              "sets_pareja2": 0,
+              "games_set1_pareja1": 7,
+              "games_set1_pareja2": 5,
+              "games_set2_pareja1": 6,
+              "games_set2_pareja2": 4,
+              "tiebreak_pareja1": null,
+              "tiebreak_pareja2": null,
+              "ganador_id": 35
+            }
+          },
           "resultados_completos": false
         },
         {
@@ -1645,7 +1659,7 @@
     }
   },
   "num_canchas": 2,
-  "fecha_modificacion": "2026-01-22T21:21:53.277649",
+  "fecha_modificacion": "2026-02-18T20:22:36.392821",
   "fixtures_finales": {
     "Cuarta": {
       "categoria": "Cuarta",
