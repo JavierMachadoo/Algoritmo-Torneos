@@ -67,7 +67,7 @@ def crear_app():
     def verificar_autenticacion():
         """Verifica que el usuario esté autenticado antes de acceder a rutas protegidas."""
         # Rutas públicas que no requieren autenticación
-        rutas_publicas = ['/login', '/static/']
+        rutas_publicas = ['/login', '/static/', '/_health']
         
         # Permitir acceso a rutas públicas
         if any(request.path.startswith(ruta) for ruta in rutas_publicas):
@@ -226,6 +226,37 @@ def crear_app():
     
     return app
 
+
+def _registrar_extras(app):
+    """Registra health check y manejadores de error globales."""
+
+    @app.route('/_health')
+    def health_check():
+        """Endpoint para keep-alive (UptimeRobot, Freshping, etc).
+        No requiere autenticación."""
+        from flask import jsonify
+        return jsonify({'status': 'ok'})
+
+    @app.errorhandler(404)
+    def not_found(e):
+        from flask import request, jsonify
+        # Si es llamada de API devolver JSON; si es página devolver HTML
+        if request.path.startswith('/api/'):
+            return jsonify({'success': False, 'message': 'Ruta no encontrada'}), 404
+        return render_template('base.html'), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        from flask import request, jsonify
+        if request.path.startswith('/api/'):
+            return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
+        return render_template('base.html'), 500
+
+
+# Instancia a nivel de módulo para que gunicorn pueda encontrarla
+# (necesario para el deploy en Render/Railway)
+app = crear_app()
+_registrar_extras(app)
 
 if __name__ == '__main__':
     app = crear_app()

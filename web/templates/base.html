@@ -15,10 +15,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=range(1, 10000)|random) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.3">
     
     <!-- Mobile CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=range(1, 10000)|random) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=1.3">
     
     {% block extra_css %}{% endblock %}
     
@@ -127,13 +127,13 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     
     <!-- JWT Helper -->
-    <script src="{{ url_for('static', filename='js/jwt-helper.js', v=range(1, 10000)|random) }}"></script>
+    <script src="{{ url_for('static', filename='js/jwt-helper.js') }}?v=1.3"></script>
     
     <!-- Toast System -->
-    <script src="{{ url_for('static', filename='js/toast.js', v=range(1, 10000)|random) }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}?v=1.3"></script>
     
     <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/app.js', v=range(1, 10000)|random) }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=1.3"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

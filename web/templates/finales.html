@@ -522,13 +522,34 @@ let calendarioData = {};
 // Cargar fixtures al inicio
 document.addEventListener('DOMContentLoaded', function() {
     cargarFixtures();
-    actualizarDetallesCategorias();
+    
+    // Auto-actualizar cada 60 segundos (sin saturar el servidor free-tier)
+    setInterval(() => {
+        cargarFixtures(/* silencioso= */true);
+    }, 60000);
 });
 
-// Cargar fixtures de todas las categorías
-async function cargarFixtures() {
+// Cargar todos los fixtures
+// silencioso=true → no muestra errores de red al usuario (para auto-refresh)
+async function cargarFixtures(silencioso = false) {
     try {
-        const response = await fetch('/api/finales/fixtures');
+        const response = await fetch('/api/finales/fixtures', {
+            credentials: 'same-origin'
+        });
+
+        // El servidor puede devolver HTML (ej: Render despertando) en vez de JSON
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (!silencioso) showToast('El servidor está iniciando, intentá de nuevo en unos segundos', 'warning');
+            return;
+        }
+
+        if (response.status === 401) {
+            // Sesión expirada → redirigir al login
+            window.location.href = '/login';
+            return;
+        }
+
         const data = await response.json();
         
         if (data.success) {
@@ -538,7 +559,7 @@ async function cargarFixtures() {
             console.error('Error al cargar fixtures:', data.message);
         }
     } catch (error) {
-        console.error('Error en cargarFixtures:', error);
+        if (!silencioso) console.error('Error al cargar fixtures:', error);
     }
 }
 
