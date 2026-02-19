@@ -2,8 +2,12 @@ services:
   - type: web
     name: algoritmo-torneos
     env: python
+    # Python version – usar la misma que en local para evitar sorpresas
+    pythonVersion: "3.13.0"
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app
+    startCommand: gunicorn main:app --config gunicorn.conf.py
+    # Render verifica este endpoint para saber que la app arrancó correctamente
+    healthCheckPath: /_health
     envVars:
       - key: DEBUG
         value: "False"
