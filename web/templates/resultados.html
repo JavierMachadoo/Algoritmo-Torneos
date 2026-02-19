@@ -255,6 +255,20 @@
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
     }
     
+    /* Estilo especial para el botón de Finales */
+    #finales-tab {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+        color: #1976d2 !important;
+        font-weight: 800 !important;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15) !important;
+    }
+    
+    #finales-tab:hover {
+        background: linear-gradient(135deg, #bbdefb, #90caf9) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2) !important;
+    }
+    
     /* Colores específicos por categoría */
     #series-cuarta-tab.active,
     #finales-cuarta-tab.active {
@@ -652,33 +666,26 @@
     <!-- Cards de Categorías -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-10">
-            <!-- Tabs principales: Fixture, Series, Finales -->
-            <ul class="nav nav-pills nav-fill mb-4" id="mainTabs" role="tablist">
+            <!-- Tabs principales: Fixture, Series -->
+            <ul class="nav nav-pills nav-fill mb-2 justify-content-center" id="mainTabs" role="tablist" style="max-width: 900px; margin: 0 auto;">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="fixture-tab" data-bs-toggle="pill" 
                             data-bs-target="#fixture-main" type="button" role="tab" 
-                            aria-controls="fixture-main" aria-selected="true">
-                        <i class="bi bi-calendar-week me-2"></i>
+                            aria-controls="fixture-main" aria-selected="true"
+                            style="padding: 0.7rem 4rem; font-size: 1.1rem;">
+                        <i class="bi bi-calendar-week me-2" style="font-size: 1.3rem;"></i>
                         <strong>FIXTURE</strong>
-                        <small class="d-block">Calendario General</small>
+                        <small class="d-block" style="font-size: 0.85rem;">Calendario General</small>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="series-tab" data-bs-toggle="pill" 
                             data-bs-target="#series-main" type="button" role="tab" 
-                            aria-controls="series-main" aria-selected="false">
-                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+                            aria-controls="series-main" aria-selected="false"
+                            style="padding: 0.7rem 4rem; font-size: 1.1rem;">
+                        <i class="bi bi-grid-3x3-gap-fill me-2" style="font-size: 1.3rem;"></i>
                         <strong>SERIES</strong>
-                        <small class="d-block">Grupos por Categoría</small>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="finales-tab" data-bs-toggle="pill" 
-                            data-bs-target="#finales-main" type="button" role="tab" 
-                            aria-controls="finales-main" aria-selected="false">
-                        <i class="bi bi-trophy-fill me-2"></i>
-                        <strong>FINALES</strong>
-                        <small class="d-block">Llaves por Categoría</small>
+                        <small class="d-block" style="font-size: 0.85rem;">Grupos por Categoría</small>
                     </button>
                 </li>
             </ul>
@@ -1087,7 +1094,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="calendario-section">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <h2 class="section-title mb-0">
                                 <i class="bi bi-calendar-week me-2"></i>Calendario General
                             </h2>
@@ -2506,26 +2513,6 @@ function confirmarAsignacionManual(parejaId, categoria) {
     });
 }
 
-// Función para cargar franjas horarias en el modal
-document.addEventListener('DOMContentLoaded', function() {
-    const franjasContainer = document.getElementById('franjasModalContainer');
-    const franjas = [
-        "Jueves 18:00", "Jueves 20:00",
-        "Viernes 18:00", "Viernes 21:00",
-        "Sábado 09:00", "Sábado 12:00", "Sábado 16:00", "Sábado 19:00"
-    ];
-    
-    franjas.forEach((franja, idx) => {
-        const div = document.createElement('div');
-        div.className = 'form-check';
-        div.innerHTML = `
-            <input class="form-check-input" type="checkbox" value="${franja}" id="franjaModal${idx}" name="franjas">
-            <label class="form-check-label" for="franjaModal${idx}">${franja}</label>
-        `;
-        franjasContainer.appendChild(div);
-    });
-});
-
 function agregarParejaDesdeModal() {
     const form = document.getElementById('formAgregarParejaModal');
     const nombre = document.getElementById('nombreModal').value.trim();
@@ -3048,12 +3035,21 @@ function confirmarEditarPareja() {
         if (data.success) {
             Toast.success(data.mensaje);
             
-            // Cerrar modal y actualizar
+            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPareja'));
             modal.hide();
             
+            // Guardar estado antes de recargar
+            sessionStorage.setItem('tabPrincipal', 'series-main');
             const categoriaActual = obtenerCategoriaActual();
-            actualizarCategoria(categoriaActual);
+            sessionStorage.setItem('tabCategoria', `series-${categoriaActual.toLowerCase()}`);
+            const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+            sessionStorage.setItem('scrollPos', scrollPos);
+            
+            // Recargar para actualizar marcadores y prevenir inconsistencias
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         } else {
             Toast.error('Error: ' + data.error);
         }

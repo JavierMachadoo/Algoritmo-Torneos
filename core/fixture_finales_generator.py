@@ -79,12 +79,15 @@ class GeneradorFixtureFinales:
         clasificados = GeneradorFixtureFinales.obtener_clasificados_por_posicion(grupos_categoria)
         
         # Generar fixture según número de grupos (SIEMPRE se genera la estructura)
+        # IMPORTANTE: Mínimo cuartos de final para todas las categorías
         if num_grupos >= 8:
             fixture = GeneradorFixtureFinales._generar_con_octavos(categoria, clasificados)
-        elif num_grupos >= 4:
-            fixture = GeneradorFixtureFinales._generar_con_cuartos(categoria, clasificados)
+        elif num_grupos >= 2:
+            # Con 2 o más grupos: generar cuartos de final
+            fixture = GeneradorFixtureFinales._generar_con_cuartos(categoria, clasificados, num_grupos)
         else:
-            fixture = GeneradorFixtureFinales._generar_solo_semifinales(categoria, clasificados)
+            # Con 1 solo grupo: también generar cuartos de final (mínimo)
+            fixture = GeneradorFixtureFinales._generar_con_cuartos(categoria, clasificados, num_grupos)
         
         return fixture
     
@@ -141,15 +144,61 @@ class GeneradorFixtureFinales:
         return fixture
     
     @staticmethod
-    def _generar_con_cuartos(categoria: str, clasificados: Dict) -> FixtureFinales:
-        """Genera fixture con cuartos (4 grupos)"""
+    def _generar_con_cuartos(categoria: str, clasificados: Dict, num_grupos_total: int) -> FixtureFinales:
+        """
+        Genera fixture con cuartos (para 1-7 grupos).
+        
+        Casos especiales:
+        - 1 grupo: Genera 4 cuartos con los 3 clasificados (1° pasa directo a semi, 2° y 3° juegan cuartos)
+        - 2 grupos: 1°A vs 2°B, 1°B vs 2°A (2 partidos de cuartos)
+        - 3 grupos: Genera 4 cuartos con primeros y segundos
+        - 4+ grupos: Cruces normales evitando A-B hasta final
+        """
         fixture = FixtureFinales(categoria=categoria)
         
         primeros = clasificados[1]
         segundos = clasificados[2]
+        terceros = clasificados[3]
+        
+        logger.info(f"Generando cuartos para {categoria}: {num_grupos_total} grupos, {len(primeros)} primeros, {len(segundos)} segundos, {len(terceros)} terceros")
+        
+        # Definir slots según número TOTAL de grupos (no solo los que tienen clasificados)
+        if num_grupos_total == 1:
+            # 1 solo grupo: El 1° pasa directo a semi, 2° y 3° juegan un cuarto
+            # Los otros cuartos quedan vacíos para mantener estructura
+            slots = [
+                {'slot1': {'pos': 2, 'grupo_idx': 0}, 'slot2': {'pos': 3, 'grupo_idx': 0}},  # 2° vs 3°
+                {'slot1': None, 'slot2': None},  # Vacío
+                {'slot1': None, 'slot2': None},  # Vacío
+                {'slot1': None, 'slot2': None},  # Vacío
+            ]
+        elif num_grupos_total == 2:
+            # 2 grupos: Cruces clásicos
+            slots = [
+                {'slot1': {'pos': 1, 'grupo_idx': 0}, 'slot2': {'pos': 2, 'grupo_idx': 1}},  # 1°A vs 2°B
+                {'slot1': {'pos': 1, 'grupo_idx': 1}, 'slot2': {'pos': 2, 'grupo_idx': 0}},  # 1°B vs 2°A
+                {'slot1': None, 'slot2': None},  # Vacío
+                {'slot1': None, 'slot2': None},  # Vacío
+            ]
+        elif num_grupos_total == 3:
+            # 3 grupos: Usar primeros y segundos, puede incluir un tercero
+            slots = [
+                {'slot1': {'pos': 1, 'grupo_idx': 0}, 'slot2': {'pos': 2, 'grupo_idx': 1}},  # 1°A vs 2°B
+                {'slot1': {'pos': 1, 'grupo_idx': 1}, 'slot2': {'pos': 2, 'grupo_idx': 2}},  # 1°B vs 2°C
+                {'slot1': {'pos': 1, 'grupo_idx': 2}, 'slot2': {'pos': 2, 'grupo_idx': 0}},  # 1°C vs 2°A (si hay)
+                {'slot1': None, 'slot2': None},  # Vacío o puede ser un repechaje
+            ]
+        else:
+            # 4+ grupos: Cruces evitando A-B hasta final
+            slots = [
+                {'slot1': {'pos': 1, 'grupo_idx': 0}, 'slot2': {'pos': 2, 'grupo_idx': 2}},  # 1°A vs 2°C
+                {'slot1': {'pos': 1, 'grupo_idx': 3}, 'slot2': {'pos': 2, 'grupo_idx': 1}},  # 1°D vs 2°B
+                {'slot1': {'pos': 1, 'grupo_idx': 1}, 'slot2': {'pos': 2, 'grupo_idx': 3}},  # 1°B vs 2°D
+                {'slot1': {'pos': 1, 'grupo_idx': 2}, 'slot2': {'pos': 2, 'grupo_idx': 0}},  # 1°C vs 2°A
+            ]
         
         # Crear 4 partidos de cuartos
-        for i in range(4):
+        for i, slot_config in enumerate(slots):
             partido_id = f"{categoria}_cuartos_{i+1}"
             partido = PartidoFinal(
                 id=partido_id,
@@ -157,22 +206,49 @@ class GeneradorFixtureFinales:
                 numero_partido=i+1
             )
             
-            # Asignar parejas si están disponibles
-            if i < len(primeros):
-                partido.pareja1 = primeros[i]['pareja']
-            if i < len(segundos):
-                partido.pareja2 = segundos[i]['pareja']
+            # Si el slot es None, dejarlo vacío
+            if slot_config['slot1'] is None:
+                partido.slot1_info = "Vacío"
+                partido.slot2_info = "Vacío"
+                fixture.cuartos.append(partido)
+                continue
+            
+            # Información de slot para pareja1
+            slot1 = slot_config['slot1']
+            lista1 = primeros if slot1['pos'] == 1 else (segundos if slot1['pos'] == 2 else terceros)
+            if slot1['grupo_idx'] < len(lista1):
+                partido.pareja1 = lista1[slot1['grupo_idx']]['pareja']
+                partido.slot1_info = f"{slot1['pos']}° Grupo {chr(65 + slot1['grupo_idx'])}"
+            else:
+                partido.slot1_info = f"{slot1['pos']}° Grupo {chr(65 + slot1['grupo_idx'])}"
+            
+            # Información de slot para pareja2
+            slot2 = slot_config['slot2']
+            lista2 = primeros if slot2['pos'] == 1 else (segundos if slot2['pos'] == 2 else terceros)
+            if slot2['grupo_idx'] < len(lista2):
+                partido.pareja2 = lista2[slot2['grupo_idx']]['pareja']
+                partido.slot2_info = f"{slot2['pos']}° Grupo {chr(65 + slot2['grupo_idx'])}"
+            else:
+                partido.slot2_info = f"{slot2['pos']}° Grupo {chr(65 + slot2['grupo_idx'])}"
             
             fixture.cuartos.append(partido)
         
         # Crear estructura de semifinales
         for i in range(2):
             partido_id = f"{categoria}_semi_{i+1}"
-            fixture.semifinales.append(PartidoFinal(
+            partido_semi = PartidoFinal(
                 id=partido_id,
                 fase=FaseFinal.SEMIFINAL,
                 numero_partido=i+1
-            ))
+            )
+            
+            # Para 1 grupo: Pre-poblar la primera semifinal con el 1° (pasa directo)
+            if num_grupos_total == 1 and i == 0 and len(primeros) > 0:
+                partido_semi.pareja1 = primeros[0]['pareja']
+                partido_semi.slot1_info = "1° Grupo A (pasa directo)"
+                partido_semi.slot2_info = "Ganador Cuartos 1"
+            
+            fixture.semifinales.append(partido_semi)
         
         # Crear final
         fixture.final = PartidoFinal(

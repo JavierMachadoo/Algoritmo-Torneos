@@ -228,9 +228,9 @@ def regenerar_calendario(resultado_data):
                             }
                             for p1, p2 in grupo_obj.partidos
                         ]
-                        # Preservar resultados y estado
-                        grupo_dict['resultados'] = grupo_obj.resultados
-                        grupo_dict['resultados_completos'] = grupo_obj.resultados_completos
+                        # Preservar resultados y estado - serializar resultados
+                        grupo_dict['resultados'] = {k: v.to_dict() for k, v in grupo_obj.resultados.items()}
+                        grupo_dict['resultados_completos'] = grupo_obj.todos_resultados_completos()
                         break
         
         return calendario
@@ -307,83 +307,116 @@ def cargar_csv():
 @api_bp.route('/agregar-pareja', methods=['POST'])
 def agregar_pareja():
     """Agrega una pareja manualmente al torneo."""
-    data = request.json
+    try:
+        data = request.json
+        
+        nombre = data.get('nombre', '').strip()
+        telefono = data.get('telefono', '').strip()
+        categoria = data.get('categoria', 'Cuarta')
+        franjas = data.get('franjas', [])
+        desde_resultados = data.get('desde_resultados', False)
+        
+        if not nombre:
+            return jsonify({'error': 'El nombre es obligatorio'}), 400
+        
+        if not franjas:
+            return jsonify({'error': 'Selecciona al menos una franja horaria'}), 400
+        
+        datos_actuales = obtener_datos_desde_token()
+        parejas = datos_actuales.get('parejas', [])
+        
+        # Generar nuevo ID único
+        max_id = max([p['id'] for p in parejas], default=0)
+        nueva_pareja = {
+            'categoria': categoria,
+            'franjas_disponibles': franjas,
+            'id': max_id + 1,
+            'nombre': nombre,
+            'telefono': telefono or 'Sin teléfono'
+        }
+        
+        parejas.append(nueva_pareja)
+        datos_actuales['parejas'] = parejas
+        
+        # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
+        estadisticas = None
+        if desde_resultados:
+            resultado_data = datos_actuales.get('resultado_algoritmo')
+            if resultado_data:
+                # Agregar a parejas no asignadas
+                parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+                parejas_sin_asignar.append(nueva_pareja)
+                resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
+                
+                # Recalcular estadísticas globales
+                estadisticas = recalcular_estadisticas(resultado_data)
+                datos_actuales['resultado_algoritmo'] = resultado_data
+        
+        sincronizar_con_storage_y_token(datos_actuales)
+        
+        response_data = {
+            'success': True,
+            'mensaje': f'Pareja "{nombre}" agregada correctamente',
+            'pareja': nueva_pareja,
+            'desde_resultados': desde_resultados
+        }
+        
+        # Incluir estadísticas si estamos en resultados
+        if desde_resultados and estadisticas:
+            response_data['estadisticas'] = estadisticas
+        
+        logger.info(f"Pareja agregada exitosamente: {nombre}")
+        return crear_respuesta_con_token_actualizado(response_data, datos_actuales)
     
-    nombre = data.get('nombre', '').strip()
-    telefono = data.get('telefono', '').strip()
-    categoria = data.get('categoria', 'Cuarta')
-    franjas = data.get('franjas', [])
-    desde_resultados = data.get('desde_resultados', False)
-    
-    if not nombre:
-        return jsonify({'error': 'El nombre es obligatorio'}), 400
-    
-    if not franjas:
-        return jsonify({'error': 'Selecciona al menos una franja horaria'}), 400
-    
-    datos_actuales = obtener_datos_desde_token()
-    parejas = datos_actuales.get('parejas', [])
-    
-    # Generar nuevo ID único
-    max_id = max([p['id'] for p in parejas], default=0)
-    nueva_pareja = {
-        'categoria': categoria,
-        'franjas_disponibles': franjas,
-        'id': max_id + 1,
-        'nombre': nombre,
-        'telefono': telefono or 'Sin teléfono'
-    }
-    
-    parejas.append(nueva_pareja)
-    datos_actuales['parejas'] = parejas
-    
-    # Si estamos en resultados y hay algoritmo ejecutado, agregar a no asignadas
-    estadisticas = None
-    if desde_resultados:
-        resultado_data = datos_actuales.get('resultado_algoritmo')
-        if resultado_data:
-            # Agregar a parejas no asignadas
-            parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
-            parejas_sin_asignar.append(nueva_pareja)
-            resultado_data['parejas_sin_asignar'] = parejas_sin_asignar
-            
-            # Recalcular estadísticas globales
-            estadisticas = recalcular_estadisticas(resultado_data)
-            datos_actuales['resultado_algoritmo'] = resultado_data
-    
-    sincronizar_con_storage_y_token(datos_actuales)
-    
-    response_data = {
-        'success': True,
-        'mensaje': f'Pareja "{nombre}" agregada correctamente',
-        'pareja': nueva_pareja,
-        'desde_resultados': desde_resultados
-    }
-    
-    # Incluir estadísticas si estamos en resultados
-    if desde_resultados and estadisticas:
-        response_data['estadisticas'] = estadisticas
-    
-    return crear_respuesta_con_token_actualizado(response_data, datos_actuales)
+    except Exception as e:
+        logger.error(f"Error al agregar pareja: {str(e)}", exc_info=True)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Error al agregar pareja: {str(e)}'}), 500
 
 
 @api_bp.route('/eliminar-pareja', methods=['POST'])
 def eliminar_pareja():
-    """Elimina una pareja del torneo."""
+    """Elimina una pareja del torneo completamente."""
     data = request.json
     pareja_id = data.get('id')
     
     datos_actuales = obtener_datos_desde_token()
+    
+    # 1. Eliminar de la lista base de parejas
     parejas = datos_actuales.get('parejas', [])
     parejas = [p for p in parejas if p['id'] != pareja_id]
-    
     datos_actuales['parejas'] = parejas
-    sincronizar_con_storage_y_token(datos_actuales)
     
-    return jsonify({
+    # 2. Si hay resultado del algoritmo, eliminar de grupos y no asignadas
+    resultado_data = datos_actuales.get('resultado_algoritmo')
+    if resultado_data:
+        # Eliminar de grupos
+        grupos_dict = resultado_data['grupos_por_categoria']
+        for cat, grupos in grupos_dict.items():
+            for grupo in grupos:
+                parejas_grupo = grupo.get('parejas', [])
+                grupo['parejas'] = [p for p in parejas_grupo if p.get('id') != pareja_id]
+                # Recalcular score si se eliminó del grupo
+                if len(grupo['parejas']) != len(parejas_grupo):
+                    recalcular_score_grupo(grupo)
+        
+        # Eliminar de no asignadas
+        parejas_sin_asignar = resultado_data.get('parejas_sin_asignar', [])
+        resultado_data['parejas_sin_asignar'] = [p for p in parejas_sin_asignar if p.get('id') != pareja_id]
+        
+        # Regenerar calendario y estadísticas
+        regenerar_calendario(resultado_data)
+        resultado_data['estadisticas'] = recalcular_estadisticas(resultado_data)
+        datos_actuales['resultado_algoritmo'] = resultado_data
+    
+    sincronizar_con_storage_y_token(datos_actuales)
+    guardar_estado_torneo()
+    
+    return crear_respuesta_con_token_actualizado({
         'success': True,
         'mensaje': 'Pareja eliminada correctamente'
-    })
+    }, datos_actuales)
 
 
 @api_bp.route('/remover-pareja-de-grupo', methods=['POST'])
@@ -657,25 +690,23 @@ def ejecutar_algoritmo():
 def serializar_resultado(resultado, num_canchas):
     """Convierte el resultado del algoritmo a formato JSON serializable."""
     grupos_dict = {}
-    canchas_asignadas = {}
-    canchas_por_grupo = {}  # Nuevo: mapeo de grupo_id a cancha
+    canchas_por_grupo = {}  # Mapeo de grupo_id a cancha
+    
+    # Obtener las asignaciones de cancha del calendario del algoritmo
+    # El calendario ya tiene las canchas asignadas correctamente sin solapamientos
+    for franja, partidos_franja in resultado.calendario.items():
+        for partido in partidos_franja:
+            grupo_id = partido.get('grupo_id')
+            cancha = partido.get('cancha')
+            if grupo_id and cancha:
+                canchas_por_grupo[grupo_id] = cancha
     
     for categoria, grupos in resultado.grupos_por_categoria.items():
         grupos_dict[categoria] = []
         
         for grupo in grupos:
-            franja = grupo.franja_horaria
-            if franja:
-                if franja not in canchas_asignadas:
-                    canchas_asignadas[franja] = 0
-                cancha_num = (canchas_asignadas[franja] % num_canchas) + 1
-                canchas_asignadas[franja] += 1
-            else:
-                cancha_num = None
-            
-            # Guardar el mapeo de grupo_id a cancha
-            if cancha_num is not None:
-                canchas_por_grupo[grupo.id] = cancha_num
+            # Usar la cancha asignada por el algoritmo
+            cancha_num = canchas_por_grupo.get(grupo.id)
             
             grupos_dict[categoria].append({
                 'id': grupo.id,
@@ -833,16 +864,16 @@ def obtener_franjas_disponibles():
     grupos_dict = resultado_data['grupos_por_categoria']
     num_canchas = obtener_datos_desde_token().get('num_canchas', 2)
     
-    # Mapeo de franjas a horas que ocupan
+    # Mapeo de franjas a horas que ocupan (incluye día para detectar solapamientos correctamente)
     franjas_a_horas_mapa = {
-        'Jueves 18:00': ['18:00', '19:00', '20:00'],
-        'Jueves 20:00': ['20:00', '21:00', '22:00'],
-        'Viernes 18:00': ['18:00', '19:00', '20:00'],
-        'Viernes 21:00': ['21:00', '22:00', '23:00'],
-        'Sábado 09:00': ['09:00', '10:00', '11:00'],
-        'Sábado 12:00': ['12:00', '13:00', '14:00'],
-        'Sábado 16:00': ['16:00', '17:00', '18:00'],
-        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+        'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
+        'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
+        'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
+        'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
+        'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
+        'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
+        'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
+        'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
     }
     
     # Crear un diccionario de franjas ocupadas por cancha con info detallada
@@ -913,16 +944,16 @@ def crear_grupo_manual():
     
     grupos_dict = resultado_data['grupos_por_categoria']
     
-    # Mapeo de franjas a horas
+    # Mapeo de franjas a horas (incluye día para detectar solapamientos correctamente)
     franjas_a_horas_mapa = {
-        'Jueves 18:00': ['18:00', '19:00', '20:00'],
-        'Jueves 20:00': ['20:00', '21:00', '22:00'],
-        'Viernes 18:00': ['18:00', '19:00', '20:00'],
-        'Viernes 21:00': ['21:00', '22:00', '23:00'],
-        'Sábado 09:00': ['09:00', '10:00', '11:00'],
-        'Sábado 12:00': ['12:00', '13:00', '14:00'],
-        'Sábado 16:00': ['16:00', '17:00', '18:00'],
-        'Sábado 19:00': ['19:00', '20:00', '21:00'],
+        'Jueves 18:00': ['Jueves 18:00', 'Jueves 19:00', 'Jueves 20:00'],
+        'Jueves 20:00': ['Jueves 20:00', 'Jueves 21:00', 'Jueves 22:00'],
+        'Viernes 18:00': ['Viernes 18:00', 'Viernes 19:00', 'Viernes 20:00'],
+        'Viernes 21:00': ['Viernes 21:00', 'Viernes 22:00', 'Viernes 23:00'],
+        'Sábado 09:00': ['Sábado 09:00', 'Sábado 10:00', 'Sábado 11:00'],
+        'Sábado 12:00': ['Sábado 12:00', 'Sábado 13:00', 'Sábado 14:00'],
+        'Sábado 16:00': ['Sábado 16:00', 'Sábado 17:00', 'Sábado 18:00'],
+        'Sábado 19:00': ['Sábado 19:00', 'Sábado 20:00', 'Sábado 21:00'],
     }
     
     # Validar que la cancha no esté ocupada directamente
@@ -1044,6 +1075,7 @@ def editar_grupo():
     regenerar_calendario(resultado_data)
     
     # Actualizar datos
+    datos_actuales = obtener_datos_desde_token()
     datos_actuales['resultado_algoritmo'] = resultado_data
     sincronizar_con_storage_y_token(datos_actuales)
     guardar_estado_torneo()  # Auto-guardar
@@ -1130,17 +1162,28 @@ def editar_pareja():
     pareja_encontrada['franjas_disponibles'] = franjas
     
     # IMPORTANTE: También actualizar en la lista base de parejas
-    datos = obtener_datos_desde_token()
-    parejas_base = datos.get('parejas', [])
+    parejas_base = datos_actuales.get('parejas', [])
+    pareja_actualizada_en_base = False
     for pareja_base in parejas_base:
         if pareja_base['id'] == pareja_id:
             pareja_base['nombre'] = nombre
             pareja_base['telefono'] = telefono
             pareja_base['categoria'] = categoria
             pareja_base['franjas_disponibles'] = franjas
+            pareja_actualizada_en_base = True
             break
-    datos['parejas'] = parejas_base
-    sincronizar_con_storage_y_token(datos)
+    
+    # Si no existe en la lista base, agregarla (prevenir inconsistencias)
+    if not pareja_actualizada_en_base:
+        parejas_base.append({
+            'id': pareja_id,
+            'nombre': nombre,
+            'telefono': telefono,
+            'categoria': categoria,
+            'franjas_disponibles': franjas
+        })
+    
+    datos_actuales['parejas'] = parejas_base
     
     # Si la pareja está en un grupo y cambiaron las franjas, recalcular score
     if grupo_contenedor and not cambio_categoria:
@@ -1417,6 +1460,27 @@ def guardar_resultado_partido():
         # Guardar en storage
         datos = obtener_datos_desde_token()
         datos['resultado_algoritmo'] = resultado_data
+        
+        # Si los resultados del grupo están completos, regenerar fixtures de finales
+        if grupo_encontrado.get('resultados_completos', False):
+            from core.fixture_finales_generator import GeneradorFixtureFinales
+            try:
+                # Obtener todos los grupos de la categoría
+                grupos_data = resultado_data['grupos_por_categoria'].get(categoria, [])
+                grupos_obj = [Grupo.from_dict(g) for g in grupos_data]
+                
+                # Regenerar fixture para esta categoría
+                fixture = GeneradorFixtureFinales.generar_fixture(categoria, grupos_obj)
+                
+                if fixture:
+                    # Actualizar fixtures guardados
+                    if 'fixtures_finales' not in datos:
+                        datos['fixtures_finales'] = {}
+                    datos['fixtures_finales'][categoria] = fixture.to_dict()
+                    logger.info(f"Fixtures de finales regenerados automáticamente para {categoria}")
+            except Exception as e:
+                logger.error(f"Error al regenerar fixtures: {str(e)}")
+        
         sincronizar_con_storage_y_token(datos)
         
         return jsonify({
