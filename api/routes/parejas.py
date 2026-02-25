@@ -235,9 +235,7 @@ def regenerar_calendario(resultado_data):
         
         return calendario
     except Exception as e:
-        print(f"Error al regenerar calendario: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error al regenerar calendario: {e}", exc_info=True)
         return resultado_data.get('calendario', {})
 
 
@@ -1221,8 +1219,14 @@ def deserializar_resultado(resultado_data):
             grupo.franja_horaria = grupo_dict.get('franja_horaria')
             grupo.score_compatibilidad = grupo_dict.get('score', 0.0)
             
-            # Cargar resultados guardados
-            grupo.resultados = grupo_dict.get('resultados', {})
+            # Cargar resultados guardados — reconstruir como objetos ResultadoPartido
+            from core.models import ResultadoPartido
+            resultados_raw = grupo_dict.get('resultados', {})
+            for key, r_data in resultados_raw.items():
+                if isinstance(r_data, dict):
+                    grupo.resultados[key] = ResultadoPartido.from_dict(r_data)
+                else:
+                    grupo.resultados[key] = r_data
             grupo.resultados_completos = grupo_dict.get('resultados_completos', False)
             
             for pareja_dict in grupo_dict['parejas']:
