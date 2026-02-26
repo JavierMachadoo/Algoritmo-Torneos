@@ -133,11 +133,23 @@ class CSVProcessor:
             
             # Validar que tengamos los datos mínimos
             if nombre and categoria:
+                # Extraer jugador1 y jugador2 del nombre si contiene '/'
+                jugador1 = ''
+                jugador2 = ''
+                if '/' in nombre:
+                    partes = nombre.split('/', 1)
+                    jugador1 = partes[0].strip()
+                    jugador2 = partes[1].strip()
+                else:
+                    jugador1 = nombre.strip()
+
                 parejas.append({
                     'categoria': categoria,
                     'franjas_disponibles': franjas,
                     'id': len(parejas) + 1,
                     'nombre': nombre,
+                    'jugador1': jugador1,
+                    'jugador2': jugador2,
                     'telefono': telefono or 'Sin teléfono'
                 })
         

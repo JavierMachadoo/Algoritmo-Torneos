@@ -120,6 +120,8 @@ class Pareja:
     franjas_disponibles: List[str]
     grupo_asignado: Optional[int] = None
     posicion_grupo: Optional[PosicionGrupo] = None  # Nueva: posición final en el grupo
+    jugador1: str = ""
+    jugador2: str = ""
     
     def __hash__(self):
         return hash(self.id)
@@ -135,6 +137,8 @@ class Pareja:
             'franjas_disponibles': self.franjas_disponibles,
             'id': self.id,
             'nombre': self.nombre,
+            'jugador1': self.jugador1,
+            'jugador2': self.jugador2,
             'telefono': self.telefono,
             'grupo_asignado': self.grupo_asignado,
             'posicion_grupo': self.posicion_grupo.value if self.posicion_grupo else None
@@ -150,7 +154,9 @@ class Pareja:
             categoria=data['categoria'],
             franjas_disponibles=data.get('franjas_disponibles', []),
             grupo_asignado=data.get('grupo_asignado'),
-            posicion_grupo=PosicionGrupo(posicion) if posicion else None
+            posicion_grupo=PosicionGrupo(posicion) if posicion else None,
+            jugador1=data.get('jugador1', ''),
+            jugador2=data.get('jugador2', '')
         )
 
 

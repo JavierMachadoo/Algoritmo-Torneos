@@ -77,6 +77,9 @@
     .categoria-septima::before { background: #9b7fed; }
     .categoria-septima .categoria-icon { background: linear-gradient(135deg, #9b7fed, #7c3aed); }
     
+    .categoria-tercera::before { background: #e83e8c; }
+    .categoria-tercera .categoria-icon { background: linear-gradient(135deg, #e83e8c, #c2185b); }
+    
     .categoria-icon {
         width: 70px;
         height: 70px;
@@ -394,6 +397,10 @@
     .partido-septima {
         background-color: #e7e3ff;
         border-left-color: #9b7fed;
+    }
+    .partido-tercera {
+        background-color: #fce4ec;
+        border-left-color: #e83e8c;
     }
     .pareja-item {
         cursor: grab;
@@ -2065,14 +2072,16 @@
         'Cuarta': 'partido-cuarta',
         'Quinta': 'partido-quinta',
         'Sexta': 'partido-sexta',
-        'Séptima': 'partido-septima'
+        'Séptima': 'partido-septima',
+        'Tercera': 'partido-tercera'
     } %}
     
     {% set emoji_categoria = {
         'Cuarta': '🟢',
         'Quinta': '🟡',
         'Sexta': '🔵',
-        'Séptima': '🟣'
+        'Séptima': '🟣',
+        'Tercera': '🔴'
     } %}
     
     <div class="partido-bloque-simple {{ clase_categoria[partido.categoria] }}">
@@ -3905,14 +3914,16 @@ function renderizarCalendario(calendario) {
         'Cuarta': 'partido-cuarta',
         'Quinta': 'partido-quinta',
         'Sexta': 'partido-sexta',
-        'Séptima': 'partido-septima'
+        'Séptima': 'partido-septima',
+        'Tercera': 'partido-tercera'
     };
     
     const emojisCategoria = {
         'Cuarta': '🟢',
         'Quinta': '🟡',
         'Sexta': '🔵',
-        'Séptima': '🟣'
+        'Séptima': '🟣',
+        'Tercera': '🔴'
     };
     
     // Función auxiliar para renderizar un partido
