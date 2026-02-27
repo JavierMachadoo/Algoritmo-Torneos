@@ -1130,7 +1130,7 @@ function renderizarTablaParejas(parejas) {
     if (!tbody && !mobileContainer) return;
     
     // Ordenar parejas por categoría
-    const ordenCategorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
+    const ordenCategorias = ['Tercera', 'Cuarta', 'Quinta', 'Sexta', 'Séptima'];
     const parejasOrdenadas = [...parejas].sort((a, b) => {
         const indexA = ordenCategorias.indexOf(a.categoria);
         const indexB = ordenCategorias.indexOf(b.categoria);

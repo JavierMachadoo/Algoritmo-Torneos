@@ -197,13 +197,16 @@ def crear_app():
             return redirect(url_for('inicio'))
         
         torneo = storage.cargar()
+        tipo_torneo = torneo.get('tipo_torneo', 'fin1')
+        categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
         
         response = make_response(render_template('resultados.html', 
                              resultado=resultado,
-                             categorias=CATEGORIAS,
+                             categorias=categorias_torneo,
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,
-                             torneo=torneo))
+                             torneo=torneo,
+                             tipo_torneo=tipo_torneo))
         
         return response
     
@@ -219,14 +222,17 @@ def crear_app():
         
         torneo = storage.cargar()
         fixtures = torneo.get('fixtures_finales', {})
+        tipo_torneo = torneo.get('tipo_torneo', 'fin1')
+        categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
         
         response = make_response(render_template('finales.html',
                              fixtures=fixtures,
-                             categorias=CATEGORIAS,
+                             categorias=categorias_torneo,
                              colores=COLORES_CATEGORIA,
                              emojis=EMOJI_CATEGORIA,
                              resultado=resultado,
-                             torneo=torneo))
+                             torneo=torneo,
+                             tipo_torneo=tipo_torneo))
         
         return response
     
