@@ -4400,10 +4400,12 @@ function cargarTablaPosiciones(categoria, grupoId) {
         .then(data => {
             if (data.success && data.tabla) {
                 renderizarTablaPosiciones(categoria, grupoId, data.tabla);
+            } else if (data.error) {
+                console.error(`Error en tabla posiciones [${categoria} / Grupo ${grupoId}]:`, data.error);
             }
         })
         .catch(error => {
-            console.error('Error cargando tabla:', error);
+            console.error(`Error cargando tabla [${categoria} / Grupo ${grupoId}]:`, error);
         });
 }
 
@@ -4518,12 +4520,12 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.removeItem('activeTab');
     }
     
-    const categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima'];
-    
-    // Cargar tablas para cada categoría
+    // Cargar tablas para cada categoría (dinámico: se basa en las categorías reales del torneo)
     fetch('/api/resultado_algoritmo')
         .then(response => response.json())
         .then(data => {
+            if (!data.grupos_por_categoria) return;
+            const categorias = Object.keys(data.grupos_por_categoria);
             categorias.forEach(categoria => {
                 const grupos = data.grupos_por_categoria[categoria] || [];
                 grupos.forEach(grupo => {
