@@ -168,7 +168,7 @@ def crear_app():
             parejas_enriquecidas.append(pareja_info)
         
         # Ordenar parejas por categoría
-        orden_categorias = ['Cuarta', 'Quinta', 'Sexta', 'Séptima', 'Tercera']
+        orden_categorias = ['Tercera', 'Cuarta', 'Quinta', 'Sexta', 'Séptima']
         parejas_ordenadas = sorted(parejas_enriquecidas, 
                                   key=lambda p: orden_categorias.index(p.get('categoria', 'Cuarta')) if p.get('categoria') in orden_categorias else 99)
 
