@@ -120,5 +120,3 @@ Y su sección de ejemplo toma código real de `api/routes/finales.py`, no códig
 - `skills/algoritmo-torneos.md` — ejemplo de skill para lógica de negocio
 - `skills/pytest-torneos.md` — ejemplo de skill para testing
 - `AGENTS.md` — tablas de Available Skills y Auto-invoke (actualizar después de crear)
-- `AGENTSEJEMPLO.md` — referencia de estructura de AGENTS.md
-- `SKILLEJEMPLO.md` — referencia del formato original de frontmatter
