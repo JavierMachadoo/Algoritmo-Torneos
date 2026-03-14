@@ -77,6 +77,16 @@
                         </a>
                     </li>
 
+                    <!-- Calendario: siempre visible -->
+                    <li class="nav-item">
+                        <a class="nav-link text-white px-3 py-2 rounded
+                            {{ 'active-link' if request.endpoint == 'calendario_publico' else '' }}"
+                           href="{{ url_for('calendario_publico') }}"
+                           style="font-weight: 600; font-size: 1rem; transition: all 0.2s ease;">
+                            <i class="bi bi-calendar-week me-1"></i>Calendario
+                        </a>
+                    </li>
+
                     {% if es_admin %}
                     <!-- Panel Admin (solo admin) -->
                     <li class="nav-item">

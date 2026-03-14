@@ -92,7 +92,7 @@ def crear_app():
                     g.es_admin = True
 
         # Rutas públicas: no requieren autenticación
-        rutas_publicas_prefijos = ['/login', '/static/', '/_health', '/grupos', '/cuadro']
+        rutas_publicas_prefijos = ['/login', '/static/', '/_health', '/grupos', '/cuadro', '/calendario']
         if request.path == '/' or any(request.path.startswith(r) for r in rutas_publicas_prefijos):
             return
 
@@ -149,7 +149,7 @@ def crear_app():
         resultado = torneo.get('resultado_algoritmo')
         tipo_torneo = torneo.get('tipo_torneo', 'fin1')
         categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
-        return make_response(render_template('landing.html',
+        return make_response(render_template('inicio.html',
                              torneo=torneo,
                              resultado=resultado,
                              categorias=categorias_torneo,
@@ -206,7 +206,7 @@ def crear_app():
         tipo_torneo = torneo.get('tipo_torneo', 'fin1')
         categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
 
-        response = make_response(render_template('inicio.html', 
+        response = make_response(render_template('homePanel.html',
                              parejas=parejas_ordenadas,
                              resultado=resultado,
                              torneo=torneo,
@@ -278,6 +278,22 @@ def crear_app():
         categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
 
         return make_response(render_template('grupos_publico.html',
+                             resultado=resultado,
+                             categorias=categorias_torneo,
+                             colores=COLORES_CATEGORIA,
+                             emojis=EMOJI_CATEGORIA,
+                             torneo=torneo,
+                             tipo_torneo=tipo_torneo))
+
+    @app.route('/calendario')
+    def calendario_publico():
+        """Vista pública del calendario de partidos — sin controles de admin."""
+        torneo = storage.cargar()
+        resultado = torneo.get('resultado_algoritmo')
+        tipo_torneo = torneo.get('tipo_torneo', 'fin1')
+        categorias_torneo = TIPOS_TORNEO.get(tipo_torneo, CATEGORIAS)
+
+        return make_response(render_template('calendario_publico.html',
                              resultado=resultado,
                              categorias=categorias_torneo,
                              colores=COLORES_CATEGORIA,
