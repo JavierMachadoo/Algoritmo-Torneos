@@ -14,11 +14,14 @@ allowed-tools: Read, Edit, Write, Glob, Grep, Bash
 
 ## Estructura Obligatoria de una Skill
 
-Cada skill es un archivo `.md` en `/skills/` con frontmatter YAML y secciones en este orden:
+Cada skill es un archivo `.md` en `/skills/business-logic/` o `/skills/stack/` según su naturaleza, con frontmatter YAML y secciones en este orden:
 
 ```
 skills/
-└── <nombre-skill>.md
+├── business-logic/   # lógica específica del dominio del proyecto
+│   └── <nombre-skill>.md
+└── stack/            # patrones del stack tecnológico
+    └── <nombre-skill>.md
 ```
 
 ### Frontmatter (REQUIRED)
@@ -116,7 +119,7 @@ Y su sección de ejemplo toma código real de `api/routes/finales.py`, no códig
 
 ## Referencias
 
-- `skills/flask-torneos.md` — ejemplo de skill para capa API
-- `skills/algoritmo-torneos.md` — ejemplo de skill para lógica de negocio
-- `skills/pytest-torneos.md` — ejemplo de skill para testing
+- `skills/stack/flask-torneos.md` — ejemplo de skill para capa API
+- `skills/business-logic/algoritmo-torneos.md` — ejemplo de skill para lógica de negocio
+- `skills/stack/pytest-torneos.md` — ejemplo de skill para testing
 - `AGENTS.md` — tablas de Available Skills y Auto-invoke (actualizar después de crear)
